@@ -1,0 +1,24 @@
+excluded Mbpp/737: canonical solution returns unpicklable Match
+20 tasks x 1 runs = 20 units; conditions ['SV', 'A', 'B', 'AB', 'ABp']
+[1/20] HumanEval/107 run0: done
+[2/20] HumanEval/131 run0: done
+[3/20] HumanEval/142 run0: done
+[4/20] HumanEval/128 run0: done
+[5/20] HumanEval/159 run0: done
+[6/20] HumanEval/26 run0: done
+[7/20] HumanEval/30 run0: done
+[8/20] HumanEval/153 run0: done
+[9/20] HumanEval/57 run0: done
+[10/20] HumanEval/81 run0: done
+[11/20] Mbpp/108 run0: done
+[12/20] Mbpp/435 run0: done
+[13/20] Mbpp/587 run0: done
+[14/20] Mbpp/311 run0: done
+[15/20] Mbpp/592 run0: done
+[16/20] Mbpp/619 run0: done
+[17/20] Mbpp/247 run0: done
+[18/20] Mbpp/724 run0: done
+[19/20] Mbpp/99 run0: done
+[20/20] Mbpp/753 run0: done
+finished with 0 errors
+EXIT 0

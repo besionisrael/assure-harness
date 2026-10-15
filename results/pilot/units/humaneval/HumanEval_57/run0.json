@@ -1,0 +1,198 @@
+{
+ "task_id": "HumanEval/57",
+ "benchmark": "humaneval",
+ "run": 0,
+ "prompt_version": "2026-10-08.1",
+ "backends": {
+  "builder": "anthropic:claude-sonnet-5-5",
+  "verifier": "anthropic:claude-sonnet-5-5",
+  "verifier_alt": "openai:gpt-5.5-2026-04-23"
+ },
+ "p0": "def monotonic(l: list):\n    \"\"\"Return True is list elements are monotonically increasing or decreasing.\n    >>> monotonic([1, 2, 4, 20])\n    True\n    >>> monotonic([1, 20, 4, 10])\n    False\n    >>> monotonic([4, 1, 0, -10])\n    True\n    \"\"\"\n    non_decreasing = True\n    non_increasing = True\n    for i in range(1, len(l)):\n        if l[i] < l[i - 1]:\n            non_decreasing = False\n        if l[i] > l[i - 1]:\n            non_increasing = False\n    return non_decreasing or non_increasing\n",
+ "p0_info": {
+  "self_rounds": 0,
+  "self_converged": true
+ },
+ "usage_shared": {
+  "input_tokens": 607,
+  "output_tokens": 695,
+  "calls": 1
+ },
+ "conditions": {
+  "SV": {
+   "programs": [
+    "def monotonic(l: list):\n    \"\"\"Return True is list elements are monotonically increasing or decreasing.\n    >>> monotonic([1, 2, 4, 20])\n    True\n    >>> monotonic([1, 20, 4, 10])\n    False\n    >>> monotonic([4, 1, 0, -10])\n    True\n    \"\"\"\n    non_decreasing = True\n    non_increasing = True\n    for i in range(1, len(l)):\n        if l[i] < l[i - 1]:\n            non_decreasing = False\n        if l[i] > l[i - 1]:\n            non_increasing = False\n    return non_decreasing or non_increasing\n"
+   ],
+   "final": "def monotonic(l: list):\n    \"\"\"Return True is list elements are monotonically increasing or decreasing.\n    >>> monotonic([1, 2, 4, 20])\n    True\n    >>> monotonic([1, 20, 4, 10])\n    False\n    >>> monotonic([4, 1, 0, -10])\n    True\n    \"\"\"\n    non_decreasing = True\n    non_increasing = True\n    for i in range(1, len(l)):\n        if l[i] < l[i - 1]:\n            non_decreasing = False\n        if l[i] > l[i - 1]:\n            non_increasing = False\n    return non_decreasing or non_increasing\n",
+   "evidence": {
+    "builder": {
+     "test_solution": "from solution import monotonic\n\n\ndef test_visible():\n    assert monotonic([1, 2, 4, 10]) == True\n    assert monotonic([1, 2, 4, 20]) == True\n    assert monotonic([1, 20, 4, 10]) == False\n    assert monotonic([4, 1, 0, -10]) == True\n    assert monotonic([4, 1, 1, 0]) == True\n    assert monotonic([1, 2, 3, 2, 5, 60]) == False\n    assert monotonic([1, 2, 3, 4, 5, 60]) == True\n    assert monotonic([9, 9, 9, 9]) == True\n\n\ndef test_edge():\n    assert monotonic([]) == True\n    assert monotonic([5]) == True\n    assert monotonic([1, 2]) == True\n    assert monotonic([2, 1]) == True\n\n\ndef test_non_monotonic():\n    assert monotonic([1, 3, 2]) == False\n    assert monotonic([3, 1, 2]) == False\n    assert monotonic([1, 1, 2, 1]) == False\n    assert monotonic([2, 2, 1, 2]) == False\n"
+    }
+   },
+   "rounds": [],
+   "usage": {
+    "input_tokens": 0,
+    "output_tokens": 0,
+    "calls": 0
+   },
+   "open_questions": []
+  },
+  "A": {
+   "programs": [
+    "def monotonic(l: list):\n    \"\"\"Return True is list elements are monotonically increasing or decreasing.\n    >>> monotonic([1, 2, 4, 20])\n    True\n    >>> monotonic([1, 20, 4, 10])\n    False\n    >>> monotonic([4, 1, 0, -10])\n    True\n    \"\"\"\n    non_decreasing = True\n    non_increasing = True\n    for i in range(1, len(l)):\n        if l[i] < l[i - 1]:\n            non_decreasing = False\n        if l[i] > l[i - 1]:\n            non_increasing = False\n    return non_decreasing or non_increasing\n"
+   ],
+   "final": "def monotonic(l: list):\n    \"\"\"Return True is list elements are monotonically increasing or decreasing.\n    >>> monotonic([1, 2, 4, 20])\n    True\n    >>> monotonic([1, 20, 4, 10])\n    False\n    >>> monotonic([4, 1, 0, -10])\n    True\n    \"\"\"\n    non_decreasing = True\n    non_increasing = True\n    for i in range(1, len(l)):\n        if l[i] < l[i - 1]:\n            non_decreasing = False\n        if l[i] > l[i - 1]:\n            non_increasing = False\n    return non_decreasing or non_increasing\n",
+   "evidence": {
+    "A": {
+     "test_phase_a": "from hypothesis import given, assume, strategies as st\nfrom solution import monotonic\n\n\ndef test_example_increasing():\n    \"\"\"Spec: [1, 2, 4, 20] is monotonically increasing so the result is True.\"\"\"\n    x = [1, 2, 4, 20]\n    out = monotonic(x)\n    assert out is True or out == True, f\"input={x!r} output={out!r}\"\n\n\ndef test_example_not_monotonic():\n    \"\"\"Spec: [1, 20, 4, 10] is neither increasing nor decreasing so the result is False.\"\"\"\n    x = [1, 20, 4, 10]\n    out = monotonic(x)\n    assert out == False, f\"input={x!r} output={out!r}\"\n\n\ndef test_example_decreasing():\n    \"\"\"Spec: [4, 1, 0, -10] is monotonically decreasing so the result is True.\"\"\"\n    x = [4, 1, 0, -10]\n    out = monotonic(x)\n    assert out == True, f\"input={x!r} output={out!r}\"\n\n\ndef test_peak_and_valley_examples_false():\n    \"\"\"Spec: lists that both rise and fall are not monotonic and give False.\"\"\"\n    for x in ([1, 2, 1], [2, 1, 2], [1, 3, 2, 4], [5, 4, 6, 7, 8], [0, 1, 2, 3, 2]):\n        out = monotonic(x)\n        assert out == False, f\"input={x!r} output={out!r}\"\n\n\ndef test_two_distinct_elements_either_order():\n    \"\"\"Spec: any two distinct elements are increasing or decreasing so the result is True.\"\"\"\n    for x in ([1, 2], [2, 1], [-5, 7], [7, -5]):\n        out = monotonic(x)\n        assert out == True, f\"input={x!r} output={out!r}\"\n\n\n@given(st.lists(st.integers(), unique=True))\ndef test_sorted_ascending_distinct_true(xs):\n    \"\"\"Spec: a list of distinct elements in increasing order is monotonic.\"\"\"\n    x = sorted(xs)\n    out = monotonic(x)\n    assert out == True, f\"input={x!r} output={out!r}\"\n\n\n@given(st.lists(st.integers(), unique=True))\ndef test_sorted_descending_distinct_true(xs):\n    \"\"\"Spec: a list of distinct elements in decreasing order is monotonic.\"\"\"\n    x = sorted(xs, reverse=True)\n    out = monotonic(x)\n    assert out == True, f\"input={x!r} output={out!r}\"\n\n\n@given(st.lists(st.integers(), max_size=20))\ndef test_rise_and_fall_is_false(x):\n    \"\"\"Spec: a list with a strict rise and a strict fall between neighbours is neither increasing nor decreasing.\"\"\"\n    ups = any(a < b for a, b in zip(x, x[1:]))\n    downs = any(a > b for a, b in zip(x, x[1:]))\n    assume(ups and downs)\n    out = monotonic(x)\n    assert out == False, f\"input={x!r} output={out!r}\"\n\n\n@given(st.lists(st.integers(), max_size=20))\ndef test_reversal_invariant(x):\n    \"\"\"Spec: reversing a list swaps increasing with decreasing, so the result is unchanged.\"\"\"\n    a = monotonic(x)\n    b = monotonic(x[::-1])\n    assert bool(a) == bool(b), f\"input={x!r} output={a!r} reversed_output={b!r}\"\n\n\n@given(st.lists(st.integers(min_value=-10**6, max_value=10**6), max_size=20))\ndef test_negation_invariant(x):\n    \"\"\"Spec: negating all elements swaps increasing with decreasing, so the result is unchanged.\"\"\"\n    a = monotonic(x)\n    y = [-v for v in x]\n    b = monotonic(y)\n    assert bool(a) == bool(b), f\"input={x!r} output={a!r} negated={y!r} negated_output={b!r}\"\n\n\n@given(st.lists(st.integers(), unique=True, min_size=3, max_size=15))\ndef test_distinct_result_matches_sortedness(x):\n    \"\"\"Spec: a list of distinct elements is monotonic exactly when it is sorted ascending or descending.\"\"\"\n    exp = x == sorted(x) or x == sorted(x, reverse=True)\n    out = monotonic(x)\n    assert bool(out) == exp, f\"input={x!r} output={out!r} expected={exp!r}\"\n\n\n@given(st.lists(st.integers(), max_size=20))\ndef test_returns_bool(x):\n    \"\"\"Spec: the function returns a truth value (True or False).\"\"\"\n    out = monotonic(x)\n    assert isinstance(out, bool), f\"input={x!r} output={out!r}\"\n\n\n@given(st.lists(st.integers(), max_size=20))\ndef test_input_not_mutated(x):\n    \"\"\"Spec: the function only inspects the list and does not alter it.\"\"\"\n    before = list(x)\n    out = monotonic(x)\n    assert x == before, f\"input={before!r} output={out!r} after={x!r}\"\n"
+    }
+   },
+   "rounds": [
+    {
+     "round": 1,
+     "failing": 0
+    }
+   ],
+   "mutation": null,
+   "open_questions": [],
+   "usage": {
+    "builder": {
+     "input_tokens": 0,
+     "output_tokens": 0,
+     "calls": 0
+    },
+    "verifier": {
+     "input_tokens": 750,
+     "output_tokens": 2929,
+     "calls": 1
+    }
+   },
+   "verifier_backend": "anthropic:claude-sonnet-5-5"
+  },
+  "B": {
+   "programs": [
+    "def monotonic(l: list):\n    \"\"\"Return True is list elements are monotonically increasing or decreasing.\n    >>> monotonic([1, 2, 4, 20])\n    True\n    >>> monotonic([1, 20, 4, 10])\n    False\n    >>> monotonic([4, 1, 0, -10])\n    True\n    \"\"\"\n    non_decreasing = True\n    non_increasing = True\n    for i in range(1, len(l)):\n        if l[i] < l[i - 1]:\n            non_decreasing = False\n        if l[i] > l[i - 1]:\n            non_increasing = False\n    return non_decreasing or non_increasing\n"
+   ],
+   "final": "def monotonic(l: list):\n    \"\"\"Return True is list elements are monotonically increasing or decreasing.\n    >>> monotonic([1, 2, 4, 20])\n    True\n    >>> monotonic([1, 20, 4, 10])\n    False\n    >>> monotonic([4, 1, 0, -10])\n    True\n    \"\"\"\n    non_decreasing = True\n    non_increasing = True\n    for i in range(1, len(l)):\n        if l[i] < l[i - 1]:\n            non_decreasing = False\n        if l[i] > l[i - 1]:\n            non_increasing = False\n    return non_decreasing or non_increasing\n",
+   "evidence": {
+    "B": {
+     "test_phase_b": "from hypothesis import given, strategies as st\n\nfrom solution import monotonic\n\n\ndef _oracle(l):\n    return l == sorted(l) or l == sorted(l, reverse=True)\n\n\ndef test_spec_examples():\n    \"\"\"Spec examples: increasing and decreasing lists are monotonic, a mixed list is not.\"\"\"\n    for x, exp in [([1, 2, 4, 20], True), ([1, 20, 4, 10], False), ([4, 1, 0, -10], True)]:\n        out = monotonic(x)\n        assert out == exp, f\"input={x!r} output={out!r}\"\n\n\ndef test_violation_at_last_pair():\n    \"\"\"A list that is increasing except for the final step is not monotonic.\"\"\"\n    x = [1, 2, 3, 4, 3]\n    out = monotonic(x)\n    assert out is False, f\"input={x!r} output={out!r}\"\n\n\ndef test_violation_at_first_pair():\n    \"\"\"A list that breaks the trend only at the first step is not monotonic.\"\"\"\n    for x in ([2, 1, 3, 4, 5], [1, 2, 0, -1, -5][::-1][::-1]):\n        out = monotonic(x)\n        assert out is False, f\"input={x!r} output={out!r}\"\n\n\ndef test_peak_and_valley_with_ordered_ends():\n    \"\"\"A list that rises then falls (or falls then rises) is not monotonic even if its ends are ordered.\"\"\"\n    for x in ([1, 5, 0, 2], [5, 0, 4, 1][::-1], [3, 1, 2], [1, 3, 2], [-3, 10, -7, 20]):\n        out = monotonic(x)\n        assert out is False, f\"input={x!r} output={out!r}\"\n\n\ndef test_negative_numbers_and_two_elements():\n    \"\"\"Strictly ordered lists with negatives, and any two distinct elements, are monotonic.\"\"\"\n    for x in ([-10, -5, -1], [-1, -5, -10], [1, 2], [2, 1], [-3, 7]):\n        out = monotonic(x)\n        assert out is True, f\"input={x!r} output={out!r}\"\n\n\ndef test_floats():\n    \"\"\"Strictly increasing or decreasing floats are monotonic; a zigzag is not.\"\"\"\n    for x, exp in [([0.5, 1.5, 2.5], True), ([2.5, 1.5, 0.5], True), ([0.5, 2.5, 1.5], False)]:\n        out = monotonic(x)\n        assert out == exp, f\"input={x!r} output={out!r}\"\n\n\ndef test_does_not_mutate_input():\n    \"\"\"Checking monotonicity must not alter the list given.\"\"\"\n    x = [3, 1, 2, 5]\n    c = list(x)\n    monotonic(x)\n    assert x == c, f\"input={c!r} output={x!r}\"\n\n\n@given(st.lists(st.integers(), unique=True, min_size=2))\ndef test_sorted_distinct_is_monotonic(x):\n    \"\"\"Any strictly increasing or strictly decreasing list is monotonic.\"\"\"\n    for y in (sorted(x), sorted(x, reverse=True)):\n        out = monotonic(y)\n        assert out is True, f\"input={y!r} output={out!r}\"\n\n\n@given(st.lists(st.integers(), unique=True, min_size=3))\ndef test_matches_oracle_distinct(x):\n    \"\"\"For distinct elements, the result is True exactly when the list is sorted ascending or descending.\"\"\"\n    out = monotonic(x)\n    assert out == _oracle(x), f\"input={x!r} output={out!r}\"\n\n\n@given(st.lists(st.integers(), unique=True, min_size=2))\ndef test_reversal_invariance(x):\n    \"\"\"A list is monotonic exactly when its reverse is monotonic.\"\"\"\n    a = monotonic(x)\n    b = monotonic(x[::-1])\n    assert a == b, f\"input={x!r} output={a!r} reversed_output={b!r}\"\n\n\n@given(st.lists(st.floats(allow_nan=False, allow_infinity=False), unique=True, min_size=3))\ndef test_matches_oracle_floats(x):\n    \"\"\"For distinct floats, the result is True exactly when the list is sorted ascending or descending.\"\"\"\n    out = monotonic(x)\n    assert out == _oracle(x), f\"input={x!r} output={out!r}\"\n\n\n@given(st.lists(st.integers(), unique=True, min_size=3), st.integers(min_value=0, max_value=10**6))\ndef test_affine_invariance(x, k):\n    \"\"\"Shifting all elements by a constant does not change whether the list is monotonic.\"\"\"\n    y = [v + k for v in x]\n    a, b = monotonic(x), monotonic(y)\n    assert a == b, f\"input={x!r} output={a!r} shifted={y!r} shifted_output={b!r}\"\n",
+     "test_phase_b_mutants": "from hypothesis import given, strategies as st\n\nfrom solution import monotonic\n\n\ndef test_non_decreasing_with_ties_is_monotonic():\n    \"\"\"A list that never decreases, even with equal neighbours, is monotonically increasing.\"\"\"\n    for x in ([1, 1, 2], [1, 2, 2, 3], [0, 0, 0, 1], [-2, -2, 5, 5]):\n        out = monotonic(x)\n        assert out is True, f\"input={x!r} output={out!r}\"\n\n\ndef test_non_increasing_with_ties_is_monotonic():\n    \"\"\"A list that never increases, even with equal neighbours, is monotonically decreasing.\"\"\"\n    for x in ([2, 1, 1], [3, 2, 2, 1], [1, 0, 0, 0], [5, 5, -2, -2]):\n        out = monotonic(x)\n        assert out is True, f\"input={x!r} output={out!r}\"\n\n\ndef test_constant_list_is_monotonic():\n    \"\"\"A list of equal elements neither rises nor falls, so it is monotonic.\"\"\"\n    for x in ([5, 5], [7, 7, 7], [0, 0, 0, 0]):\n        out = monotonic(x)\n        assert out is True, f\"input={x!r} output={out!r}\"\n\n\ndef test_ties_do_not_hide_direction_change():\n    \"\"\"A list that rises and then falls is not monotonic even when it contains ties.\"\"\"\n    for x in ([1, 1, 2, 0], [2, 2, 1, 1, 3], [0, 1, 1, 0]):\n        out = monotonic(x)\n        assert out is False, f\"input={x!r} output={out!r}\"\n\n\n@given(st.lists(st.integers(min_value=-5, max_value=5), min_size=2))\ndef test_sorted_with_duplicates_is_monotonic(x):\n    \"\"\"Any list sorted ascending or descending, duplicates allowed, is monotonic.\"\"\"\n    for y in (sorted(x), sorted(x, reverse=True)):\n        out = monotonic(y)\n        assert out is True, f\"input={y!r} output={out!r}\"\n\n\n@given(st.integers(min_value=-100, max_value=100), st.integers(min_value=2, max_value=20))\ndef test_constant_lists_property(v, n):\n    \"\"\"Any list of identical elements is monotonic.\"\"\"\n    x = [v] * n\n    out = monotonic(x)\n    assert out is True, f\"input={x!r} output={out!r}\"\n\n\n@given(st.lists(st.integers(min_value=-5, max_value=5), min_size=2))\ndef test_matches_oracle_with_duplicates(x):\n    \"\"\"A list is monotonic exactly when it is sorted ascending or descending (non-strict).\"\"\"\n    exp = x == sorted(x) or x == sorted(x, reverse=True)\n    out = monotonic(x)\n    assert out == exp, f\"input={x!r} output={out!r}\"\n"
+    }
+   },
+   "rounds": [
+    {
+     "round": 1,
+     "failing": 0
+    }
+   ],
+   "mutation": {
+    "mutants": 19,
+    "survivors": 2,
+    "shown": 2
+   },
+   "open_questions": [],
+   "usage": {
+    "builder": {
+     "input_tokens": 0,
+     "output_tokens": 0,
+     "calls": 0
+    },
+    "verifier": {
+     "input_tokens": 4112,
+     "output_tokens": 4434,
+     "calls": 2
+    }
+   },
+   "verifier_backend": "anthropic:claude-sonnet-5-5"
+  },
+  "AB": {
+   "programs": [
+    "def monotonic(l: list):\n    \"\"\"Return True is list elements are monotonically increasing or decreasing.\n    >>> monotonic([1, 2, 4, 20])\n    True\n    >>> monotonic([1, 20, 4, 10])\n    False\n    >>> monotonic([4, 1, 0, -10])\n    True\n    \"\"\"\n    non_decreasing = True\n    non_increasing = True\n    for i in range(1, len(l)):\n        if l[i] < l[i - 1]:\n            non_decreasing = False\n        if l[i] > l[i - 1]:\n            non_increasing = False\n    return non_decreasing or non_increasing\n"
+   ],
+   "final": "def monotonic(l: list):\n    \"\"\"Return True is list elements are monotonically increasing or decreasing.\n    >>> monotonic([1, 2, 4, 20])\n    True\n    >>> monotonic([1, 20, 4, 10])\n    False\n    >>> monotonic([4, 1, 0, -10])\n    True\n    \"\"\"\n    non_decreasing = True\n    non_increasing = True\n    for i in range(1, len(l)):\n        if l[i] < l[i - 1]:\n            non_decreasing = False\n        if l[i] > l[i - 1]:\n            non_increasing = False\n    return non_decreasing or non_increasing\n",
+   "evidence": {
+    "A": {
+     "test_phase_a": "from hypothesis import given, assume, strategies as st\n\nfrom solution import monotonic\n\n\ndef test_doc_example_increasing():\n    \"\"\"A strictly increasing list such as [1, 2, 4, 20] must give True.\"\"\"\n    x = [1, 2, 4, 20]\n    out = monotonic(x)\n    assert out is True, f\"input={x!r} output={out!r}\"\n\n\ndef test_doc_example_not_monotonic():\n    \"\"\"A list that rises and falls such as [1, 20, 4, 10] must give False.\"\"\"\n    x = [1, 20, 4, 10]\n    out = monotonic(x)\n    assert out is False, f\"input={x!r} output={out!r}\"\n\n\ndef test_doc_example_decreasing():\n    \"\"\"A strictly decreasing list such as [4, 1, 0, -10] must give True.\"\"\"\n    x = [4, 1, 0, -10]\n    out = monotonic(x)\n    assert out is True, f\"input={x!r} output={out!r}\"\n\n\ndef test_two_distinct_elements():\n    \"\"\"Any two-element list with distinct values is monotonic in either order.\"\"\"\n    for x in ([1, 2], [2, 1], [-5, 7], [7, -5]):\n        out = monotonic(x)\n        assert out is True, f\"input={x!r} output={out!r}\"\n\n\ndef test_small_non_monotonic_examples():\n    \"\"\"Lists with a strict rise and a strict fall must give False.\"\"\"\n    for x in ([1, 3, 2], [3, 1, 2], [1, 2, 3, 2, 1], [5, 1, 5 + 1, 0]):\n        out = monotonic(x)\n        assert out is False, f\"input={x!r} output={out!r}\"\n\n\ndef test_negative_numbers_increasing_and_decreasing():\n    \"\"\"Strictly monotone lists of negative numbers must give True.\"\"\"\n    for x in ([-10, -5, -1], [-1, -5, -10]):\n        out = monotonic(x)\n        assert out is True, f\"input={x!r} output={out!r}\"\n\n\n@given(st.lists(st.integers(), min_size=2, max_size=30, unique=True))\ndef test_sorted_ascending_distinct_is_monotonic(xs):\n    \"\"\"A strictly increasing list must be reported as monotonic.\"\"\"\n    x = sorted(xs)\n    out = monotonic(x)\n    assert out is True, f\"input={x!r} output={out!r}\"\n\n\n@given(st.lists(st.integers(), min_size=2, max_size=30, unique=True))\ndef test_sorted_descending_distinct_is_monotonic(xs):\n    \"\"\"A strictly decreasing list must be reported as monotonic.\"\"\"\n    x = sorted(xs, reverse=True)\n    out = monotonic(x)\n    assert out is True, f\"input={x!r} output={out!r}\"\n\n\n@given(st.lists(st.integers(), min_size=3, max_size=30, unique=True))\ndef test_distinct_unsorted_is_not_monotonic(xs):\n    \"\"\"A list of distinct values that is neither increasing nor decreasing must give False.\"\"\"\n    assume(xs != sorted(xs) and xs != sorted(xs, reverse=True))\n    out = monotonic(xs)\n    assert out is False, f\"input={xs!r} output={out!r}\"\n\n\n@given(st.lists(st.integers(), min_size=2, max_size=30))\ndef test_reversal_invariance(xs):\n    \"\"\"Reversing a list must not change whether it is monotonic.\"\"\"\n    a = monotonic(list(xs))\n    b = monotonic(list(reversed(xs)))\n    assert a == b, f\"input={xs!r} output={a!r} reversed_output={b!r}\"\n\n\n@given(st.lists(st.integers(min_value=-10**6, max_value=10**6), min_size=2, max_size=30))\ndef test_negation_invariance(xs):\n    \"\"\"Negating every element swaps increasing and decreasing, so the result must not change.\"\"\"\n    neg = [-v for v in xs]\n    a = monotonic(list(xs))\n    b = monotonic(neg)\n    assert a == b, f\"input={xs!r} output={a!r} negated={neg!r} negated_output={b!r}\"\n\n\n@given(st.lists(st.integers(), min_size=2, max_size=30))\ndef test_returns_bool(xs):\n    \"\"\"The function must return a boolean (True or False).\"\"\"\n    out = monotonic(list(xs))\n    assert isinstance(out, bool), f\"input={xs!r} output={out!r}\"\n"
+    },
+    "B": {
+     "test_phase_b": "from hypothesis import given, assume, strategies as st\n\nfrom solution import monotonic\n\n\ndef test_direction_change_at_last_pair():\n    \"\"\"A long increasing run followed by a strict fall at the end must give False.\"\"\"\n    x = list(range(100)) + [50]\n    out = monotonic(x)\n    assert out is False, f\"input={x!r} output={out!r}\"\n\n\ndef test_direction_change_at_first_pair():\n    \"\"\"A strict fall followed by a long strict rise must give False.\"\"\"\n    x = [100] + list(range(100))\n    out = monotonic(x)\n    assert out is False, f\"input={x!r} output={out!r}\"\n\n\ndef test_decreasing_run_then_rise_at_end():\n    \"\"\"A long decreasing run followed by a strict rise at the end must give False.\"\"\"\n    x = list(range(100, 0, -1)) + [1000]\n    out = monotonic(x)\n    assert out is False, f\"input={x!r} output={out!r}\"\n\n\ndef test_long_strictly_monotone_lists():\n    \"\"\"Long strictly increasing and strictly decreasing lists must give True.\"\"\"\n    for x in (list(range(1000)), list(range(1000, 0, -1))):\n        out = monotonic(x)\n        assert out is True, f\"input={x!r} output={out!r}\"\n\n\ndef test_rise_and_fall_with_duplicates_is_false():\n    \"\"\"A list containing both a strict rise and a strict fall must give False even with repeated values.\"\"\"\n    for x in ([1, 1, 2, 1], [1, 2, 2, 1], [2, 1, 1, 2], [3, 3, 1, 1, 5, 5], [0, 5, 5, 0, 0]):\n        out = monotonic(x)\n        assert out is False, f\"input={x!r} output={out!r}\"\n\n\ndef test_floats_strictly_monotone():\n    \"\"\"Strictly monotone float lists must give True.\"\"\"\n    for x in ([0.5, 1.5, 2.25], [2.25, 1.5, 0.5], [-0.1, -0.2, -0.3]):\n        out = monotonic(x)\n        assert out is True, f\"input={x!r} output={out!r}\"\n\n\ndef test_floats_not_monotone():\n    \"\"\"Float lists that rise and fall must give False.\"\"\"\n    for x in ([0.1, 0.3, 0.2], [0.3, 0.1, 0.2]):\n        out = monotonic(x)\n        assert out is False, f\"input={x!r} output={out!r}\"\n\n\ndef test_large_magnitude_integers():\n    \"\"\"Monotonicity must be decided correctly for very large integers.\"\"\"\n    big = 10**30\n    cases = [\n        ([big, big + 1, big + 3], True),\n        ([big + 3, big + 1, big], True),\n        ([big, big + 5, big + 1], False),\n        ([-big, big, -big], False),\n    ]\n    for x, exp in cases:\n        out = monotonic(x)\n        assert out is exp, f\"input={x!r} output={out!r} expected={exp!r}\"\n\n\n@given(st.lists(st.integers(min_value=-50, max_value=50), min_size=2, max_size=25))\ndef test_rise_and_fall_present_means_false(xs):\n    \"\"\"Any list that contains both a strict rise and a strict fall between neighbours must give False.\"\"\"\n    pairs = list(zip(xs, xs[1:]))\n    assume(any(b > a for a, b in pairs) and any(b < a for a, b in pairs))\n    out = monotonic(xs)\n    assert out is False, f\"input={xs!r} output={out!r}\"\n\n\n@given(st.lists(st.integers(min_value=-50, max_value=50), min_size=2, max_size=25))\ndef test_all_neighbours_strictly_one_direction_means_true(xs):\n    \"\"\"A list whose neighbours all strictly rise or all strictly fall must give True.\"\"\"\n    pairs = list(zip(xs, xs[1:]))\n    assume(all(b > a for a, b in pairs) or all(b < a for a, b in pairs))\n    out = monotonic(xs)\n    assert out is True, f\"input={xs!r} output={out!r}\"\n\n\n@given(\n    st.lists(st.integers(min_value=-1000, max_value=1000), min_size=1, max_size=20, unique=True),\n    st.integers(min_value=1, max_value=10),\n)\ndef test_append_breaking_element_makes_false(xs, k):\n    \"\"\"Appending a value that reverses the direction of a strictly monotone list of length >= 2 must give False.\"\"\"\n    assume(len(xs) >= 2)\n    inc = sorted(xs)\n    dec = sorted(xs, reverse=True)\n    inc_bad = inc + [inc[-1] - k]\n    dec_bad = dec + [dec[-1] + k]\n    for x in (inc_bad, dec_bad):\n        out = monotonic(x)\n        assert out is False, f\"input={x!r} output={out!r}\"\n\n\n@given(\n    st.lists(st.floats(allow_nan=False, allow_infinity=False, width=32), min_size=2, max_size=20, unique=True)\n)\ndef test_sorted_distinct_floats_are_monotone(xs):\n    \"\"\"Distinct floats sorted ascending or descending must give True.\"\"\"\n    for x in (sorted(xs), sorted(xs, reverse=True)):\n        out = monotonic(x)\n        assert out is True, f\"input={x!r} output={out!r}\"\n\n\n@given(\n    st.lists(st.integers(min_value=-100, max_value=100), min_size=2, max_size=20),\n    st.integers(min_value=-100, max_value=100),\n)\ndef test_translation_invariance(xs, c):\n    \"\"\"Adding a constant to every element must not change whether the list is monotonic.\"\"\"\n    a = monotonic(list(xs))\n    shifted = [v + c for v in xs]\n    b = monotonic(shifted)\n    assert a == b, f\"input={xs!r} output={a!r} shifted={shifted!r} shifted_output={b!r}\"\n"
+    }
+   },
+   "rounds": [
+    {
+     "round": 1,
+     "failing": 0
+    }
+   ],
+   "mutation": {
+    "mutants": 19,
+    "survivors": 0
+   },
+   "open_questions": [
+    "Strict versus non-strict: the spec does not say whether equal neighbours (`[1, 1, 2]`, `[2, 2, 2]`) count as monotonic, so I do not test lists with repeated adjacent values.",
+    "Empty and single-element lists: the spec does not say what these return, so I do not test them."
+   ],
+   "usage": {
+    "builder": {
+     "input_tokens": 0,
+     "output_tokens": 0,
+     "calls": 0
+    },
+    "verifier": {
+     "input_tokens": 5520,
+     "output_tokens": 5540,
+     "calls": 2
+    }
+   },
+   "verifier_backend": "anthropic:claude-sonnet-5-5"
+  },
+  "ABp": {
+   "programs": [
+    "def monotonic(l: list):\n    \"\"\"Return True is list elements are monotonically increasing or decreasing.\n    >>> monotonic([1, 2, 4, 20])\n    True\n    >>> monotonic([1, 20, 4, 10])\n    False\n    >>> monotonic([4, 1, 0, -10])\n    True\n    \"\"\"\n    non_decreasing = True\n    non_increasing = True\n    for i in range(1, len(l)):\n        if l[i] < l[i - 1]:\n            non_decreasing = False\n        if l[i] > l[i - 1]:\n            non_increasing = False\n    return non_decreasing or non_increasing\n"
+   ],
+   "final": "def monotonic(l: list):\n    \"\"\"Return True is list elements are monotonically increasing or decreasing.\n    >>> monotonic([1, 2, 4, 20])\n    True\n    >>> monotonic([1, 20, 4, 10])\n    False\n    >>> monotonic([4, 1, 0, -10])\n    True\n    \"\"\"\n    non_decreasing = True\n    non_increasing = True\n    for i in range(1, len(l)):\n        if l[i] < l[i - 1]:\n            non_decreasing = False\n        if l[i] > l[i - 1]:\n            non_increasing = False\n    return non_decreasing or non_increasing\n",
+   "evidence": {
+    "A": {
+     "test_phase_a": "\"\"\"\nGuarantees imposed by the specification:\n- The function under test is named monotonic and accepts a list.\n- It returns True for a list whose elements are monotonically increasing, as in [1, 2, 4, 20].\n- It returns True for a list whose elements are monotonically decreasing, as in [4, 1, 0, -10].\n- It returns False for a list that is neither increasing nor decreasing, as in [1, 20, 4, 10].\n- For strictly ordered comparable integer lists, monotonicity depends only on whether all adjacent comparisons go in one direction.\n- Any strictly increasing integer list of length at least two is monotonic.\n- Any strictly decreasing integer list of length at least two is monotonic.\n- Any integer list with both an adjacent increase and an adjacent decrease is not monotonic.\n\nOPEN QUESTIONS:\n- Whether \"monotonically increasing or decreasing\" allows equal adjacent elements is not specified.\n- The expected result for the empty list is not specified.\n- The expected result for a one-element list is not specified.\n- The behavior for elements that are not mutually comparable is not specified.\n- The behavior for non-list inputs is not specified.\n\"\"\"\n\nfrom hypothesis import given, strategies as st\n\n\ndef test_spec_example_increasing_list_is_monotonic():\n    \"\"\"The specification requires a clearly increasing list to return True.\"\"\"\n    from solution import monotonic\n\n    x = [1, 2, 4, 20]\n    out = monotonic(x)\n    assert out is True, f\"input={x!r} output={out!r}\"\n\n\ndef test_spec_example_mixed_list_is_not_monotonic():\n    \"\"\"The specification requires a list that increases and then decreases to return False.\"\"\"\n    from solution import monotonic\n\n    x = [1, 20, 4, 10]\n    out = monotonic(x)\n    assert out is False, f\"input={x!r} output={out!r}\"\n\n\ndef test_spec_example_decreasing_list_is_monotonic():\n    \"\"\"The specification requires a clearly decreasing list to return True.\"\"\"\n    from solution import monotonic\n\n    x = [4, 1, 0, -10]\n    out = monotonic(x)\n    assert out is True, f\"input={x!r} output={out!r}\"\n\n\n@given(st.lists(st.integers(), min_size=2, max_size=50, unique=True).map(sorted))\ndef test_strictly_increasing_integer_lists_are_monotonic(x):\n    \"\"\"The specification requires every strictly increasing integer list to return True.\"\"\"\n    from solution import monotonic\n\n    out = monotonic(x)\n    assert out is True, f\"input={x!r} output={out!r}\"\n\n\n@given(st.lists(st.integers(), min_size=2, max_size=50, unique=True).map(lambda xs: sorted(xs, reverse=True)))\ndef test_strictly_decreasing_integer_lists_are_monotonic(x):\n    \"\"\"The specification requires every strictly decreasing integer list to return True.\"\"\"\n    from solution import monotonic\n\n    out = monotonic(x)\n    assert out is True, f\"input={x!r} output={out!r}\"\n\n\n@given(\n    peak=st.integers(min_value=-10**6, max_value=10**6),\n    left_drop=st.integers(min_value=1, max_value=10**6),\n    right_drop=st.integers(min_value=1, max_value=10**6),\n)\ndef test_peak_shaped_integer_lists_are_not_monotonic(peak, left_drop, right_drop):\n    \"\"\"The specification requires a list with an adjacent increase and then an adjacent decrease to return False.\"\"\"\n    from solution import monotonic\n\n    x = [peak - left_drop, peak, peak - right_drop]\n    out = monotonic(x)\n    assert out is False, f\"input={x!r} output={out!r}\"\n\n\n@given(\n    valley=st.integers(min_value=-10**6, max_value=10**6),\n    left_rise=st.integers(min_value=1, max_value=10**6),\n    right_rise=st.integers(min_value=1, max_value=10**6),\n)\ndef test_valley_shaped_integer_lists_are_not_monotonic(valley, left_rise, right_rise):\n    \"\"\"The specification requires a list with an adjacent decrease and then an adjacent increase to return False.\"\"\"\n    from solution import monotonic\n\n    x = [valley + left_rise, valley, valley + right_rise]\n    out = monotonic(x)\n    assert out is False, f\"input={x!r} output={out!r}\"\n\n\n@given(\n    prefix=st.lists(st.integers(min_value=-10**6, max_value=10**6), min_size=0, max_size=10, unique=True),\n    suffix=st.lists(st.integers(min_value=-10**6, max_value=10**6), min_size=0, max_size=10, unique=True),\n)\ndef test_sorted_unique_integer_lists_remain_monotonic_when_reversed(prefix, suffix):\n    \"\"\"The specification requires reversing a strictly increasing integer list to produce a decreasing monotonic list.\"\"\"\n    from solution import monotonic\n\n    values = sorted(set(prefix + suffix + [-10**6 - 2, -10**6 - 1]))\n    x = list(reversed(values))\n    out = monotonic(x)\n    assert out is True, f\"input={x!r} output={out!r}\"\n"
+    },
+    "B": {
+     "test_phase_b": "from hypothesis import given, strategies as st\n\n\ndef _is_strictly_monotonic_by_spec(x):\n    return all(x[i] < x[i + 1] for i in range(len(x) - 1)) or all(\n        x[i] > x[i + 1] for i in range(len(x) - 1)\n    )\n\n\ndef _has_no_equal_adjacent_values(x):\n    return all(x[i] != x[i + 1] for i in range(len(x) - 1))\n\n\ndef test_two_element_increasing_list_is_monotonic_boundary():\n    \"\"\"The specification requires a two-element strictly increasing list to return True.\"\"\"\n    from solution import monotonic\n\n    x = [-3, 7]\n    out = monotonic(x)\n    assert out is True, f\"input={x!r} output={out!r}\"\n\n\ndef test_two_element_decreasing_list_is_monotonic_boundary():\n    \"\"\"The specification requires a two-element strictly decreasing list to return True.\"\"\"\n    from solution import monotonic\n\n    x = [7, -3]\n    out = monotonic(x)\n    assert out is True, f\"input={x!r} output={out!r}\"\n\n\ndef test_late_increase_after_decreasing_prefix_is_not_monotonic():\n    \"\"\"The specification requires a list with a decreasing prefix followed by an increase to return False.\"\"\"\n    from solution import monotonic\n\n    x = [9, 5, 1, 6]\n    out = monotonic(x)\n    assert out is False, f\"input={x!r} output={out!r}\"\n\n\ndef test_late_decrease_after_increasing_prefix_is_not_monotonic():\n    \"\"\"The specification requires a list with an increasing prefix followed by a decrease to return False.\"\"\"\n    from solution import monotonic\n\n    x = [-5, 0, 4, -1]\n    out = monotonic(x)\n    assert out is False, f\"input={x!r} output={out!r}\"\n\n\n@given(\n    st.lists(st.integers(), min_size=2, max_size=30).filter(\n        _has_no_equal_adjacent_values\n    )\n)\ndef test_adjacent_distinct_integer_lists_match_strict_monotonic_definition(x):\n    \"\"\"The specification requires an adjacent-distinct integer list to return True exactly when all adjacent comparisons have one direction.\"\"\"\n    from solution import monotonic\n\n    exp = _is_strictly_monotonic_by_spec(x)\n    out = monotonic(x)\n    assert out is exp, f\"input={x!r} output={out!r} expected={exp!r}\"\n",
+     "test_phase_b_mutants": "\"\"\"\nNo mutation tests are added.\n\nMutants M007 and M009 change behavior only for inputs containing equal adjacent\nelements, and the specification does not determine whether equal adjacent\nelements are allowed in a monotonic list.\n\"\"\"\n"
+    }
+   },
+   "rounds": [
+    {
+     "round": 1,
+     "failing": 0
+    }
+   ],
+   "mutation": {
+    "mutants": 19,
+    "survivors": 2,
+    "shown": 2
+   },
+   "open_questions": [
+    "Whether \"monotonically increasing or decreasing\" allows equal adjacent elements is not specified.",
+    "The expected result for the empty list is not specified.",
+    "The expected result for a one-element list is not specified.",
+    "The behavior for elements that are not mutually comparable is not specified.",
+    "The behavior for non-list inputs is not specified."
+   ],
+   "usage": {
+    "builder": {
+     "input_tokens": 0,
+     "output_tokens": 0,
+     "calls": 0
+    },
+    "verifier": {
+     "input_tokens": 8289,
+     "output_tokens": 4432,
+     "calls": 3
+    }
+   },
+   "verifier_backend": "openai:gpt-5.5-2026-04-23"
+  }
+ },
+ "seconds": 433.4
+}

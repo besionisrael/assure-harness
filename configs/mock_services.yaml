@@ -1,0 +1,15 @@
+# Offline dry run of the third-party services (plumbing only; numbers are meaningless).
+campaign: mock_services
+output_dir: results
+seed: 2026
+runs: 1
+benchmarks:
+  svc_mistral: {}
+  svc_qwen: {}
+max_hidden: 200
+workers: 4
+scoring_workers: 2
+models:
+  builder:      {provider: mock, seed: 1, label: mock-builder}
+  verifier:     {provider: mock, seed: 2, label: mock-verifier}
+  verifier_alt: {provider: mock, seed: 3, label: mock-verifier-alt}

@@ -1,0 +1,6 @@
+1 tasks x 3 runs = 3 units; conditions ['SV', 'A', 'B', 'AB', 'ABp']
+[1/3] casestudy/docpay run0: skipped
+[2/3] casestudy/docpay run2: done
+[3/3] casestudy/docpay run1: done
+finished with 0 errors
+EXIT 0

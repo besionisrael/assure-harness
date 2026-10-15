@@ -1,0 +1,44 @@
+{
+ "campaign": "pilot_casestudy",
+ "output_dir": "results",
+ "seed": 2026,
+ "runs": 1,
+ "conditions": [
+  "SV",
+  "A",
+  "B",
+  "AB",
+  "ABp"
+ ],
+ "workers": 1,
+ "scoring_workers": 4,
+ "max_hidden": null,
+ "hypothesis_max_examples": 100,
+ "scoring_max_examples": 50,
+ "scoring_mutants": 30,
+ "budgets": {
+  "self_rounds": 5,
+  "cex_rounds": 3,
+  "inner_repair_rounds": 2,
+  "max_counterexamples": 5,
+  "phase_b_mutants": 30,
+  "phase_b_survivors_shown": 6
+ },
+ "benchmarks": {
+  "casestudy": {}
+ },
+ "models": {
+  "builder": {
+   "provider": "anthropic",
+   "model": "claude-sonnet-5-5"
+  },
+  "verifier": {
+   "provider": "anthropic",
+   "model": "claude-sonnet-5-5"
+  },
+  "verifier_alt": {
+   "provider": "openai",
+   "model": "gpt-5.5-2026-04-23"
+  }
+ }
+}

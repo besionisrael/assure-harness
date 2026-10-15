@@ -1,0 +1,7 @@
+rq,comparison,test,n,a,b,mean_a,mean_b,effect,p,p_holm,significant
+RQ1,SV visible vs hidden (evaluation gap),McNemar,3,SV.visible_ok,SV.correct,1.0,1.0,discordant 0/0,1.0,1.0,False
+RQ1,Final correctness SV vs AB,McNemar,3,SV.correct,AB.correct,1.0,1.0,discordant 0/0,1.0,1.0,False
+RQ1,Final correctness SV vs ABp,McNemar,3,SV.correct,ABp.correct,1.0,1.0,discordant 0/0,1.0,1.0,False
+RQ1,Final correctness SV vs A,McNemar,3,SV.correct,A.correct,1.0,1.0,discordant 0/0,1.0,1.0,False
+RQ1,Final correctness SV vs B,McNemar,3,SV.correct,B.correct,1.0,1.0,discordant 0/0,1.0,1.0,False
+RQ4,Faulty releases SV vs AB,McNemar,3,SV.faulty_release,AB.faulty_release,0.0,0.0,discordant 0/0,1.0,1.0,False

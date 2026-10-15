@@ -1,0 +1,8 @@
+anthropic>=0.40
+openai>=1.50
+hypothesis>=6.100
+pytest>=8
+numpy>=1.26
+scipy>=1.11
+statsmodels>=0.14
+pyyaml>=6

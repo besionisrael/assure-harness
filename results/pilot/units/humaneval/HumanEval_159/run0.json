@@ -1,0 +1,199 @@
+{
+ "task_id": "HumanEval/159",
+ "benchmark": "humaneval",
+ "run": 0,
+ "prompt_version": "2026-10-08.1",
+ "backends": {
+  "builder": "anthropic:claude-sonnet-5-5",
+  "verifier": "anthropic:claude-sonnet-5-5",
+  "verifier_alt": "openai:gpt-5.5-2026-04-23"
+ },
+ "p0": "def eat(number, need, remaining):\n    eaten = min(need, remaining)\n    return [number + eaten, remaining - eaten]\n",
+ "p0_info": {
+  "self_rounds": 0,
+  "self_converged": true
+ },
+ "usage_shared": {
+  "input_tokens": 812,
+  "output_tokens": 460,
+  "calls": 1
+ },
+ "conditions": {
+  "SV": {
+   "programs": [
+    "def eat(number, need, remaining):\n    eaten = min(need, remaining)\n    return [number + eaten, remaining - eaten]\n"
+   ],
+   "final": "def eat(number, need, remaining):\n    eaten = min(need, remaining)\n    return [number + eaten, remaining - eaten]\n",
+   "evidence": {
+    "builder": {
+     "test_solution": "from solution import eat\n\n\ndef test_examples():\n    assert eat(5, 6, 10) == [11, 4]\n    assert eat(4, 8, 9) == [12, 1]\n    assert eat(1, 10, 10) == [11, 0]\n    assert eat(2, 11, 5) == [7, 0]\n    assert eat(4, 5, 7) == [9, 2]\n    assert eat(4, 5, 1) == [5, 0]\n\n\ndef test_zero_cases():\n    assert eat(0, 0, 0) == [0, 0]\n    assert eat(0, 0, 5) == [0, 5]\n    assert eat(3, 5, 0) == [3, 0]\n\n\ndef test_extremes():\n    assert eat(1000, 1000, 1000) == [2000, 0]\n    assert eat(1000, 0, 1000) == [1000, 1000]\n\n\ndef test_returns_list():\n    assert isinstance(eat(1, 1, 1), list)\n"
+    }
+   },
+   "rounds": [],
+   "usage": {
+    "input_tokens": 0,
+    "output_tokens": 0,
+    "calls": 0
+   },
+   "open_questions": []
+  },
+  "A": {
+   "programs": [
+    "def eat(number, need, remaining):\n    eaten = min(need, remaining)\n    return [number + eaten, remaining - eaten]\n"
+   ],
+   "final": "def eat(number, need, remaining):\n    eaten = min(need, remaining)\n    return [number + eaten, remaining - eaten]\n",
+   "evidence": {
+    "A": {
+     "test_phase_a": "from hypothesis import given, strategies as st\n\nfrom solution import eat\n\nnums = st.integers(min_value=0, max_value=1000)\n\n\ndef expected(number, need, remaining):\n    eaten = min(need, remaining)\n    return [number + eaten, remaining - eaten]\n\n\ndef test_example_enough_remaining():\n    \"\"\"eat(5, 6, 10) must return [11, 4].\"\"\"\n    out = eat(5, 6, 10)\n    assert list(out) == [11, 4], f\"input={(5, 6, 10)!r} output={out!r}\"\n\n\ndef test_example_enough_remaining_2():\n    \"\"\"eat(4, 8, 9) must return [12, 1].\"\"\"\n    out = eat(4, 8, 9)\n    assert list(out) == [12, 1], f\"input={(4, 8, 9)!r} output={out!r}\"\n\n\ndef test_example_exact():\n    \"\"\"When need equals remaining, eat(1, 10, 10) must return [11, 0].\"\"\"\n    out = eat(1, 10, 10)\n    assert list(out) == [11, 0], f\"input={(1, 10, 10)!r} output={out!r}\"\n\n\ndef test_example_not_enough():\n    \"\"\"When remaining is insufficient, eat(2, 11, 5) must return [7, 0].\"\"\"\n    out = eat(2, 11, 5)\n    assert list(out) == [7, 0], f\"input={(2, 11, 5)!r} output={out!r}\"\n\n\ndef test_zero_need():\n    \"\"\"With need 0 nothing is eaten and the remaining carrots are unchanged.\"\"\"\n    out = eat(7, 0, 20)\n    assert list(out) == [7, 20], f\"input={(7, 0, 20)!r} output={out!r}\"\n\n\ndef test_zero_remaining():\n    \"\"\"With no remaining carrots nothing can be eaten.\"\"\"\n    out = eat(7, 9, 0)\n    assert list(out) == [7, 0], f\"input={(7, 9, 0)!r} output={out!r}\"\n\n\ndef test_all_zero():\n    \"\"\"With all inputs zero the result must be [0, 0].\"\"\"\n    out = eat(0, 0, 0)\n    assert list(out) == [0, 0], f\"input={(0, 0, 0)!r} output={out!r}\"\n\n\ndef test_max_values():\n    \"\"\"At maximum bounds with need equal to remaining the result must be [2000, 0].\"\"\"\n    out = eat(1000, 1000, 1000)\n    assert list(out) == [2000, 0], f\"input={(1000, 1000, 1000)!r} output={out!r}\"\n\n\ndef test_max_number_need_exceeds():\n    \"\"\"When need exceeds remaining at the bounds, all remaining carrots are eaten.\"\"\"\n    out = eat(1000, 1000, 0)\n    assert list(out) == [1000, 0], f\"input={(1000, 1000, 0)!r} output={out!r}\"\n\n\n@given(nums, nums, nums)\ndef test_matches_formula(number, need, remaining):\n    \"\"\"The result must be the total eaten after eating min(need, remaining) carrots and the carrots left.\"\"\"\n    out = eat(number, need, remaining)\n    exp = expected(number, need, remaining)\n    assert len(out) == 2, f\"input={(number, need, remaining)!r} output={out!r}\"\n    assert list(out) == exp, f\"input={(number, need, remaining)!r} output={out!r}\"\n\n\n@given(nums, nums, nums)\ndef test_conservation(number, need, remaining):\n    \"\"\"Total eaten plus carrots left must equal number plus remaining.\"\"\"\n    out = eat(number, need, remaining)\n    assert out[0] + out[1] == number + remaining, f\"input={(number, need, remaining)!r} output={out!r}\"\n\n\n@given(nums, nums, nums)\ndef test_bounds(number, need, remaining):\n    \"\"\"Total eaten must be within [number, number+need] and left within [0, remaining].\"\"\"\n    out = eat(number, need, remaining)\n    assert number <= out[0] <= number + need, f\"input={(number, need, remaining)!r} output={out!r}\"\n    assert 0 <= out[1] <= remaining, f\"input={(number, need, remaining)!r} output={out!r}\"\n\n\n@given(nums, nums, nums)\ndef test_sufficient_stock_meets_need(number, need, remaining):\n    \"\"\"If remaining >= need the rabbit eats exactly need carrots.\"\"\"\n    if remaining < need:\n        need, remaining = remaining, need\n    out = eat(number, need, remaining)\n    assert list(out) == [number + need, remaining - need], f\"input={(number, need, remaining)!r} output={out!r}\"\n\n\n@given(nums, nums, nums)\ndef test_insufficient_stock_empties(number, need, remaining):\n    \"\"\"If remaining < need the rabbit eats all remaining and none are left.\"\"\"\n    if remaining >= need:\n        need, remaining = remaining, need\n        if remaining >= need:\n            return\n    out = eat(number, need, remaining)\n    assert list(out) == [number + remaining, 0], f\"input={(number, need, remaining)!r} output={out!r}\"\n"
+    }
+   },
+   "rounds": [
+    {
+     "round": 1,
+     "failing": 0
+    }
+   ],
+   "mutation": null,
+   "open_questions": [],
+   "usage": {
+    "builder": {
+     "input_tokens": 0,
+     "output_tokens": 0,
+     "calls": 0
+    },
+    "verifier": {
+     "input_tokens": 1017,
+     "output_tokens": 2001,
+     "calls": 1
+    }
+   },
+   "verifier_backend": "anthropic:claude-sonnet-5-5"
+  },
+  "B": {
+   "programs": [
+    "def eat(number, need, remaining):\n    eaten = min(need, remaining)\n    return [number + eaten, remaining - eaten]\n"
+   ],
+   "final": "def eat(number, need, remaining):\n    eaten = min(need, remaining)\n    return [number + eaten, remaining - eaten]\n",
+   "evidence": {
+    "B": {
+     "test_phase_b": "from hypothesis import given, strategies as st\n\nfrom solution import eat\n\nvals = st.integers(min_value=0, max_value=1000)\n\n\ndef check(args, exp):\n    out = eat(*args)\n    assert list(out) == exp, f\"input={args!r} output={out!r} expected={exp!r}\"\n\n\ndef test_example_enough_remaining():\n    \"\"\"When remaining exceeds need, eat(5, 6, 10) must return [11, 4].\"\"\"\n    check((5, 6, 10), [11, 4])\n\n\ndef test_example_leftover_one():\n    \"\"\"eat(4, 8, 9) must return [12, 1].\"\"\"\n    check((4, 8, 9), [12, 1])\n\n\ndef test_example_exact_match():\n    \"\"\"When need equals remaining, all carrots are eaten: eat(1, 10, 10) -> [11, 0].\"\"\"\n    check((1, 10, 10), [11, 0])\n\n\ndef test_example_insufficient():\n    \"\"\"When remaining is less than need, eat all remaining: eat(2, 11, 5) -> [7, 0].\"\"\"\n    check((2, 11, 5), [7, 0])\n\n\ndef test_all_zero():\n    \"\"\"With nothing eaten, needed, or remaining the result must be [0, 0].\"\"\"\n    check((0, 0, 0), [0, 0])\n\n\ndef test_zero_need():\n    \"\"\"With need 0 no carrots are eaten and remaining is unchanged.\"\"\"\n    check((7, 0, 20), [7, 20])\n\n\ndef test_zero_remaining():\n    \"\"\"With no remaining carrots, the total is unchanged and remaining is 0.\"\"\"\n    check((7, 5, 0), [7, 0])\n\n\ndef test_need_one_less_than_remaining():\n    \"\"\"When need is remaining-1, one carrot is left over.\"\"\"\n    check((10, 99, 100), [109, 1])\n\n\ndef test_need_one_more_than_remaining():\n    \"\"\"When need is remaining+1, all remaining are eaten and none are left.\"\"\"\n    check((10, 101, 100), [110, 0])\n\n\ndef test_max_values():\n    \"\"\"At maximum inputs, the totals must be computed correctly.\"\"\"\n    check((1000, 1000, 1000), [2000, 0])\n\n\ndef test_max_number_zero_need():\n    \"\"\"With max number and zero need, nothing changes.\"\"\"\n    check((1000, 0, 1000), [1000, 1000])\n\n\ndef test_return_type():\n    \"\"\"The result must be an array of exactly two integers.\"\"\"\n    out = eat(3, 4, 5)\n    assert isinstance(out, (list, tuple)) and len(out) == 2, f\"input=(3,4,5) output={out!r}\"\n    assert all(isinstance(v, int) for v in out), f\"input=(3,4,5) output={out!r}\"\n\n\n@given(vals, vals, vals)\ndef test_conservation(n, need, rem):\n    \"\"\"Carrots eaten plus carrots left must equal the previous total plus the stock.\"\"\"\n    out = eat(n, need, rem)\n    assert out[0] + out[1] == n + rem, f\"input={(n, need, rem)!r} output={out!r}\"\n\n\n@given(vals, vals, vals)\ndef test_sufficient_branch(n, need, rem):\n    \"\"\"If remaining >= need, the rabbit eats exactly need carrots.\"\"\"\n    if rem >= need:\n        out = eat(n, need, rem)\n        exp = [n + need, rem - need]\n        assert list(out) == exp, f\"input={(n, need, rem)!r} output={out!r}\"\n\n\n@given(vals, vals, vals)\ndef test_insufficient_branch(n, need, rem):\n    \"\"\"If remaining < need, the rabbit eats all remaining and none are left.\"\"\"\n    if rem < need:\n        out = eat(n, need, rem)\n        exp = [n + rem, 0]\n        assert list(out) == exp, f\"input={(n, need, rem)!r} output={out!r}\"\n\n\n@given(vals, vals, vals)\ndef test_bounds(n, need, rem):\n    \"\"\"Total eaten is at least number, left is between 0 and remaining, and at most need is eaten.\"\"\"\n    out = eat(n, need, rem)\n    assert n <= out[0] <= n + need, f\"input={(n, need, rem)!r} output={out!r}\"\n    assert 0 <= out[1] <= rem, f\"input={(n, need, rem)!r} output={out!r}\"\n"
+    }
+   },
+   "rounds": [
+    {
+     "round": 1,
+     "failing": 0
+    }
+   ],
+   "mutation": {
+    "mutants": 2,
+    "survivors": 0
+   },
+   "open_questions": [],
+   "usage": {
+    "builder": {
+     "input_tokens": 0,
+     "output_tokens": 0,
+     "calls": 0
+    },
+    "verifier": {
+     "input_tokens": 1048,
+     "output_tokens": 1577,
+     "calls": 1
+    }
+   },
+   "verifier_backend": "anthropic:claude-sonnet-5-5"
+  },
+  "AB": {
+   "programs": [
+    "def eat(number, need, remaining):\n    eaten = min(need, remaining)\n    return [number + eaten, remaining - eaten]\n"
+   ],
+   "final": "def eat(number, need, remaining):\n    eaten = min(need, remaining)\n    return [number + eaten, remaining - eaten]\n",
+   "evidence": {
+    "A": {
+     "test_phase_a": "from hypothesis import given, strategies as st\n\nfrom solution import eat\n\nvals = st.integers(min_value=0, max_value=1000)\n\n\ndef test_example_enough_remaining():\n    \"\"\"eat(5, 6, 10) must return [11, 4] per the specification example.\"\"\"\n    out = eat(5, 6, 10)\n    assert list(out) == [11, 4], f\"input={(5, 6, 10)!r} output={out!r}\"\n\n\ndef test_example_leftover_one():\n    \"\"\"eat(4, 8, 9) must return [12, 1] per the specification example.\"\"\"\n    out = eat(4, 8, 9)\n    assert list(out) == [12, 1], f\"input={(4, 8, 9)!r} output={out!r}\"\n\n\ndef test_example_exact():\n    \"\"\"When remaining equals need, the rabbit eats need and zero are left.\"\"\"\n    out = eat(1, 10, 10)\n    assert list(out) == [11, 0], f\"input={(1, 10, 10)!r} output={out!r}\"\n\n\ndef test_example_not_enough():\n    \"\"\"When remaining is less than need, the rabbit eats all remaining carrots.\"\"\"\n    out = eat(2, 11, 5)\n    assert list(out) == [7, 0], f\"input={(2, 11, 5)!r} output={out!r}\"\n\n\ndef test_zero_need():\n    \"\"\"With need 0 nothing is eaten, so the result is [number, remaining].\"\"\"\n    out = eat(7, 0, 13)\n    assert list(out) == [7, 13], f\"input={(7, 0, 13)!r} output={out!r}\"\n\n\ndef test_zero_remaining():\n    \"\"\"With no remaining carrots the total is unchanged and zero are left.\"\"\"\n    out = eat(7, 5, 0)\n    assert list(out) == [7, 0], f\"input={(7, 5, 0)!r} output={out!r}\"\n\n\ndef test_all_zero():\n    \"\"\"All-zero inputs must give [0, 0].\"\"\"\n    out = eat(0, 0, 0)\n    assert list(out) == [0, 0], f\"input={(0, 0, 0)!r} output={out!r}\"\n\n\ndef test_max_bounds():\n    \"\"\"Maximum-bound inputs must give [2000, 0].\"\"\"\n    out = eat(1000, 1000, 1000)\n    assert list(out) == [2000, 0], f\"input={(1000, 1000, 1000)!r} output={out!r}\"\n\n\n@given(vals, vals, vals)\ndef test_matches_formula(number, need, remaining):\n    \"\"\"The result must equal [number + eaten, remaining - eaten] with eaten = min(need, remaining).\"\"\"\n    out = eat(number, need, remaining)\n    eaten = min(need, remaining)\n    exp = [number + eaten, remaining - eaten]\n    assert list(out) == exp, f\"input={(number, need, remaining)!r} output={out!r}\"\n\n\n@given(vals, vals, vals)\ndef test_returns_two_elements(number, need, remaining):\n    \"\"\"The result must be an array of exactly two values.\"\"\"\n    out = eat(number, need, remaining)\n    assert len(out) == 2, f\"input={(number, need, remaining)!r} output={out!r}\"\n\n\n@given(vals, vals, vals)\ndef test_conservation(number, need, remaining):\n    \"\"\"Total eaten plus carrots left must equal number plus remaining.\"\"\"\n    out = eat(number, need, remaining)\n    assert out[0] + out[1] == number + remaining, f\"input={(number, need, remaining)!r} output={out!r}\"\n\n\n@given(vals, vals, vals)\ndef test_left_in_range(number, need, remaining):\n    \"\"\"Carrots left must be between 0 and remaining inclusive.\"\"\"\n    out = eat(number, need, remaining)\n    assert 0 <= out[1] <= remaining, f\"input={(number, need, remaining)!r} output={out!r}\"\n\n\n@given(vals, vals, vals)\ndef test_eaten_not_exceeding_need(number, need, remaining):\n    \"\"\"The rabbit never eats more than it needs, so total is at most number + need.\"\"\"\n    out = eat(number, need, remaining)\n    assert number <= out[0] <= number + need, f\"input={(number, need, remaining)!r} output={out!r}\"\n\n\n@given(vals, vals, vals)\ndef test_sufficient_stock_satisfies_need(number, need, remaining):\n    \"\"\"If remaining >= need, the rabbit eats exactly need carrots.\"\"\"\n    if remaining < need:\n        remaining, need = need, remaining\n    out = eat(number, need, remaining)\n    assert list(out) == [number + need, remaining - need], f\"input={(number, need, remaining)!r} output={out!r}\"\n\n\n@given(vals, vals, vals)\ndef test_insufficient_stock_empties(number, need, remaining):\n    \"\"\"If remaining < need, the rabbit eats everything and zero are left.\"\"\"\n    if remaining >= need:\n        if need == 1000:\n            return\n        remaining, need = need, remaining + 1 if remaining + 1 <= 1000 else remaining\n        if remaining >= need:\n            return\n    out = eat(number, need, remaining)\n    assert list(out) == [number + remaining, 0], f\"input={(number, need, remaining)!r} output={out!r}\"\n"
+    },
+    "B": {
+     "test_phase_b": "from hypothesis import given, strategies as st\n\nfrom solution import eat\n\nvals = st.integers(min_value=0, max_value=1000)\n\n\n@given(vals, vals)\ndef test_need_equals_remaining_boundary(number, n):\n    \"\"\"When need equals remaining, the rabbit eats exactly need and nothing is left.\"\"\"\n    out = eat(number, n, n)\n    assert list(out) == [number + n, 0], f\"input={(number, n, n)!r} output={out!r}\"\n\n\n@given(vals, st.integers(min_value=0, max_value=999))\ndef test_need_one_more_than_remaining(number, remaining):\n    \"\"\"When need exceeds remaining by one, the rabbit eats all remaining and none is left.\"\"\"\n    need = remaining + 1\n    out = eat(number, need, remaining)\n    assert list(out) == [number + remaining, 0], f\"input={(number, need, remaining)!r} output={out!r}\"\n\n\n@given(vals, st.integers(min_value=0, max_value=999))\ndef test_need_one_less_than_remaining(number, need):\n    \"\"\"When remaining exceeds need by one, the rabbit eats need and exactly one is left.\"\"\"\n    remaining = need + 1\n    out = eat(number, need, remaining)\n    assert list(out) == [number + need, 1], f\"input={(number, need, remaining)!r} output={out!r}\"\n\n\ndef test_zero_need_max_others():\n    \"\"\"With need 0 and maximal other inputs, nothing is eaten.\"\"\"\n    out = eat(1000, 0, 1000)\n    assert list(out) == [1000, 1000], f\"input={(1000, 0, 1000)!r} output={out!r}\"\n\n\ndef test_need_max_nothing_remaining():\n    \"\"\"With no carrots in stock and a large need, nothing is eaten and none is left.\"\"\"\n    out = eat(0, 1000, 0)\n    assert list(out) == [0, 0], f\"input={(0, 1000, 0)!r} output={out!r}\"\n\n\ndef test_need_max_remaining_max_number_zero():\n    \"\"\"Needing 1000 with 1000 in stock and none eaten gives [1000, 0].\"\"\"\n    out = eat(0, 1000, 1000)\n    assert list(out) == [1000, 0], f\"input={(0, 1000, 1000)!r} output={out!r}\"\n\n\ndef test_eat_one_of_many():\n    \"\"\"Eating one carrot from a full stock leaves 999 and raises the total by one.\"\"\"\n    out = eat(1000, 1, 1000)\n    assert list(out) == [1001, 999], f\"input={(1000, 1, 1000)!r} output={out!r}\"\n\n\ndef test_need_one_empty_stock():\n    \"\"\"Needing one carrot with an empty stock leaves the total unchanged and none left.\"\"\"\n    out = eat(0, 1, 0)\n    assert list(out) == [0, 0], f\"input={(0, 1, 0)!r} output={out!r}\"\n\n\ndef test_need_max_small_stock():\n    \"\"\"A maximal need with a small stock means eating the entire stock.\"\"\"\n    out = eat(500, 1000, 1)\n    assert list(out) == [501, 0], f\"input={(500, 1000, 1)!r} output={out!r}\"\n\n\n@given(vals, vals, vals)\ndef test_left_independent_of_number(number, need, remaining):\n    \"\"\"The number of carrots left must not depend on how many were already eaten.\"\"\"\n    out = eat(number, need, remaining)\n    base = eat(0, need, remaining)\n    assert out[1] == base[1], f\"input={(number, need, remaining)!r} output={out!r} base={base!r}\"\n\n\n@given(vals, vals, vals)\ndef test_total_shifts_with_number(number, need, remaining):\n    \"\"\"The eaten total must increase by exactly the number already eaten.\"\"\"\n    out = eat(number, need, remaining)\n    base = eat(0, need, remaining)\n    assert out[0] - number == base[0], f\"input={(number, need, remaining)!r} output={out!r} base={base!r}\"\n\n\n@given(vals, vals, vals)\ndef test_either_need_met_or_stock_empty(number, need, remaining):\n    \"\"\"After the meal either the need is fully satisfied or no carrots remain.\"\"\"\n    out = eat(number, need, remaining)\n    assert out[0] - number == need or out[1] == 0, f\"input={(number, need, remaining)!r} output={out!r}\"\n\n\n@given(vals, vals, vals)\ndef test_never_eats_more_than_stock(number, need, remaining):\n    \"\"\"The rabbit cannot eat more carrots than were in stock.\"\"\"\n    out = eat(number, need, remaining)\n    assert out[0] - number <= remaining, f\"input={(number, need, remaining)!r} output={out!r}\"\n\n\n@given(vals, vals, st.integers(min_value=0, max_value=999))\ndef test_more_stock_never_eats_less(number, need, remaining):\n    \"\"\"Having more carrots in stock never reduces the number eaten.\"\"\"\n    a = eat(number, need, remaining)\n    b = eat(number, need, remaining + 1)\n    assert b[0] >= a[0], f\"input={(number, need, remaining)!r} output_a={a!r} output_b={b!r}\"\n\n\n@given(st.integers(min_value=0, max_value=1000), st.integers(min_value=0, max_value=999), vals)\ndef test_larger_need_never_eats_less(number, need, remaining):\n    \"\"\"A larger need never results in fewer carrots eaten.\"\"\"\n    a = eat(number, need, remaining)\n    b = eat(number, need + 1, remaining)\n    assert b[0] >= a[0] and b[1] <= a[1], f\"input={(number, need, remaining)!r} output_a={a!r} output_b={b!r}\"\n\n\n@given(vals, vals, vals)\ndef test_results_are_integers(number, need, remaining):\n    \"\"\"Both returned values are integers, as carrot counts.\"\"\"\n    out = eat(number, need, remaining)\n    assert all(isinstance(x, int) for x in out), f\"input={(number, need, remaining)!r} output={out!r}\"\n\n\n@given(vals, vals, vals)\ndef test_deterministic(number, need, remaining):\n    \"\"\"Calling the function twice with the same inputs gives the same result.\"\"\"\n    a = eat(number, need, remaining)\n    b = eat(number, need, remaining)\n    assert list(a) == list(b), f\"input={(number, need, remaining)!r} output_a={a!r} output_b={b!r}\"\n"
+    }
+   },
+   "rounds": [
+    {
+     "round": 1,
+     "failing": 0
+    }
+   ],
+   "mutation": {
+    "mutants": 2,
+    "survivors": 0
+   },
+   "open_questions": [],
+   "usage": {
+    "builder": {
+     "input_tokens": 0,
+     "output_tokens": 0,
+     "calls": 0
+    },
+    "verifier": {
+     "input_tokens": 6617,
+     "output_tokens": 4702,
+     "calls": 2
+    }
+   },
+   "verifier_backend": "anthropic:claude-sonnet-5-5"
+  },
+  "ABp": {
+   "programs": [
+    "def eat(number, need, remaining):\n    eaten = min(need, remaining)\n    return [number + eaten, remaining - eaten]\n",
+    "def eat(number, need, remaining):\n    eaten = min(need, remaining)\n    return [number + eaten, remaining - eaten]\n",
+    "def eat(number, need, remaining):\n    eaten = min(need, remaining)\n    return [number + eaten, remaining - eaten]\n",
+    "def eat(number, need, remaining):\n    eaten = min(need, remaining)\n    return [number + eaten, remaining - eaten]\n"
+   ],
+   "final": "def eat(number, need, remaining):\n    eaten = min(need, remaining)\n    return [number + eaten, remaining - eaten]\n",
+   "evidence": {
+    "A": {
+     "test_phase_a": "import pytest\nfrom hypothesis import given, strategies as st\n\nfrom solution import eat\n\n\nVALID_INT = st.integers(min_value=0, max_value=1000)\n\n\n@pytest.mark.parametrize(\n    (\"number\", \"need\", \"remaining\", \"expected\"),\n    [\n        (5, 6, 10, [11, 4]),\n        (4, 8, 9, [12, 1]),\n        (1, 10, 10, [11, 0]),\n        (2, 11, 5, [7, 0]),\n    ],\n)\ndef test_specification_examples(number, need, remaining, expected):\n    \"\"\"The function must return the exact results shown in the specification examples.\"\"\"\n    out = eat(number, need, remaining)\n    assert out == expected, f\"input={(number, need, remaining)!r} output={out!r}\"\n\n\n@given(number=VALID_INT, remaining=VALID_INT)\ndef test_zero_need_eats_no_additional_carrots(number, remaining):\n    \"\"\"When need is zero, the function must leave both the eaten total and remaining stock unchanged.\"\"\"\n    out = eat(number, 0, remaining)\n    expected = [number, remaining]\n    assert out == expected, f\"input={(number, 0, remaining)!r} output={out!r}\"\n\n\n@given(number=VALID_INT, need=VALID_INT)\ndef test_zero_remaining_means_no_additional_carrots_can_be_eaten(number, need):\n    \"\"\"When remaining is zero, the function must return the original eaten total and zero carrots left.\"\"\"\n    out = eat(number, need, 0)\n    expected = [number, 0]\n    assert out == expected, f\"input={(number, need, 0)!r} output={out!r}\"\n\n\n@given(number=VALID_INT, need=VALID_INT)\ndef test_exactly_enough_remaining_carrots_are_all_eaten(number, need):\n    \"\"\"When remaining equals need, the function must eat exactly that amount and leave zero carrots.\"\"\"\n    out = eat(number, need, need)\n    expected = [number + need, 0]\n    assert out == expected, f\"input={(number, need, need)!r} output={out!r}\"\n\n\n@pytest.mark.parametrize(\n    (\"number\", \"need\", \"remaining\", \"expected\"),\n    [\n        (0, 0, 0, [0, 0]),\n        (1000, 0, 1000, [1000, 1000]),\n        (1000, 1000, 0, [1000, 0]),\n        (0, 1000, 1000, [1000, 0]),\n        (1000, 1000, 1000, [2000, 0]),\n        (1000, 999, 1000, [1999, 1]),\n        (999, 1000, 999, [1998, 0]),\n    ],\n)\ndef test_inclusive_constraint_boundaries(number, need, remaining, expected):\n    \"\"\"The function must handle inclusive boundary values from the stated input constraints.\"\"\"\n    out = eat(number, need, remaining)\n    assert out == expected, f\"input={(number, need, remaining)!r} output={out!r}\"\n\n\n@given(number=VALID_INT, need=VALID_INT, remaining=VALID_INT)\ndef test_general_consumption_formula(number, need, remaining):\n    \"\"\"For all valid inputs, the function must eat exactly the lesser of need and remaining.\"\"\"\n    out = eat(number, need, remaining)\n    consumed = min(need, remaining)\n    expected = [number + consumed, remaining - consumed]\n    assert out == expected, f\"input={(number, need, remaining)!r} output={out!r}\"\n\n\n@given(number=VALID_INT, need=VALID_INT, remaining=VALID_INT)\ndef test_output_shape_and_conservation_invariants(number, need, remaining):\n    \"\"\"For all valid inputs, the output must be a two-item list that conserves the original stock.\"\"\"\n    out = eat(number, need, remaining)\n    msg = f\"input={(number, need, remaining)!r} output={out!r}\"\n    assert isinstance(out, list), msg\n    assert len(out) == 2, msg\n    assert all(isinstance(value, int) for value in out), msg\n\n    total_eaten, left = out\n    consumed = total_eaten - number\n\n    assert consumed == min(need, remaining), msg\n    assert left == remaining - consumed, msg\n    assert total_eaten + left == number + remaining, msg\n    assert 0 <= left <= remaining, msg\n    assert 0 <= consumed <= need, msg\n    assert 0 <= consumed <= remaining, msg\n"
+    },
+    "B": {
+     "test_phase_b": "import pytest\nfrom hypothesis import given, strategies as st\n\nfrom solution import eat\n\n\nVALID_INT = st.integers(min_value=0, max_value=1000)\n\n\n@given(\n    number=VALID_INT,\n    need=st.integers(min_value=0, max_value=999),\n    extra=st.integers(min_value=1, max_value=1000),\n)\ndef test_when_stock_exceeds_need_only_needed_carrots_are_eaten(number, need, extra):\n    \"\"\"When remaining is greater than need, the function must eat exactly need carrots and leave the surplus.\"\"\"\n    remaining = min(1000, need + extra)\n    if remaining <= need:\n        remaining = need + 1\n    out = eat(number, need, remaining)\n    expected = [number + need, remaining - need]\n    assert out == expected, f\"input={(number, need, remaining)!r} output={out!r}\"\n\n\n@given(\n    number=VALID_INT,\n    remaining=st.integers(min_value=0, max_value=999),\n    extra=st.integers(min_value=1, max_value=1000),\n)\ndef test_when_need_exceeds_stock_all_remaining_carrots_are_eaten(number, remaining, extra):\n    \"\"\"When need is greater than remaining, the function must eat all remaining carrots and leave none.\"\"\"\n    need = min(1000, remaining + extra)\n    if need <= remaining:\n        need = remaining + 1\n    out = eat(number, need, remaining)\n    expected = [number + remaining, 0]\n    assert out == expected, f\"input={(number, need, remaining)!r} output={out!r}\"\n\n\n@given(number=VALID_INT, need=st.integers(min_value=1, max_value=999))\ndef test_consumption_switches_correctly_around_exact_need_threshold(number, need):\n    \"\"\"Around the exact-need threshold, the function must change from eating all stock to leaving surplus stock.\"\"\"\n    inputs_and_expected = [\n        ((number, need, need - 1), [number + need - 1, 0]),\n        ((number, need, need), [number + need, 0]),\n        ((number, need, need + 1), [number + need, 1]),\n    ]\n\n    for args, expected in inputs_and_expected:\n        out = eat(*args)\n        assert out == expected, f\"input={args!r} output={out!r}\"\n\n\n@pytest.mark.parametrize(\n    (\"number\", \"need\", \"remaining\", \"expected\"),\n    [\n        (0, 1, 2, [1, 1]),\n        (0, 2, 1, [1, 0]),\n        (1000, 1, 2, [1001, 1]),\n        (1000, 2, 1, [1001, 0]),\n        (999, 1, 1000, [1000, 999]),\n        (999, 1000, 1, [1000, 0]),\n        (1, 999, 1000, [1000, 1]),\n        (1, 1000, 999, [1000, 0]),\n    ],\n)\ndef test_near_boundary_branch_cases(number, need, remaining, expected):\n    \"\"\"Near the input boundaries, the function must still apply the same eat-needed-or-eat-all rule.\"\"\"\n    out = eat(number, need, remaining)\n    assert out == expected, f\"input={(number, need, remaining)!r} output={out!r}\"\n\n\n@given(number=VALID_INT, need=st.integers(min_value=1, max_value=1000), remaining=VALID_INT)\ndef test_total_eaten_never_exceeds_original_total_plus_need(number, need, remaining):\n    \"\"\"For all valid inputs, the total eaten after the meal must not exceed the original total plus need.\"\"\"\n    out = eat(number, need, remaining)\n    assert out[0] <= number + need, f\"input={(number, need, remaining)!r} output={out!r}\"\n\n\n@given(number=VALID_INT, need=VALID_INT, remaining=VALID_INT)\ndef test_remaining_stock_is_zero_exactly_when_stock_does_not_exceed_need(number, need, remaining):\n    \"\"\"For all valid inputs, no carrots must remain exactly when the available stock is not greater than need.\"\"\"\n    out = eat(number, need, remaining)\n    expected_zero_remaining = remaining <= need\n    observed_zero_remaining = out[1] == 0\n    assert observed_zero_remaining == expected_zero_remaining, (\n        f\"input={(number, need, remaining)!r} output={out!r}\"\n    )\n"
+    }
+   },
+   "rounds": [
+    {
+     "round": 1,
+     "failing": 3,
+     "counterexamples": "1. Guarantee: The function must return the exact results shown in the specification examples.\n  Observed: TypeError: \"test_specification_examples() missing 4 required positional arguments: 'number', 'need', 'remaining', and 'expected'\"\n2. Guarantee: The function must handle inclusive boundary values from the stated input constraints.\n  Observed: TypeError: \"test_inclusive_constraint_boundaries() missing 4 required positional arguments: 'number', 'need', 'remaining', and 'expected'\"\n3. Guarantee: Near the input boundaries, the function must still apply the same eat-needed-or-eat-all rule.\n  Observed: TypeError: \"test_near_boundary_branch_cases() missing 4 required positional arguments: 'number', 'need', 'remaining', and 'expected'\""
+    },
+    {
+     "round": 2,
+     "failing": 3,
+     "counterexamples": "1. Guarantee: The function must return the exact results shown in the specification examples.\n  Observed: TypeError: \"test_specification_examples() missing 4 required positional arguments: 'number', 'need', 'remaining', and 'expected'\"\n2. Guarantee: The function must handle inclusive boundary values from the stated input constraints.\n  Observed: TypeError: \"test_inclusive_constraint_boundaries() missing 4 required positional arguments: 'number', 'need', 'remaining', and 'expected'\"\n3. Guarantee: Near the input boundaries, the function must still apply the same eat-needed-or-eat-all rule.\n  Observed: TypeError: \"test_near_boundary_branch_cases() missing 4 required positional arguments: 'number', 'need', 'remaining', and 'expected'\""
+    },
+    {
+     "round": 3,
+     "failing": 3,
+     "counterexamples": "1. Guarantee: The function must return the exact results shown in the specification examples.\n  Observed: TypeError: \"test_specification_examples() missing 4 required positional arguments: 'number', 'need', 'remaining', and 'expected'\"\n2. Guarantee: The function must handle inclusive boundary values from the stated input constraints.\n  Observed: TypeError: \"test_inclusive_constraint_boundaries() missing 4 required positional arguments: 'number', 'need', 'remaining', and 'expected'\"\n3. Guarantee: Near the input boundaries, the function must still apply the same eat-needed-or-eat-all rule.\n  Observed: TypeError: \"test_near_boundary_branch_cases() missing 4 required positional arguments: 'number', 'need', 'remaining', and 'expected'\""
+    }
+   ],
+   "mutation": {
+    "mutants": 2,
+    "survivors": 0
+   },
+   "open_questions": [],
+   "usage": {
+    "builder": {
+     "input_tokens": 8099,
+     "output_tokens": 1783,
+     "calls": 3
+    },
+    "verifier": {
+     "input_tokens": 4054,
+     "output_tokens": 4596,
+     "calls": 2
+    }
+   },
+   "verifier_backend": "openai:gpt-5.5-2026-04-23"
+  }
+ },
+ "seconds": 181.3
+}

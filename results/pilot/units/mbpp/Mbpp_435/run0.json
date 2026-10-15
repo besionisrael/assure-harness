@@ -1,0 +1,212 @@
+{
+ "task_id": "Mbpp/435",
+ "benchmark": "mbpp",
+ "run": 0,
+ "prompt_version": "2026-10-08.1",
+ "backends": {
+  "builder": "anthropic:claude-sonnet-5-5",
+  "verifier": "anthropic:claude-sonnet-5-5",
+  "verifier_alt": "openai:gpt-5.5-2026-04-23"
+ },
+ "p0": "def last_Digit(n):\n    return abs(int(n)) % 10\n",
+ "p0_info": {
+  "self_rounds": 0,
+  "self_converged": true
+ },
+ "usage_shared": {
+  "input_tokens": 409,
+  "output_tokens": 283,
+  "calls": 1
+ },
+ "conditions": {
+  "SV": {
+   "programs": [
+    "def last_Digit(n):\n    return abs(int(n)) % 10\n"
+   ],
+   "final": "def last_Digit(n):\n    return abs(int(n)) % 10\n",
+   "evidence": {
+    "builder": {
+     "test_solution": "from solution import last_Digit\n\n\ndef test_basic():\n    assert last_Digit(123) == 3\n    assert last_Digit(25) == 5\n    assert last_Digit(30) == 0\n\n\ndef test_single_digit():\n    assert last_Digit(0) == 0\n    assert last_Digit(7) == 7\n\n\ndef test_negative():\n    assert last_Digit(-123) == 3\n    assert last_Digit(-10) == 0\n\n\ndef test_large():\n    assert last_Digit(10**30 + 9) == 9\n"
+    }
+   },
+   "rounds": [],
+   "usage": {
+    "input_tokens": 0,
+    "output_tokens": 0,
+    "calls": 0
+   },
+   "open_questions": []
+  },
+  "A": {
+   "programs": [
+    "def last_Digit(n):\n    return abs(int(n)) % 10\n"
+   ],
+   "final": "def last_Digit(n):\n    return abs(int(n)) % 10\n",
+   "evidence": {
+    "A": {
+     "test_phase_a": "from hypothesis import given, strategies as st\n\nfrom solution import last_Digit\n\n\ndef test_spec_example():\n    \"\"\"The last digit of 123 must be 3.\"\"\"\n    out = last_Digit(123)\n    assert out == 3, f\"input={123!r} output={out!r}\"\n\n\ndef test_zero():\n    \"\"\"The last digit of 0 must be 0.\"\"\"\n    out = last_Digit(0)\n    assert out == 0, f\"input={0!r} output={out!r}\"\n\n\ndef test_single_digits():\n    \"\"\"The last digit of a single-digit number must be the number itself.\"\"\"\n    for d in range(10):\n        out = last_Digit(d)\n        assert out == d, f\"input={d!r} output={out!r}\"\n\n\ndef test_multiples_of_ten():\n    \"\"\"The last digit of a multiple of ten must be 0.\"\"\"\n    for n in (10, 20, 100, 1000, 1234567890):\n        out = last_Digit(n)\n        assert out == 0, f\"input={n!r} output={out!r}\"\n\n\ndef test_examples_misc():\n    \"\"\"The last digit of a number must be its final decimal digit.\"\"\"\n    for n, exp in ((7, 7), (19, 9), (100001, 1), (987654321, 1), (10**30 + 5, 5)):\n        out = last_Digit(n)\n        assert out == exp, f\"input={n!r} output={out!r}\"\n\n\n@given(st.integers(min_value=0, max_value=10**40))\ndef test_matches_mod_ten(n):\n    \"\"\"The last digit of a non-negative integer must equal n mod 10.\"\"\"\n    out = last_Digit(n)\n    assert out == n % 10, f\"input={n!r} output={out!r}\"\n\n\n@given(st.integers(min_value=0, max_value=10**40))\ndef test_in_digit_range(n):\n    \"\"\"The last digit of a non-negative integer must be between 0 and 9.\"\"\"\n    out = last_Digit(n)\n    assert 0 <= out <= 9, f\"input={n!r} output={out!r}\"\n\n\n@given(st.integers(min_value=0, max_value=10**40))\ndef test_matches_string_last_char(n):\n    \"\"\"The last digit must equal the last character of the decimal representation.\"\"\"\n    out = last_Digit(n)\n    assert out == int(str(n)[-1]), f\"input={n!r} output={out!r}\"\n\n\n@given(st.integers(min_value=0, max_value=10**30), st.integers(min_value=0, max_value=10**10))\ndef test_invariant_under_adding_multiples_of_ten(n, k):\n    \"\"\"The last digit must be unchanged when a multiple of ten is added.\"\"\"\n    a = last_Digit(n)\n    b = last_Digit(n + 10 * k)\n    assert a == b, f\"input={n!r},{k!r} output={a!r},{b!r}\"\n\n\n@given(st.integers(min_value=0, max_value=10**30), st.integers(min_value=0, max_value=9))\ndef test_appending_digit(n, d):\n    \"\"\"The last digit of a number formed by appending digit d must be d.\"\"\"\n    m = n * 10 + d\n    out = last_Digit(m)\n    assert out == d, f\"input={m!r} output={out!r}\"\n"
+    }
+   },
+   "rounds": [
+    {
+     "round": 1,
+     "failing": 0
+    }
+   ],
+   "mutation": null,
+   "open_questions": [
+    "Negative numbers: the spec does not say whether `last_Digit(-123)` is 3 or 7 (or -3), so I do not test it.",
+    "Non-integer inputs (floats, strings) are unspecified, so I do not test them.",
+    "Return type: the spec does not say whether the result is an int, but a digit is naturally an int. I compare by value and do not test `isinstance`."
+   ],
+   "usage": {
+    "builder": {
+     "input_tokens": 0,
+     "output_tokens": 0,
+     "calls": 0
+    },
+    "verifier": {
+     "input_tokens": 698,
+     "output_tokens": 1312,
+     "calls": 1
+    }
+   },
+   "verifier_backend": "anthropic:claude-sonnet-5-5"
+  },
+  "B": {
+   "programs": [
+    "def last_Digit(n):\n    return abs(int(n)) % 10\n"
+   ],
+   "final": "def last_Digit(n):\n    return abs(int(n)) % 10\n",
+   "evidence": {
+    "B": {
+     "test_phase_b": "from hypothesis import given, strategies as st\n\nfrom solution import last_Digit\n\n\ndef test_spec_example():\n    \"\"\"The last digit of 123 must be 3.\"\"\"\n    out = last_Digit(123)\n    assert out == 3, f\"input={123!r} output={out!r}\"\n\n\ndef test_zero():\n    \"\"\"The last digit of 0 must be 0.\"\"\"\n    out = last_Digit(0)\n    assert out == 0, f\"input={0!r} output={out!r}\"\n\n\ndef test_single_digits():\n    \"\"\"The last digit of a single-digit number must be that number.\"\"\"\n    for d in range(10):\n        out = last_Digit(d)\n        assert out == d, f\"input={d!r} output={out!r}\"\n\n\ndef test_multiples_of_ten():\n    \"\"\"The last digit of a number ending in zero must be 0.\"\"\"\n    for n in (10, 20, 100, 1000, 9990, 10**18):\n        out = last_Digit(n)\n        assert out == 0, f\"input={n!r} output={out!r}\"\n\n\ndef test_digit_boundaries():\n    \"\"\"The last digit of numbers around a power of ten must be read from the final decimal place.\"\"\"\n    cases = {9: 9, 10: 0, 11: 1, 99: 9, 100: 0, 101: 1, 999999999: 9, 1000000000: 0}\n    for n, exp in cases.items():\n        out = last_Digit(n)\n        assert out == exp, f\"input={n!r} output={out!r}\"\n\n\ndef test_very_large_integer():\n    \"\"\"The last digit of an arbitrarily large integer must be its final decimal digit.\"\"\"\n    n = int(\"9\" * 50 + \"7\")\n    out = last_Digit(n)\n    assert out == 7, f\"input={n!r} output={out!r}\"\n\n\n@given(st.integers(min_value=0, max_value=10**30))\ndef test_matches_decimal_string(n):\n    \"\"\"The last digit must equal the final character of the decimal representation.\"\"\"\n    out = last_Digit(n)\n    exp = int(str(n)[-1])\n    assert out == exp, f\"input={n!r} output={out!r}\"\n\n\n@given(st.integers(min_value=0, max_value=10**30))\ndef test_in_range_zero_to_nine(n):\n    \"\"\"The last digit must be a single digit between 0 and 9.\"\"\"\n    out = last_Digit(n)\n    assert isinstance(out, int) and 0 <= out <= 9, f\"input={n!r} output={out!r}\"\n\n\n@given(st.integers(min_value=0, max_value=10**20), st.integers(min_value=0, max_value=10**10))\ndef test_adding_multiple_of_ten_preserves_last_digit(n, k):\n    \"\"\"Adding a multiple of 10 to a number must not change its last digit.\"\"\"\n    a = last_Digit(n)\n    b = last_Digit(n + 10 * k)\n    assert a == b, f\"input={n!r},{k!r} output={a!r},{b!r}\"\n\n\n@given(st.integers(min_value=0, max_value=10**20), st.integers(min_value=1, max_value=10**10))\ndef test_prefixing_digits_preserves_last_digit(n, p):\n    \"\"\"Prepending digits to a number must not change its last digit.\"\"\"\n    m = int(str(p) + str(n))\n    a = last_Digit(n)\n    b = last_Digit(m)\n    assert a == b, f\"input={n!r},{m!r} output={a!r},{b!r}\"\n\n\n@given(st.integers(min_value=0, max_value=10**20), st.integers(min_value=0, max_value=9))\ndef test_constructed_last_digit(prefix, d):\n    \"\"\"A number built by appending digit d to a prefix must have last digit d.\"\"\"\n    n = prefix * 10 + d\n    out = last_Digit(n)\n    assert out == d, f\"input={n!r} output={out!r}\"\n"
+    }
+   },
+   "rounds": [
+    {
+     "round": 1,
+     "failing": 0
+    }
+   ],
+   "mutation": {
+    "mutants": 3,
+    "survivors": 0
+   },
+   "open_questions": [],
+   "usage": {
+    "builder": {
+     "input_tokens": 0,
+     "output_tokens": 0,
+     "calls": 0
+    },
+    "verifier": {
+     "input_tokens": 705,
+     "output_tokens": 1673,
+     "calls": 1
+    }
+   },
+   "verifier_backend": "anthropic:claude-sonnet-5-5"
+  },
+  "AB": {
+   "programs": [
+    "def last_Digit(n):\n    return abs(int(n)) % 10\n"
+   ],
+   "final": "def last_Digit(n):\n    return abs(int(n)) % 10\n",
+   "evidence": {
+    "A": {
+     "test_phase_a": "from hypothesis import given, strategies as st\nfrom solution import last_Digit\n\n\ndef test_example_123():\n    \"\"\"The last digit of 123 must be 3.\"\"\"\n    out = last_Digit(123)\n    assert out == 3, f\"input={123!r} output={out!r}\"\n\n\ndef test_zero():\n    \"\"\"The last digit of 0 must be 0.\"\"\"\n    out = last_Digit(0)\n    assert out == 0, f\"input={0!r} output={out!r}\"\n\n\ndef test_single_digits():\n    \"\"\"The last digit of a single-digit number must be the number itself.\"\"\"\n    for d in range(10):\n        out = last_Digit(d)\n        assert out == d, f\"input={d!r} output={out!r}\"\n\n\ndef test_multiples_of_ten():\n    \"\"\"The last digit of a multiple of ten must be 0.\"\"\"\n    for n in (10, 20, 100, 1000, 123450):\n        out = last_Digit(n)\n        assert out == 0, f\"input={n!r} output={out!r}\"\n\n\ndef test_assorted_examples():\n    \"\"\"The last digit of a number must be its final decimal digit.\"\"\"\n    for n, exp in ((19, 9), (101, 1), (99999, 9), (1234567890123456789, 9)):\n        out = last_Digit(n)\n        assert out == exp, f\"input={n!r} output={out!r}\"\n\n\n@given(st.integers(min_value=0, max_value=10**30))\ndef test_matches_mod_ten(n):\n    \"\"\"The last digit of a non-negative integer must equal n mod 10.\"\"\"\n    out = last_Digit(n)\n    assert out == n % 10, f\"input={n!r} output={out!r}\"\n\n\n@given(st.integers(min_value=0, max_value=10**30))\ndef test_in_range(n):\n    \"\"\"The last digit of a non-negative integer must be between 0 and 9 inclusive.\"\"\"\n    out = last_Digit(n)\n    assert 0 <= out <= 9, f\"input={n!r} output={out!r}\"\n\n\n@given(st.integers(min_value=0, max_value=10**30))\ndef test_matches_string_last_char(n):\n    \"\"\"The last digit must equal the last character of the decimal representation.\"\"\"\n    out = last_Digit(n)\n    assert out == int(str(n)[-1]), f\"input={n!r} output={out!r}\"\n\n\n@given(st.integers(min_value=0, max_value=10**30))\ndef test_shift_invariance(n):\n    \"\"\"Adding 10 to a number must not change its last digit.\"\"\"\n    a = last_Digit(n)\n    b = last_Digit(n + 10)\n    assert a == b, f\"input={n!r} output={a!r} shifted_output={b!r}\"\n\n\n@given(st.integers(min_value=0, max_value=10**20), st.integers(min_value=0, max_value=9))\ndef test_append_digit(prefix, d):\n    \"\"\"Appending digit d to a number's decimal form must give last digit d.\"\"\"\n    n = prefix * 10 + d\n    out = last_Digit(n)\n    assert out == d, f\"input={n!r} output={out!r}\"\n"
+    },
+    "B": {
+     "test_phase_b": "from hypothesis import given, strategies as st\nfrom solution import last_Digit\n\n\ndef test_boundaries_around_ten():\n    \"\"\"The last digit of numbers around the one/two-digit boundary must be their final digit.\"\"\"\n    for n, exp in ((9, 9), (10, 0), (11, 1), (19, 9), (20, 0), (99, 9), (100, 0), (101, 1)):\n        out = last_Digit(n)\n        assert out == exp, f\"input={n!r} output={out!r}\"\n\n\ndef test_powers_of_ten():\n    \"\"\"The last digit of any positive power of ten must be 0.\"\"\"\n    for k in range(1, 60):\n        n = 10 ** k\n        out = last_Digit(n)\n        assert out == 0, f\"input={n!r} output={out!r}\"\n\n\ndef test_all_nines():\n    \"\"\"The last digit of a number consisting only of 9s must be 9.\"\"\"\n    for k in range(1, 60):\n        n = 10 ** k - 1\n        out = last_Digit(n)\n        assert out == 9, f\"input={n!r} output={out!r}\"\n\n\ndef test_very_large_integers():\n    \"\"\"The last digit of an arbitrarily large integer must be its final decimal digit.\"\"\"\n    for d in range(10):\n        n = 10 ** 5000 + d\n        out = last_Digit(n)\n        assert out == d, f\"input=10**5000+{d} output={out!r}\"\n\n\ndef test_repdigits():\n    \"\"\"The last digit of a repdigit number must be the repeated digit.\"\"\"\n    for d in range(1, 10):\n        n = int(str(d) * 12)\n        out = last_Digit(n)\n        assert out == d, f\"input={n!r} output={out!r}\"\n\n\ndef test_consecutive_cycle():\n    \"\"\"Consecutive integers must have last digits cycling 0 through 9.\"\"\"\n    for n in range(0, 200):\n        out = last_Digit(n)\n        assert out == n % 10, f\"input={n!r} output={out!r}\"\n\n\n@given(st.integers(min_value=0, max_value=10**400))\ndef test_huge_matches_mod_ten(n):\n    \"\"\"The last digit of a huge non-negative integer must equal n mod 10.\"\"\"\n    out = last_Digit(n)\n    assert out == n % 10, f\"input={n!r} output={out!r}\"\n\n\n@given(st.integers(min_value=0, max_value=10**30))\ndef test_idempotent(n):\n    \"\"\"The last digit of a number's last digit must be that same digit.\"\"\"\n    d = last_Digit(n)\n    out = last_Digit(d)\n    assert out == d, f\"input={n!r} first={d!r} output={out!r}\"\n\n\n@given(st.integers(min_value=0, max_value=10**30), st.integers(min_value=0, max_value=10**30))\ndef test_sum_property(a, b):\n    \"\"\"The last digit of a sum must equal the last digit of the sum of the operands' last digits.\"\"\"\n    out = last_Digit(a + b)\n    exp = last_Digit(last_Digit(a) + last_Digit(b))\n    assert out == exp, f\"input=({a!r},{b!r}) output={out!r} expected={exp!r}\"\n\n\n@given(st.integers(min_value=0, max_value=10**30), st.integers(min_value=0, max_value=10**30))\ndef test_product_property(a, b):\n    \"\"\"The last digit of a product must equal the last digit of the product of the operands' last digits.\"\"\"\n    out = last_Digit(a * b)\n    exp = last_Digit(last_Digit(a) * last_Digit(b))\n    assert out == exp, f\"input=({a!r},{b!r}) output={out!r} expected={exp!r}\"\n\n\n@given(st.integers(min_value=0, max_value=10**30))\ndef test_times_ten_is_zero(n):\n    \"\"\"The last digit of any multiple of ten must be 0.\"\"\"\n    m = n * 10\n    out = last_Digit(m)\n    assert out == 0, f\"input={m!r} output={out!r}\"\n\n\n@given(st.integers(min_value=0, max_value=10**30), st.integers(min_value=0, max_value=10**6))\ndef test_adding_multiple_of_ten(n, k):\n    \"\"\"Adding any multiple of ten to a number must not change its last digit.\"\"\"\n    a = last_Digit(n)\n    b = last_Digit(n + 10 * k)\n    assert a == b, f\"input=({n!r},{k!r}) output={a!r} shifted_output={b!r}\"\n"
+    }
+   },
+   "rounds": [
+    {
+     "round": 1,
+     "failing": 0
+    }
+   ],
+   "mutation": {
+    "mutants": 3,
+    "survivors": 0
+   },
+   "open_questions": [
+    "Negative inputs: the last digit could be `n % 10` or `abs(n) % 10`, and the specification does not say which. I will not test negatives.",
+    "Non-integer inputs (floats, strings): the specification does not say what to return. I will not test them.",
+    "The return type (int vs str) is only implied by the assert example, where `== 3` implies an int. I will check int values only through equality with ints, and the range property will only apply to the int value."
+   ],
+   "usage": {
+    "builder": {
+     "input_tokens": 0,
+     "output_tokens": 0,
+     "calls": 0
+    },
+    "verifier": {
+     "input_tokens": 4182,
+     "output_tokens": 3431,
+     "calls": 2
+    }
+   },
+   "verifier_backend": "anthropic:claude-sonnet-5-5"
+  },
+  "ABp": {
+   "programs": [
+    "def last_Digit(n):\n    return abs(int(n)) % 10\n",
+    "def last_Digit(n):\n    return abs(int(n)) % 10\n",
+    "def last_Digit(n):\n    return abs(int(n)) % 10\n",
+    "def last_Digit(n):\n    return abs(int(n)) % 10\n"
+   ],
+   "final": "def last_Digit(n):\n    return abs(int(n)) % 10\n",
+   "evidence": {
+    "A": {
+     "test_phase_a": "\"\"\"\nGUARANTEES:\n- The function under test is named last_Digit and is imported from solution.\n- For a non-negative integer input, last_Digit returns the final base-10 digit of that integer.\n- The provided example requires last_Digit(123) == 3.\n- Boundary cases for the unambiguous domain include 0, single-digit integers, and integers ending in 0.\n- The last digit of any non-negative integer must equal its remainder modulo 10.\n\nOPEN QUESTIONS:\n- Whether negative numbers are valid inputs, and if so whether last_Digit(-123) should be 3, -3, or something else.\n- Whether non-integer numeric inputs such as floats, Decimals, Fractions, or complex numbers are valid inputs.\n- Whether string representations of numbers are valid inputs.\n- Whether the return type is required to be exactly int, rather than merely equal to the expected digit.\n\"\"\"\n\nimport pytest\nfrom hypothesis import given, strategies as st\n\n\ndef test_provided_example_123_returns_3():\n    \"\"\"The specification requires last_Digit(123) to return 3.\"\"\"\n    from solution import last_Digit\n\n    x = 123\n    out = last_Digit(x)\n    exp = 3\n    assert out == exp, f\"input={x!r} output={out!r}\"\n\n\n@pytest.mark.parametrize(\"x\", list(range(10)))\ndef test_single_digit_non_negative_integers_return_themselves(x):\n    \"\"\"The last digit of a non-negative single-digit integer must be the integer itself.\"\"\"\n    from solution import last_Digit\n\n    out = last_Digit(x)\n    exp = x\n    assert out == exp, f\"input={x!r} output={out!r}\"\n\n\n@pytest.mark.parametrize(\n    (\"x\", \"exp\"),\n    [\n        (10, 0),\n        (20, 0),\n        (101, 1),\n        (1005, 5),\n        (987654321, 1),\n        (1234567890, 0),\n    ],\n)\ndef test_representative_multi_digit_non_negative_integers(x, exp):\n    \"\"\"The last digit of a multi-digit non-negative integer must be its final decimal digit.\"\"\"\n    from solution import last_Digit\n\n    out = last_Digit(x)\n    assert out == exp, f\"input={x!r} output={out!r}\"\n\n\n@given(st.integers(min_value=0))\ndef test_non_negative_integer_last_digit_equals_modulo_10(x):\n    \"\"\"For every non-negative integer, the last digit must equal the integer modulo 10.\"\"\"\n    from solution import last_Digit\n\n    out = last_Digit(x)\n    exp = x % 10\n    assert out == exp, f\"input={x!r} output={out!r}\"\n"
+    },
+    "B": {
+     "test_phase_b": "import pytest\nfrom hypothesis import given, strategies as st\n\n\n@pytest.mark.parametrize(\n    (\"x\", \"exp\"),\n    [\n        (10**50 + 7, 7),\n        (10**100 + 4, 4),\n        (3 * 10**75, 0),\n        (987654321987654321987654321987654329, 9),\n    ],\n)\ndef test_very_large_non_negative_integers_return_their_final_decimal_digit(x, exp):\n    \"\"\"The last digit of any non-negative integer, including very large integers, must be its final decimal digit.\"\"\"\n    from solution import last_Digit\n\n    out = last_Digit(x)\n    assert out == exp, f\"input={x!r} output={out!r}\"\n\n\n@pytest.mark.parametrize(\"power\", [1, 2, 10, 100, 1000])\ndef test_powers_of_ten_have_last_digit_zero(power):\n    \"\"\"The last digit of every positive power of ten must be zero.\"\"\"\n    from solution import last_Digit\n\n    x = 10**power\n    out = last_Digit(x)\n    exp = 0\n    assert out == exp, f\"input={x!r} output={out!r}\"\n\n\n@given(prefix=st.integers(min_value=0), digit=st.integers(min_value=0, max_value=9))\ndef test_number_formed_by_appending_a_digit_returns_that_digit(prefix, digit):\n    \"\"\"For any non-negative integer prefix and decimal digit, appending the digit must make it the last digit.\"\"\"\n    from solution import last_Digit\n\n    x = prefix * 10 + digit\n    out = last_Digit(x)\n    exp = digit\n    assert out == exp, f\"input={x!r} output={out!r}\"\n\n\n@given(\n    base=st.integers(min_value=0),\n    multiple=st.integers(min_value=0, max_value=10**12),\n)\ndef test_adding_a_non_negative_multiple_of_ten_preserves_last_digit(base, multiple):\n    \"\"\"Adding a non-negative multiple of ten to a non-negative integer must not change its last digit.\"\"\"\n    from solution import last_Digit\n\n    x = base\n    y = base + 10 * multiple\n    out = last_Digit(y)\n    exp = x % 10\n    assert out == exp, f\"input={y!r} output={out!r}\"\n"
+    }
+   },
+   "rounds": [
+    {
+     "round": 1,
+     "failing": 4,
+     "counterexamples": "1. Guarantee: The last digit of a non-negative single-digit integer must be the integer itself.\n  Observed: TypeError: \"test_single_digit_non_negative_integers_return_themselves() missing 1 required positional argument: 'x'\"\n2. Guarantee: The last digit of a multi-digit non-negative integer must be its final decimal digit.\n  Observed: TypeError: \"test_representative_multi_digit_non_negative_integers() missing 2 required positional arguments: 'x' and 'exp'\"\n3. Guarantee: The last digit of any non-negative integer, including very large integers, must be its final decimal digit.\n  Observed: TypeError: \"test_very_large_non_negative_integers_return_their_final_decimal_digit() missing 2 required positional arguments: 'x' and 'exp'\"\n4. Guarantee: The last digit of every positive power of ten must be zero.\n  Observed: TypeError: \"test_powers_of_ten_have_last_digit_zero() missing 1 required positional argument: 'power'\""
+    },
+    {
+     "round": 2,
+     "failing": 4,
+     "counterexamples": "1. Guarantee: The last digit of a non-negative single-digit integer must be the integer itself.\n  Observed: TypeError: \"test_single_digit_non_negative_integers_return_themselves() missing 1 required positional argument: 'x'\"\n2. Guarantee: The last digit of a multi-digit non-negative integer must be its final decimal digit.\n  Observed: TypeError: \"test_representative_multi_digit_non_negative_integers() missing 2 required positional arguments: 'x' and 'exp'\"\n3. Guarantee: The last digit of any non-negative integer, including very large integers, must be its final decimal digit.\n  Observed: TypeError: \"test_very_large_non_negative_integers_return_their_final_decimal_digit() missing 2 required positional arguments: 'x' and 'exp'\"\n4. Guarantee: The last digit of every positive power of ten must be zero.\n  Observed: TypeError: \"test_powers_of_ten_have_last_digit_zero() missing 1 required positional argument: 'power'\""
+    },
+    {
+     "round": 3,
+     "failing": 4,
+     "counterexamples": "1. Guarantee: The last digit of a non-negative single-digit integer must be the integer itself.\n  Observed: TypeError: \"test_single_digit_non_negative_integers_return_themselves() missing 1 required positional argument: 'x'\"\n2. Guarantee: The last digit of a multi-digit non-negative integer must be its final decimal digit.\n  Observed: TypeError: \"test_representative_multi_digit_non_negative_integers() missing 2 required positional arguments: 'x' and 'exp'\"\n3. Guarantee: The last digit of any non-negative integer, including very large integers, must be its final decimal digit.\n  Observed: TypeError: \"test_very_large_non_negative_integers_return_their_final_decimal_digit() missing 2 required positional arguments: 'x' and 'exp'\"\n4. Guarantee: The last digit of every positive power of ten must be zero.\n  Observed: TypeError: \"test_powers_of_ten_have_last_digit_zero() missing 1 required positional argument: 'power'\""
+    }
+   ],
+   "mutation": {
+    "mutants": 3,
+    "survivors": 0
+   },
+   "open_questions": [
+    "Whether negative numbers are valid inputs, and if so whether last_Digit(-123) should be 3, -3, or something else.",
+    "Whether non-integer numeric inputs such as floats, Decimals, Fractions, or complex numbers are valid inputs.",
+    "Whether string representations of numbers are valid inputs.",
+    "Whether the return type is required to be exactly int, rather than merely equal to the expected digit."
+   ],
+   "usage": {
+    "builder": {
+     "input_tokens": 6829,
+     "output_tokens": 2168,
+     "calls": 3
+    },
+    "verifier": {
+     "input_tokens": 2508,
+     "output_tokens": 2697,
+     "calls": 2
+    }
+   },
+   "verifier_backend": "openai:gpt-5.5-2026-04-23"
+  }
+ },
+ "seconds": 109.1
+}

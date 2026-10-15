@@ -1,0 +1,12 @@
+The validator reported these problems with your corrected files:
+
+1. The reference now passes all tests. But two faults are no longer detected:
+   F05 (REQ-5, overdue days use floor instead of ceiling) and
+   F08 (REQ-8, renewal does not check active reservations) pass every test of T_h.
+   They were previously caught only by the test that was wrong. Add hidden tests
+   that target them (only behavior the specification fixes), or replace these faults.
+
+2. Fault F11 (REQ-7, pay_fine checks <= instead of >) still fails the visible test
+   test_pay_fine. Every fault must pass T_v and fail T_h. Change or replace it.
+
+Output all files again in full, in the same format.

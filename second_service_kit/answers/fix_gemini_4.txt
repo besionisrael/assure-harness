@@ -1,0 +1,27 @@
+An independent reviewer checked whether every hidden test asserts only what the
+specification fixes. It reported these problems (quoted as reported):
+
+- test_req2_item_validation: `assert svc.add_item("", "Hammer", "Tools", 5, 7)[0] == 400`
+  - the specification only returns 400 for total_qty <= 0 or duration_days <= 0; it
+  never says an empty item_id is invalid.
+- test_req3_unpaid_fines_block_borrow: `svc.members["debtor"]["fines"] = 10.0`
+  - the specification defines no internal state, so a conforming implementation
+  need not have `svc.members`.
+- test_req5_return_and_fines: `assert svc.return_item(loan_id, "good") == (200, {"fine": 0.0, "status": "good"})`
+  - the interface declares a `status` field but never fixes its content.
+- test_req5_fractional_overdue_ceiling: `assert res[1]["fine"] == 2.0` on a 1-second
+  overdue return - your AUTHOR_NOTES.md declares partial-second overdue handling as
+  deliberately left open, so it must not be tested.
+- test_req9_damaged_and_lost: `assert svc.items["i1"]["available"] == 1` and
+  `assert svc.items["i2"]["total_qty"] == 0` - these read an internal `svc.items`
+  dictionary that the specification does not describe.
+
+In addition, the validator found that visible_tests.py also reads `svc.members`.
+
+Tests, visible or hidden, may use only the public interface described in the
+specification; they must never read or write internal attributes. For each problem,
+decide whether the specification should fix the behavior (then state it in spec.md)
+or whether the test should not require it (then change or remove the assertion).
+Faults must still pass T_v and fail T_h, with at least 12 faults in total.
+
+Output all files again in full, in the same format.

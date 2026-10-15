@@ -1,0 +1,15 @@
+The validator reported that both problems are still present:
+
+1. The reference still fails test_req8_move_conflict_leaves_unchanged:
+   hidden_tests.py, line 201:  assert svc.move("ann", b1["booking_id"], 5, 10, 12)[0] == 409
+   The reference returns 200. The comment above this line says the move "would put
+   3 + 2 seats on hour 12". Check against the specification which of the test and
+   the reference is right, and make S, the reference and T_h agree.
+
+2. F03 still does not apply. Its original text starts with 12 spaces:
+       '            if not (_is_int(start) and _is_int(end) and 0 <= start < end <= 24):'
+   but the line in reference.py starts with 8 spaces:
+       '        if not (_is_int(start) and _is_int(end) and 0 <= start < end <= 24):'
+   The original text must match reference.py exactly, including indentation.
+
+Output all files again in full, in the same format.

@@ -1,0 +1,17 @@
+The validator reported these problems:
+
+1. The reference fails one hidden test: test_req8_move_conflict_leaves_unchanged.
+   hidden_tests.py, line 200:  assert svc.move("ann", b1["booking_id"], 5, 11, 13)[0] == 409
+   The reference returns 200, not 409.
+   Decide which behavior the specification requires. Then fix the reference or the
+   test, and the specification if it is unclear, so that S, the reference and T_h agree.
+   Note: because this test fails on the reference, it currently "detects" almost
+   every fault for the wrong reason. Check that each fault is still caught by a
+   test that targets it.
+
+2. Fault F03: its original text does not occur in reference.py:
+       if not (_is_int(start) and _is_int(end) and 0 <= start < end <= 24):
+   The original text must match reference.py exactly, character for character,
+   including indentation. Fix the fault so that its original text occurs exactly once.
+
+Output all files again in full, in the same format.

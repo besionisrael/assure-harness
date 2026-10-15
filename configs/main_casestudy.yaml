@@ -1,0 +1,24 @@
+# Main campaign of the case study (PROTOCOL.md). Do not run before the protocol is frozen.
+# Services: case study v2 and two services written by third-party models (DECIDE-5).
+campaign: main_casestudy
+output_dir: results
+seed: 2026
+runs: 5
+benchmarks:
+  casestudy_v2: {}
+  svc_mistral: {}
+  svc_qwen: {}
+workers: 3
+models:
+  builder:
+    provider: anthropic
+    max_tokens: 64000       # includes thinking/reasoning tokens
+    model: claude-sonnet-5-5
+  verifier:
+    provider: anthropic
+    max_tokens: 64000       # includes thinking/reasoning tokens
+    model: claude-sonnet-5-5
+  verifier_alt:
+    provider: openai
+    max_tokens: 64000       # includes thinking/reasoning tokens
+    model: gpt-5.5-2026-04-23

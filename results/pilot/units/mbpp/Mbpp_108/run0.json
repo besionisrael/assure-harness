@@ -1,0 +1,199 @@
+{
+ "task_id": "Mbpp/108",
+ "benchmark": "mbpp",
+ "run": 0,
+ "prompt_version": "2026-10-08.1",
+ "backends": {
+  "builder": "anthropic:claude-sonnet-5-5",
+  "verifier": "anthropic:claude-sonnet-5-5",
+  "verifier_alt": "openai:gpt-5.5-2026-04-23"
+ },
+ "p0": "def merge_sorted_list(a, b, c):\n    return sorted(list(a) + list(b) + list(c))\n",
+ "p0_info": {
+  "self_rounds": 0,
+  "self_converged": true
+ },
+ "usage_shared": {
+  "input_tokens": 877,
+  "output_tokens": 657,
+  "calls": 1
+ },
+ "conditions": {
+  "SV": {
+   "programs": [
+    "def merge_sorted_list(a, b, c):\n    return sorted(list(a) + list(b) + list(c))\n"
+   ],
+   "final": "def merge_sorted_list(a, b, c):\n    return sorted(list(a) + list(b) + list(c))\n",
+   "evidence": {
+    "builder": {
+     "test_solution": "from solution import merge_sorted_list\n\n\ndef test_example1():\n    assert merge_sorted_list([25, 24, 15, 4, 5, 29, 110], [19, 20, 11, 56, 25, 233, 154], [24, 26, 54, 48]) == [4, 5, 11, 15, 19, 20, 24, 24, 25, 25, 26, 29, 48, 54, 56, 110, 154, 233]\n\n\ndef test_example2():\n    assert merge_sorted_list([1, 3, 5, 6, 8, 9], [2, 5, 7, 11], [1, 4, 7, 8, 12]) == [1, 1, 2, 3, 4, 5, 5, 6, 7, 7, 8, 8, 9, 11, 12]\n\n\ndef test_example3():\n    assert merge_sorted_list([18, 14, 10, 9, 8, 7, 9, 3, 2, 4, 1], [25, 35, 22, 85, 14, 65, 75, 25, 58], [12, 74, 9, 50, 61, 41]) == [1, 2, 3, 4, 7, 8, 9, 9, 9, 10, 12, 14, 14, 18, 22, 25, 25, 35, 41, 50, 58, 61, 65, 74, 75, 85]\n\n\ndef test_empty():\n    assert merge_sorted_list([], [], []) == []\n    assert merge_sorted_list([], [2, 1], []) == [1, 2]\n\n\ndef test_no_mutation():\n    a = [3, 1]\n    merge_sorted_list(a, [2], [])\n    assert a == [3, 1]\n"
+    }
+   },
+   "rounds": [],
+   "usage": {
+    "input_tokens": 0,
+    "output_tokens": 0,
+    "calls": 0
+   },
+   "open_questions": []
+  },
+  "A": {
+   "programs": [
+    "def merge_sorted_list(a, b, c):\n    return sorted(list(a) + list(b) + list(c))\n"
+   ],
+   "final": "def merge_sorted_list(a, b, c):\n    return sorted(list(a) + list(b) + list(c))\n",
+   "evidence": {
+    "A": {
+     "test_phase_a": "from collections import Counter\n\nfrom hypothesis import given, strategies as st\n\nfrom solution import merge_sorted_list\n\nints = st.integers(min_value=-1000, max_value=1000)\nint_lists = st.lists(ints, max_size=30)\n\n\ndef test_spec_example():\n    \"\"\"The merge of the three example lists must equal the specified sorted list.\"\"\"\n    a = [25, 24, 15, 4, 5, 29, 110]\n    b = [19, 20, 11, 56, 25, 233, 154]\n    c = [24, 26, 54, 48]\n    exp = [4, 5, 11, 15, 19, 20, 24, 24, 25, 25, 26, 29, 48, 54, 56, 110, 154, 233]\n    out = merge_sorted_list(a, b, c)\n    assert out == exp, f\"input={(a, b, c)!r} output={out!r}\"\n\n\ndef test_all_empty():\n    \"\"\"Merging three empty lists must yield an empty list.\"\"\"\n    out = merge_sorted_list([], [], [])\n    assert out == [], f\"input={([], [], [])!r} output={out!r}\"\n\n\ndef test_some_empty():\n    \"\"\"Empty lists must contribute no elements and the rest must be sorted.\"\"\"\n    a, b, c = [], [3, 1, 2], []\n    out = merge_sorted_list(a, b, c)\n    assert out == [1, 2, 3], f\"input={(a, b, c)!r} output={out!r}\"\n\n\ndef test_duplicates_preserved_across_lists():\n    \"\"\"Duplicate values must be kept with full multiplicity in the merged list.\"\"\"\n    a, b, c = [5, 5], [5], [5, 1]\n    out = merge_sorted_list(a, b, c)\n    assert out == [1, 5, 5, 5, 5], f\"input={(a, b, c)!r} output={out!r}\"\n\n\ndef test_negative_numbers():\n    \"\"\"Negative integers must be ordered ascending in the merged list.\"\"\"\n    a, b, c = [0, -5], [-10, 7], [-5, 3]\n    out = merge_sorted_list(a, b, c)\n    assert out == [-10, -5, -5, 0, 3, 7], f\"input={(a, b, c)!r} output={out!r}\"\n\n\ndef test_reverse_sorted_inputs():\n    \"\"\"Inputs in descending order must still produce an ascending merged list.\"\"\"\n    a, b, c = [9, 8, 7], [6, 5, 4], [3, 2, 1]\n    out = merge_sorted_list(a, b, c)\n    assert out == list(range(1, 10)), f\"input={(a, b, c)!r} output={out!r}\"\n\n\n@given(int_lists, int_lists, int_lists)\ndef test_equals_sorted_concatenation(a, b, c):\n    \"\"\"The result must equal the ascending sort of all elements of the three lists.\"\"\"\n    out = merge_sorted_list(list(a), list(b), list(c))\n    exp = sorted(a + b + c)\n    assert out == exp, f\"input={(a, b, c)!r} output={out!r}\"\n\n\n@given(int_lists, int_lists, int_lists)\ndef test_output_is_non_decreasing(a, b, c):\n    \"\"\"The result must be sorted in ascending order.\"\"\"\n    out = merge_sorted_list(list(a), list(b), list(c))\n    assert all(out[i] <= out[i + 1] for i in range(len(out) - 1)), \\\n        f\"input={(a, b, c)!r} output={out!r}\"\n\n\n@given(int_lists, int_lists, int_lists)\ndef test_multiset_and_length_preserved(a, b, c):\n    \"\"\"The result must contain exactly the elements of all inputs with multiplicity.\"\"\"\n    out = merge_sorted_list(list(a), list(b), list(c))\n    assert len(out) == len(a) + len(b) + len(c), f\"input={(a, b, c)!r} output={out!r}\"\n    assert Counter(out) == Counter(a + b + c), f\"input={(a, b, c)!r} output={out!r}\"\n\n\n@given(int_lists, int_lists, int_lists)\ndef test_argument_order_irrelevant(a, b, c):\n    \"\"\"The merged result must not depend on the order of the three list arguments.\"\"\"\n    o1 = merge_sorted_list(list(a), list(b), list(c))\n    o2 = merge_sorted_list(list(c), list(a), list(b))\n    o3 = merge_sorted_list(list(b), list(c), list(a))\n    assert o1 == o2 == o3, f\"input={(a, b, c)!r} outputs={(o1, o2, o3)!r}\"\n\n\n@given(int_lists, int_lists, int_lists)\ndef test_presorted_inputs_same_result(a, b, c):\n    \"\"\"Pre-sorting the inputs must not change the merged sorted result.\"\"\"\n    o1 = merge_sorted_list(list(a), list(b), list(c))\n    o2 = merge_sorted_list(sorted(a), sorted(b), sorted(c))\n    assert o1 == o2, f\"input={(a, b, c)!r} outputs={(o1, o2)!r}\"\n"
+    }
+   },
+   "rounds": [
+    {
+     "round": 1,
+     "failing": 0
+    }
+   ],
+   "mutation": null,
+   "open_questions": [
+    "Whether the input lists are mutated is not specified, so I do not test it.",
+    "Behavior for non-integer or mixed-type elements (floats, strings, `None`) is not specified, so I generate only integers.",
+    "Whether the returned list may share identity with an input is not specified, so I do not test it.",
+    "Behavior for non-list arguments (tuples, generators, wrong argument count) is not specified, so I do not test it."
+   ],
+   "usage": {
+    "builder": {
+     "input_tokens": 0,
+     "output_tokens": 0,
+     "calls": 0
+    },
+    "verifier": {
+     "input_tokens": 815,
+     "output_tokens": 2564,
+     "calls": 1
+    }
+   },
+   "verifier_backend": "anthropic:claude-sonnet-5-5"
+  },
+  "B": {
+   "programs": [
+    "def merge_sorted_list(a, b, c):\n    return sorted(list(a) + list(b) + list(c))\n"
+   ],
+   "final": "def merge_sorted_list(a, b, c):\n    return sorted(list(a) + list(b) + list(c))\n",
+   "evidence": {
+    "B": {
+     "test_phase_b": "from collections import Counter\n\nfrom hypothesis import given, strategies as st\n\nfrom solution import merge_sorted_list\n\nints = st.lists(st.integers(min_value=-10**6, max_value=10**6), max_size=30)\n\n\ndef test_spec_example():\n    \"\"\"Merging the three example lists yields the specified sorted list including duplicates.\"\"\"\n    a = [25, 24, 15, 4, 5, 29, 110]\n    b = [19, 20, 11, 56, 25, 233, 154]\n    c = [24, 26, 54, 48]\n    exp = [4, 5, 11, 15, 19, 20, 24, 24, 25, 25, 26, 29, 48, 54, 56, 110, 154, 233]\n    out = merge_sorted_list(a, b, c)\n    assert out == exp, f\"input={(a, b, c)!r} output={out!r}\"\n\n\ndef test_all_empty():\n    \"\"\"Merging three empty lists gives an empty list.\"\"\"\n    out = merge_sorted_list([], [], [])\n    assert out == [], f\"input=([],[],[]) output={out!r}\"\n\n\ndef test_some_empty():\n    \"\"\"Empty lists contribute no elements, and the remaining elements are sorted.\"\"\"\n    x = ([3, 1, 2], [], [])\n    out = merge_sorted_list(*x)\n    assert out == [1, 2, 3], f\"input={x!r} output={out!r}\"\n    y = ([], [], [9, 7])\n    out = merge_sorted_list(*y)\n    assert out == [7, 9], f\"input={y!r} output={out!r}\"\n    z = ([5], [], [4])\n    out = merge_sorted_list(*z)\n    assert out == [4, 5], f\"input={z!r} output={out!r}\"\n\n\ndef test_duplicates_preserved():\n    \"\"\"Duplicate values across and within lists are all kept in the output.\"\"\"\n    x = ([1, 1], [1], [1, 2])\n    out = merge_sorted_list(*x)\n    assert out == [1, 1, 1, 1, 2], f\"input={x!r} output={out!r}\"\n\n\ndef test_negatives_and_zero():\n    \"\"\"Negative numbers and zero are ordered numerically.\"\"\"\n    x = ([0, -5], [3, -1], [-10, 10])\n    out = merge_sorted_list(*x)\n    assert out == [-10, -5, -1, 0, 3, 10], f\"input={x!r} output={out!r}\"\n\n\ndef test_already_sorted_and_reverse_sorted():\n    \"\"\"Sorted and reverse-sorted inputs both produce the same sorted output.\"\"\"\n    x = ([1, 2, 3], [4, 5, 6], [7, 8, 9])\n    y = ([9, 8, 7], [6, 5, 4], [3, 2, 1])\n    exp = list(range(1, 10))\n    out1 = merge_sorted_list(*x)\n    out2 = merge_sorted_list(*y)\n    assert out1 == exp, f\"input={x!r} output={out1!r}\"\n    assert out2 == exp, f\"input={y!r} output={out2!r}\"\n\n\ndef test_inputs_not_mutated():\n    \"\"\"Merging must not alter the input lists.\"\"\"\n    a, b, c = [3, 1], [2], [0]\n    merge_sorted_list(a, b, c)\n    assert (a, b, c) == ([3, 1], [2], [0]), f\"inputs after call={(a, b, c)!r}\"\n\n\ndef test_returns_list():\n    \"\"\"The merged result is a list.\"\"\"\n    out = merge_sorted_list([2], [1], [3])\n    assert isinstance(out, list), f\"output={out!r}\"\n\n\n@given(ints, ints, ints)\ndef test_matches_sorted_concatenation(a, b, c):\n    \"\"\"The result equals the sorted concatenation of the three lists.\"\"\"\n    out = merge_sorted_list(list(a), list(b), list(c))\n    exp = sorted(a + b + c)\n    assert out == exp, f\"input={(a, b, c)!r} output={out!r}\"\n\n\n@given(ints, ints, ints)\ndef test_output_sorted_and_multiset_preserved(a, b, c):\n    \"\"\"The output is non-decreasing and contains exactly the input elements with multiplicity.\"\"\"\n    out = merge_sorted_list(list(a), list(b), list(c))\n    assert all(out[i] <= out[i + 1] for i in range(len(out) - 1)), f\"input={(a, b, c)!r} output={out!r}\"\n    assert Counter(out) == Counter(a + b + c), f\"input={(a, b, c)!r} output={out!r}\"\n    assert len(out) == len(a) + len(b) + len(c), f\"input={(a, b, c)!r} output={out!r}\"\n\n\n@given(ints, ints, ints)\ndef test_argument_order_irrelevant(a, b, c):\n    \"\"\"Permuting the three input lists does not change the merged result.\"\"\"\n    o1 = merge_sorted_list(list(a), list(b), list(c))\n    o2 = merge_sorted_list(list(c), list(a), list(b))\n    o3 = merge_sorted_list(list(b), list(c), list(a))\n    assert o1 == o2 == o3, f\"input={(a, b, c)!r} outputs={(o1, o2, o3)!r}\"\n\n\n@given(ints, ints, ints)\ndef test_inputs_unchanged_property(a, b, c):\n    \"\"\"The input lists remain unchanged after merging.\"\"\"\n    a0, b0, c0 = list(a), list(b), list(c)\n    out = merge_sorted_list(a0, b0, c0)\n    assert (a0, b0, c0) == (a, b, c), f\"input={(a, b, c)!r} output={out!r}\"\n"
+    }
+   },
+   "rounds": [
+    {
+     "round": 1,
+     "failing": 0
+    }
+   ],
+   "mutation": {
+    "mutants": 2,
+    "survivors": 0
+   },
+   "open_questions": [],
+   "usage": {
+    "builder": {
+     "input_tokens": 0,
+     "output_tokens": 0,
+     "calls": 0
+    },
+    "verifier": {
+     "input_tokens": 833,
+     "output_tokens": 2068,
+     "calls": 1
+    }
+   },
+   "verifier_backend": "anthropic:claude-sonnet-5-5"
+  },
+  "AB": {
+   "programs": [
+    "def merge_sorted_list(a, b, c):\n    return sorted(list(a) + list(b) + list(c))\n"
+   ],
+   "final": "def merge_sorted_list(a, b, c):\n    return sorted(list(a) + list(b) + list(c))\n",
+   "evidence": {
+    "A": {
+     "test_phase_a": "from hypothesis import given, strategies as st\nfrom solution import merge_sorted_list\n\nints = st.lists(st.integers(min_value=-1000, max_value=1000), max_size=30)\n\n\ndef test_spec_example():\n    \"\"\"The function must return the sorted merge of the three example lists, keeping duplicates.\"\"\"\n    a = [25, 24, 15, 4, 5, 29, 110]\n    b = [19, 20, 11, 56, 25, 233, 154]\n    c = [24, 26, 54, 48]\n    exp = [4, 5, 11, 15, 19, 20, 24, 24, 25, 25, 26, 29, 48, 54, 56, 110, 154, 233]\n    out = merge_sorted_list(list(a), list(b), list(c))\n    assert out == exp, f\"input={(a, b, c)!r} output={out!r}\"\n\n\ndef test_all_empty():\n    \"\"\"Merging three empty lists must give an empty list.\"\"\"\n    out = merge_sorted_list([], [], [])\n    assert out == [], f\"input={([], [], [])!r} output={out!r}\"\n\n\ndef test_some_empty():\n    \"\"\"Empty lists must contribute no elements to the sorted merge.\"\"\"\n    out = merge_sorted_list([], [3, 1, 2], [])\n    assert out == [1, 2, 3], f\"input={([], [3, 1, 2], [])!r} output={out!r}\"\n    out = merge_sorted_list([5], [], [4])\n    assert out == [4, 5], f\"input={([5], [], [4])!r} output={out!r}\"\n\n\ndef test_duplicates_kept():\n    \"\"\"Duplicate values across lists must all appear in the output.\"\"\"\n    out = merge_sorted_list([1, 1], [1], [1, 1])\n    assert out == [1, 1, 1, 1, 1], f\"input={([1, 1], [1], [1, 1])!r} output={out!r}\"\n\n\ndef test_negative_numbers():\n    \"\"\"Negative values must be sorted in ascending order with the rest.\"\"\"\n    out = merge_sorted_list([0, -5], [3, -1], [-10])\n    assert out == [-10, -5, -1, 0, 3], f\"input={([0, -5], [3, -1], [-10])!r} output={out!r}\"\n\n\n@given(ints, ints, ints)\ndef test_equals_sorted_concatenation(a, b, c):\n    \"\"\"The output must equal the ascending sort of all elements of the three inputs.\"\"\"\n    out = merge_sorted_list(list(a), list(b), list(c))\n    exp = sorted(a + b + c)\n    assert out == exp, f\"input={(a, b, c)!r} output={out!r}\"\n\n\n@given(ints, ints, ints)\ndef test_output_sorted_and_length(a, b, c):\n    \"\"\"The output must be non-decreasing and contain exactly as many elements as the inputs combined.\"\"\"\n    out = merge_sorted_list(list(a), list(b), list(c))\n    assert len(out) == len(a) + len(b) + len(c), f\"input={(a, b, c)!r} output={out!r}\"\n    assert all(out[i] <= out[i + 1] for i in range(len(out) - 1)), f\"input={(a, b, c)!r} output={out!r}\"\n\n\n@given(ints, ints, ints)\ndef test_argument_order_irrelevant(a, b, c):\n    \"\"\"The merged result must not depend on which list is passed in which position.\"\"\"\n    o1 = merge_sorted_list(list(a), list(b), list(c))\n    o2 = merge_sorted_list(list(c), list(a), list(b))\n    o3 = merge_sorted_list(list(b), list(c), list(a))\n    assert o1 == o2 == o3, f\"input={(a, b, c)!r} outputs={(o1, o2, o3)!r}\"\n\n\n@given(ints, ints, ints)\ndef test_presorted_inputs(a, b, c):\n    \"\"\"Sorted inputs must also merge into the sorted multiset union.\"\"\"\n    sa, sb, sc = sorted(a), sorted(b), sorted(c)\n    out = merge_sorted_list(list(sa), list(sb), list(sc))\n    assert out == sorted(a + b + c), f\"input={(sa, sb, sc)!r} output={out!r}\"\n"
+    },
+    "B": {
+     "test_phase_b": "from collections import Counter\n\nfrom hypothesis import given, strategies as st\nfrom solution import merge_sorted_list\n\nsmall = st.lists(st.integers(min_value=-50, max_value=50), max_size=40)\nbig = st.lists(st.integers(min_value=-(10**30), max_value=10**30), max_size=30)\nlong_lists = st.lists(st.integers(min_value=-10**6, max_value=10**6), min_size=100, max_size=300)\n\n\ndef test_same_list_object_three_times():\n    \"\"\"Passing the same list as all three arguments must yield each element three times, sorted.\"\"\"\n    x = [3, 1, 2]\n    out = merge_sorted_list(x, x, x)\n    assert out == [1, 1, 1, 2, 2, 2, 3, 3, 3], f\"input={(x, x, x)!r} output={out!r}\"\n\n\ndef test_reverse_sorted_inputs():\n    \"\"\"Descending inputs must still produce an ascending merged list.\"\"\"\n    a, b, c = [9, 6, 3], [8, 5, 2], [7, 4, 1]\n    out = merge_sorted_list(list(a), list(b), list(c))\n    assert out == list(range(1, 10)), f\"input={(a, b, c)!r} output={out!r}\"\n\n\ndef test_single_element_lists():\n    \"\"\"Three single-element lists must merge into a sorted three-element list.\"\"\"\n    out = merge_sorted_list([3], [1], [2])\n    assert out == [1, 2, 3], f\"input={([3], [1], [2])!r} output={out!r}\"\n\n\ndef test_two_empty_one_nonempty_each_position():\n    \"\"\"A single non-empty list in any argument position must come back sorted.\"\"\"\n    for pos in range(3):\n        args = [[], [], []]\n        args[pos] = [5, 2, 9, 2]\n        out = merge_sorted_list(*[list(x) for x in args])\n        assert out == [2, 2, 5, 9], f\"input={args!r} output={out!r}\"\n\n\ndef test_very_large_integers():\n    \"\"\"Integers of arbitrary magnitude must be sorted correctly in the merge.\"\"\"\n    a, b, c = [10**40, -10**40], [10**20], [0, 10**40]\n    out = merge_sorted_list(list(a), list(b), list(c))\n    exp = [-10**40, 0, 10**20, 10**40, 10**40]\n    assert out == exp, f\"input={(a, b, c)!r} output={out!r}\"\n\n\ndef test_all_equal_elements():\n    \"\"\"Lists of identical values must keep every occurrence in the merge.\"\"\"\n    out = merge_sorted_list([7] * 5, [7] * 3, [7] * 2)\n    assert out == [7] * 10, f\"input={([7]*5, [7]*3, [7]*2)!r} output={out!r}\"\n\n\ndef test_unequal_lengths_one_long():\n    \"\"\"A long list merged with short lists must keep all elements in ascending order.\"\"\"\n    a = list(range(100, 0, -1))\n    b = [0]\n    c = [1000]\n    out = merge_sorted_list(list(a), list(b), list(c))\n    exp = [0] + list(range(1, 101)) + [1000]\n    assert out == exp, f\"input={(a, b, c)!r} output={out!r}\"\n\n\n@given(small, small, small)\ndef test_multiset_preserved(a, b, c):\n    \"\"\"The output must contain exactly the same elements with the same multiplicities as the inputs combined.\"\"\"\n    out = merge_sorted_list(list(a), list(b), list(c))\n    assert Counter(out) == Counter(a) + Counter(b) + Counter(c), f\"input={(a, b, c)!r} output={out!r}\"\n\n\n@given(big, big, big)\ndef test_large_magnitude_property(a, b, c):\n    \"\"\"For integers of any magnitude the output must be the ascending sort of all inputs.\"\"\"\n    out = merge_sorted_list(list(a), list(b), list(c))\n    assert out == sorted(a + b + c), f\"input={(a, b, c)!r} output={out!r}\"\n\n\n@given(long_lists, long_lists, long_lists)\ndef test_long_lists_property(a, b, c):\n    \"\"\"Long inputs must merge into a sorted list of the combined length.\"\"\"\n    out = merge_sorted_list(list(a), list(b), list(c))\n    assert len(out) == len(a) + len(b) + len(c), f\"input_lens={(len(a), len(b), len(c))!r} output_len={len(out)!r}\"\n    assert out == sorted(a + b + c), f\"input={(a, b, c)!r} output={out!r}\"\n\n\n@given(small, small, small)\ndef test_descending_inputs_property(a, b, c):\n    \"\"\"Inputs sorted in descending order must still merge into the ascending sorted union.\"\"\"\n    da, db, dc = sorted(a, reverse=True), sorted(b, reverse=True), sorted(c, reverse=True)\n    out = merge_sorted_list(list(da), list(db), list(dc))\n    assert out == sorted(a + b + c), f\"input={(da, db, dc)!r} output={out!r}\"\n\n\n@given(small, small, small)\ndef test_all_six_permutations_agree(a, b, c):\n    \"\"\"The merged result must be identical for every ordering of the three arguments.\"\"\"\n    import itertools\n    base = merge_sorted_list(list(a), list(b), list(c))\n    for p in itertools.permutations([a, b, c]):\n        out = merge_sorted_list(*[list(x) for x in p])\n        assert out == base, f\"input={p!r} output={out!r} expected={base!r}\"\n"
+    }
+   },
+   "rounds": [
+    {
+     "round": 1,
+     "failing": 0
+    }
+   ],
+   "mutation": {
+    "mutants": 2,
+    "survivors": 0
+   },
+   "open_questions": [
+    "Whether the inputs are mutated is unspecified, so I do not test it.",
+    "The element types are unspecified beyond numbers, so I test only integers.",
+    "Whether the return value is a new list object is unspecified. A list is implied, and I only compare with list equality.",
+    "Descending order is not considered, since \"sorted\" is read as ascending per the example."
+   ],
+   "usage": {
+    "builder": {
+     "input_tokens": 0,
+     "output_tokens": 0,
+     "calls": 0
+    },
+    "verifier": {
+     "input_tokens": 5391,
+     "output_tokens": 3968,
+     "calls": 2
+    }
+   },
+   "verifier_backend": "anthropic:claude-sonnet-5-5"
+  },
+  "ABp": {
+   "programs": [
+    "def merge_sorted_list(a, b, c):\n    return sorted(list(a) + list(b) + list(c))\n"
+   ],
+   "final": "def merge_sorted_list(a, b, c):\n    return sorted(list(a) + list(b) + list(c))\n",
+   "evidence": {
+    "A": {
+     "test_phase_a": "from collections import Counter\n\nfrom hypothesis import given, strategies as st\n\nfrom solution import merge_sorted_list\n\n\ndef test_given_example_merges_all_values_in_ascending_order():\n    \"\"\"merge_sorted_list must return the ascending sorted concatenation of the three example lists.\"\"\"\n    a = [25, 24, 15, 4, 5, 29, 110]\n    b = [19, 20, 11, 56, 25, 233, 154]\n    c = [24, 26, 54, 48]\n    exp = [4, 5, 11, 15, 19, 20, 24, 24, 25, 25, 26, 29, 48, 54, 56, 110, 154, 233]\n    out = merge_sorted_list(a, b, c)\n    assert out == exp, f\"input={(a, b, c)!r} output={out!r}\"\n\n\ndef test_three_empty_lists_return_empty_list():\n    \"\"\"merge_sorted_list must return an empty sorted list when all three input lists are empty.\"\"\"\n    a = []\n    b = []\n    c = []\n    exp = []\n    out = merge_sorted_list(a, b, c)\n    assert out == exp, f\"input={(a, b, c)!r} output={out!r}\"\n\n\ndef test_empty_lists_can_be_mixed_with_nonempty_lists():\n    \"\"\"merge_sorted_list must include and sort values correctly when some of the three lists are empty.\"\"\"\n    a = []\n    b = [3, 1, 2]\n    c = []\n    exp = [1, 2, 3]\n    out = merge_sorted_list(a, b, c)\n    assert out == exp, f\"input={(a, b, c)!r} output={out!r}\"\n\n\ndef test_duplicate_values_are_preserved():\n    \"\"\"merge_sorted_list must preserve duplicate values from all three input lists.\"\"\"\n    a = [2, 2, 1]\n    b = [1, 3, 2]\n    c = [3, 3, 1]\n    exp = [1, 1, 1, 2, 2, 2, 3, 3, 3]\n    out = merge_sorted_list(a, b, c)\n    assert out == exp, f\"input={(a, b, c)!r} output={out!r}\"\n\n\ndef test_negative_and_positive_integers_are_sorted_together():\n    \"\"\"merge_sorted_list must sort integer values in ascending numeric order, including negative values.\"\"\"\n    a = [-1, 5, 0]\n    b = [-10, 2]\n    c = [3, -1]\n    exp = [-10, -1, -1, 0, 2, 3, 5]\n    out = merge_sorted_list(a, b, c)\n    assert out == exp, f\"input={(a, b, c)!r} output={out!r}\"\n\n\n@given(\n    st.lists(st.integers()),\n    st.lists(st.integers()),\n    st.lists(st.integers()),\n)\ndef test_property_result_equals_sorted_concatenation(a, b, c):\n    \"\"\"merge_sorted_list must return exactly the same list as sorting the concatenation of the three integer lists.\"\"\"\n    exp = sorted(a + b + c)\n    out = merge_sorted_list(a, b, c)\n    assert out == exp, f\"input={(a, b, c)!r} output={out!r}\"\n\n\n@given(\n    st.lists(st.integers()),\n    st.lists(st.integers()),\n    st.lists(st.integers()),\n)\ndef test_property_output_is_ascending(a, b, c):\n    \"\"\"merge_sorted_list must return a list whose elements are in nondecreasing ascending order.\"\"\"\n    out = merge_sorted_list(a, b, c)\n    is_sorted = all(out[i] <= out[i + 1] for i in range(len(out) - 1))\n    assert is_sorted, f\"input={(a, b, c)!r} output={out!r}\"\n\n\n@given(\n    st.lists(st.integers()),\n    st.lists(st.integers()),\n    st.lists(st.integers()),\n)\ndef test_property_output_preserves_multiplicities(a, b, c):\n    \"\"\"merge_sorted_list must preserve the multiplicity of every integer value from the three input lists.\"\"\"\n    out = merge_sorted_list(a, b, c)\n    exp_counts = Counter(a + b + c)\n    out_counts = Counter(out)\n    assert out_counts == exp_counts, f\"input={(a, b, c)!r} output={out!r}\"\n"
+    },
+    "B": {
+     "test_phase_b": "from hypothesis import given, strategies as st\n\nfrom solution import merge_sorted_list\n\n\ndef test_single_element_in_each_list_is_merged_and_sorted():\n    \"\"\"merge_sorted_list must merge one element from each of the three lists into one ascending sorted list.\"\"\"\n    a = [3]\n    b = [1]\n    c = [2]\n    exp = [1, 2, 3]\n    out = merge_sorted_list(a, b, c)\n    assert out == exp, f\"input={(a, b, c)!r} output={out!r}\"\n\n\ndef test_only_third_list_nonempty_is_returned_sorted():\n    \"\"\"merge_sorted_list must include and sort values from the third list even when the first two lists are empty.\"\"\"\n    a = []\n    b = []\n    c = [9, 7, 8, 7]\n    exp = [7, 7, 8, 9]\n    out = merge_sorted_list(a, b, c)\n    assert out == exp, f\"input={(a, b, c)!r} output={out!r}\"\n\n\ndef test_already_sorted_inputs_still_produce_one_globally_sorted_list():\n    \"\"\"merge_sorted_list must produce one globally sorted list rather than merely concatenating sorted input lists.\"\"\"\n    a = [1, 4, 7]\n    b = [2, 5, 8]\n    c = [3, 6, 9]\n    exp = [1, 2, 3, 4, 5, 6, 7, 8, 9]\n    out = merge_sorted_list(a, b, c)\n    assert out == exp, f\"input={(a, b, c)!r} output={out!r}\"\n\n\ndef test_reverse_sorted_inputs_are_merged_into_ascending_order():\n    \"\"\"merge_sorted_list must sort the merged result in ascending order even when each input list is in descending order.\"\"\"\n    a = [9, 6, 3]\n    b = [8, 5, 2]\n    c = [7, 4, 1]\n    exp = [1, 2, 3, 4, 5, 6, 7, 8, 9]\n    out = merge_sorted_list(a, b, c)\n    assert out == exp, f\"input={(a, b, c)!r} output={out!r}\"\n\n\ndef test_string_lists_are_merged_into_lexicographic_sorted_order():\n    \"\"\"merge_sorted_list must merge three lists of comparable values into one sorted list.\"\"\"\n    a = [\"pear\", \"apple\"]\n    b = [\"banana\", \"apple\"]\n    c = [\"plum\", \"apricot\"]\n    exp = [\"apple\", \"apple\", \"apricot\", \"banana\", \"pear\", \"plum\"]\n    out = merge_sorted_list(a, b, c)\n    assert out == exp, f\"input={(a, b, c)!r} output={out!r}\"\n\n\ndef test_float_lists_are_merged_into_numeric_sorted_order():\n    \"\"\"merge_sorted_list must merge three lists of comparable numeric values into one ascending sorted list.\"\"\"\n    a = [2.5, -1.0]\n    b = [0.0, 2.5]\n    c = [float(\"inf\"), -3.25]\n    exp = [-3.25, -1.0, 0.0, 2.5, 2.5, float(\"inf\")]\n    out = merge_sorted_list(a, b, c)\n    assert out == exp, f\"input={(a, b, c)!r} output={out!r}\"\n\n\n@given(\n    st.lists(st.text()),\n    st.lists(st.text()),\n    st.lists(st.text()),\n)\ndef test_property_string_lists_equal_sorted_concatenation(a, b, c):\n    \"\"\"merge_sorted_list must return the sorted concatenation for three lists of comparable string values.\"\"\"\n    exp = sorted(a + b + c)\n    out = merge_sorted_list(a, b, c)\n    assert out == exp, f\"input={(a, b, c)!r} output={out!r}\"\n\n\n@given(\n    st.lists(st.floats(allow_nan=False)),\n    st.lists(st.floats(allow_nan=False)),\n    st.lists(st.floats(allow_nan=False)),\n)\ndef test_property_float_lists_equal_sorted_concatenation(a, b, c):\n    \"\"\"merge_sorted_list must return the sorted concatenation for three lists of comparable floating-point values.\"\"\"\n    exp = sorted(a + b + c)\n    out = merge_sorted_list(a, b, c)\n    assert out == exp, f\"input={(a, b, c)!r} output={out!r}\"\n\n\n@given(\n    st.lists(st.booleans()),\n    st.lists(st.booleans()),\n    st.lists(st.booleans()),\n)\ndef test_property_boolean_lists_equal_sorted_concatenation(a, b, c):\n    \"\"\"merge_sorted_list must preserve and sort all values from three lists whose elements are comparable.\"\"\"\n    exp = sorted(a + b + c)\n    out = merge_sorted_list(a, b, c)\n    assert out == exp, f\"input={(a, b, c)!r} output={out!r}\"\n\n\ndef test_return_value_is_a_list_for_list_inputs():\n    \"\"\"merge_sorted_list must return the merged values as a list.\"\"\"\n    a = [2]\n    b = [1]\n    c = [3]\n    out = merge_sorted_list(a, b, c)\n    assert isinstance(out, list), f\"input={(a, b, c)!r} output={out!r}\"\n"
+    }
+   },
+   "rounds": [
+    {
+     "round": 1,
+     "failing": 0
+    }
+   ],
+   "mutation": {
+    "mutants": 2,
+    "survivors": 0
+   },
+   "open_questions": [
+    "The specification does not define behavior for non-list inputs.",
+    "The specification does not define behavior for lists containing mutually incomparable element types.",
+    "The specification does not state whether the input lists may be mutated, so mutation behavior is not tested."
+   ],
+   "usage": {
+    "builder": {
+     "input_tokens": 0,
+     "output_tokens": 0,
+     "calls": 0
+    },
+    "verifier": {
+     "input_tokens": 3760,
+     "output_tokens": 3960,
+     "calls": 2
+    }
+   },
+   "verifier_backend": "openai:gpt-5.5-2026-04-23"
+  }
+ },
+ "seconds": 286.1
+}

@@ -1,0 +1,16 @@
+# Offline dry run of the case study (plus two EvalPlus tasks, to check that both
+# task kinds coexist). Validates the plumbing only; numbers are meaningless.
+campaign: mock_casestudy
+output_dir: results
+seed: 2026
+runs: 3
+benchmarks:
+  casestudy: {}
+  humaneval: {n: 2}
+max_hidden: 200
+workers: 4
+scoring_workers: 2
+models:
+  builder:      {provider: mock, seed: 1, label: mock-builder}
+  verifier:     {provider: mock, seed: 2, label: mock-verifier}
+  verifier_alt: {provider: mock, seed: 3, label: mock-verifier-alt}

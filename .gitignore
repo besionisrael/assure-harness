@@ -1,0 +1,12 @@
+# secrets
+.env
+
+# the paper is kept outside this repository
+paper/
+
+# caches and build artifacts
+__pycache__/
+*.pyc
+.pytest_cache/
+data/cache/
+/second_service_kit.zip

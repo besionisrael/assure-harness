@@ -1,0 +1,25 @@
+# Exploratory rescoring of main_casestudy (PROTOCOL.md, deviation log): same units, no model call;
+# pytest.mark.parametrize tests are run instead of failing with TypeError.
+campaign: main_casestudy_rescored
+output_dir: results
+seed: 2026
+runs: 5
+benchmarks:
+  casestudy_v2: {}
+  svc_mistral: {}
+  svc_qwen: {}
+workers: 3
+models:
+  builder:
+    provider: anthropic
+    max_tokens: 64000       # includes thinking/reasoning tokens
+    model: claude-sonnet-5-5
+  verifier:
+    provider: anthropic
+    max_tokens: 64000       # includes thinking/reasoning tokens
+    model: claude-sonnet-5-5
+  verifier_alt:
+    provider: openai
+    max_tokens: 64000       # includes thinking/reasoning tokens
+    model: gpt-5.5-2026-04-23
+scoring_expand_parametrize: true

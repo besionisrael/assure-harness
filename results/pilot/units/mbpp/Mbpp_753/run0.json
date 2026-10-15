@@ -1,0 +1,224 @@
+{
+ "task_id": "Mbpp/753",
+ "benchmark": "mbpp",
+ "run": 0,
+ "prompt_version": "2026-10-08.1",
+ "backends": {
+  "builder": "anthropic:claude-sonnet-5-5",
+  "verifier": "anthropic:claude-sonnet-5-5",
+  "verifier_alt": "openai:gpt-5.5-2026-04-23"
+ },
+ "p0": "def min_k(test_list, K):\n    if K is None or K <= 0:\n        return []\n    return sorted(test_list, key=lambda x: x[1])[:K]\n",
+ "p0_info": {
+  "self_rounds": 0,
+  "self_converged": true
+ },
+ "usage_shared": {
+  "input_tokens": 650,
+  "output_tokens": 653,
+  "calls": 1
+ },
+ "conditions": {
+  "SV": {
+   "programs": [
+    "def min_k(test_list, K):\n    if K is None or K <= 0:\n        return []\n    return sorted(test_list, key=lambda x: x[1])[:K]\n"
+   ],
+   "final": "def min_k(test_list, K):\n    if K is None or K <= 0:\n        return []\n    return sorted(test_list, key=lambda x: x[1])[:K]\n",
+   "evidence": {
+    "builder": {
+     "test_solution": "from solution import min_k\n\n\ndef test_visible_lists():\n    assert min_k([['Manjeet', 10], ['Akshat', 4], ['Akash', 2], ['Nikhil', 8]], 2) == [['Akash', 2], ['Akshat', 4]]\n    assert min_k([['Sanjeev', 11], ['Angat', 5], ['Akash', 3], ['Nepin', 9]], 3) == [['Akash', 3], ['Angat', 5], ['Nepin', 9]]\n    assert min_k([['tanmay', 14], ['Amer', 11], ['Ayesha', 9], ['SKD', 16]], 1) == [['Ayesha', 9]]\n\n\ndef test_tuples():\n    assert min_k([('Manjeet', 10), ('Akshat', 4), ('Akash', 2), ('Nikhil', 8)], 2) == [('Akash', 2), ('Akshat', 4)]\n\n\ndef test_edge():\n    assert min_k([], 3) == []\n    assert min_k([('a', 1)], 0) == []\n    assert min_k([('a', 2), ('b', 1)], 5) == [('b', 1), ('a', 2)]\n\n\ndef test_ties_stable():\n    assert min_k([('a', 1), ('b', 1), ('c', 1)], 2) == [('a', 1), ('b', 1)]\n"
+    }
+   },
+   "rounds": [],
+   "usage": {
+    "input_tokens": 0,
+    "output_tokens": 0,
+    "calls": 0
+   },
+   "open_questions": []
+  },
+  "A": {
+   "programs": [
+    "def min_k(test_list, K):\n    if K is None or K <= 0:\n        return []\n    return sorted(test_list, key=lambda x: x[1])[:K]\n",
+    "def min_k(test_list, K):\n    if K is None or K <= 0:\n        return []\n    return sorted(test_list, key=lambda x: x[1])[:K]\n",
+    "def min_k(test_list, K):\n    if K is None or K <= 0:\n        return []\n    return sorted(test_list, key=lambda x: x[1])[:K]\n",
+    "def min_k(test_list, K):\n    if K is None or K <= 0:\n        return []\n    return sorted(test_list, key=lambda x: x[1])[:K]\n"
+   ],
+   "final": "def min_k(test_list, K):\n    if K is None or K <= 0:\n        return []\n    return sorted(test_list, key=lambda x: x[1])[:K]\n",
+   "evidence": {
+    "A": {
+     "test_phase_a": "from hypothesis import given, strategies as st\n\nfrom solution import min_k\n\n\ndef test_spec_example():\n    \"\"\"The function must return the 2 minimum records, ascending, for the specification's example.\"\"\"\n    x = [('Manjeet', 10), ('Akshat', 4), ('Akash', 2), ('Nikhil', 8)]\n    out = min_k(x, 2)\n    exp = [('Akash', 2), ('Akshat', 4)]\n    assert out == exp, f\"input={x!r} output={out!r}\"\n\n\ndef test_k_one_returns_single_minimum():\n    \"\"\"With k=1 the function must return only the minimum record.\"\"\"\n    x = [('n2', 30), ('n0', 5), ('n1', 12)]\n    out = min_k(x, 1)\n    exp = [('n0', 5)]\n    assert out == exp, f\"input={x!r} k=1 output={out!r}\"\n\n\ndef test_k_equals_length_returns_all_ascending():\n    \"\"\"With k equal to the list length the function must return all records in ascending order.\"\"\"\n    x = [('n2', 30), ('n0', 5), ('n1', 12)]\n    out = min_k(x, 3)\n    exp = [('n0', 5), ('n1', 12), ('n2', 30)]\n    assert out == exp, f\"input={x!r} k=3 output={out!r}\"\n\n\ndef test_already_sorted_input():\n    \"\"\"The function must return the k smallest records when the input is already ascending.\"\"\"\n    x = [('n0', 1), ('n1', 2), ('n2', 3), ('n3', 4)]\n    out = min_k(x, 3)\n    exp = [('n0', 1), ('n1', 2), ('n2', 3)]\n    assert out == exp, f\"input={x!r} k=3 output={out!r}\"\n\n\ndef test_descending_input():\n    \"\"\"The function must return the k smallest records in ascending order when the input is descending.\"\"\"\n    x = [('n3', 40), ('n2', 30), ('n1', 20), ('n0', 10)]\n    out = min_k(x, 2)\n    exp = [('n0', 10), ('n1', 20)]\n    assert out == exp, f\"input={x!r} k=2 output={out!r}\"\n\n\n@st.composite\ndef records_and_k(draw):\n    values = draw(st.lists(st.integers(-1000, 1000), min_size=1, max_size=30, unique=True))\n    values.sorted = None if False else None\n    ordered = sorted(values)\n    # names increase with value so all plausible sort keys agree\n    canonical = [(f\"n{i:03d}\", v) for i, v in enumerate(ordered)]\n    shuffled = draw(st.permutations(canonical))\n    k = draw(st.integers(1, len(canonical)))\n    return list(shuffled), canonical, k\n\n\n@given(records_and_k())\ndef test_returns_k_smallest_ascending(data):\n    \"\"\"The function must return exactly the k minimum records in ascending order.\"\"\"\n    x, canonical, k = data\n    out = min_k(list(x), k)\n    exp = canonical[:k]\n    assert out == exp, f\"input={x!r} k={k} output={out!r}\"\n\n\n@given(records_and_k())\ndef test_result_length_and_membership(data):\n    \"\"\"The result must contain exactly k records, each taken from the input.\"\"\"\n    x, canonical, k = data\n    out = min_k(list(x), k)\n    assert len(out) == k, f\"input={x!r} k={k} output={out!r}\"\n    for r in out:\n        assert r in x, f\"input={x!r} k={k} output={out!r}\"\n    assert len(set(out)) == len(out), f\"input={x!r} k={k} output={out!r}\"\n\n\n@given(records_and_k())\ndef test_excluded_not_smaller_than_included(data):\n    \"\"\"Every record not returned must be no smaller than every returned record.\"\"\"\n    x, canonical, k = data\n    out = min_k(list(x), k)\n    rest = [r for r in x if r not in out]\n    if out and rest:\n        assert max(r[1] for r in out) < min(r[1] for r in rest), f\"input={x!r} k={k} output={out!r}\"\n"
+    }
+   },
+   "rounds": [
+    {
+     "round": 1,
+     "failing": 3,
+     "counterexamples": "1. Guarantee: The function must return exactly the k minimum records in ascending order.\n  Observed: AttributeError: \"'list' object has no attribute 'sorted' and no __dict__ for setting new attributes\"\n  while generating 'data' from records_and_k()\n2. Guarantee: The result must contain exactly k records, each taken from the input.\n  Observed: AttributeError: \"'list' object has no attribute 'sorted' and no __dict__ for setting new attributes\"\n  while generating 'data' from records_and_k()\n3. Guarantee: Every record not returned must be no smaller than every returned record.\n  Observed: AttributeError: \"'list' object has no attribute 'sorted' and no __dict__ for setting new attributes\"\n  while generating 'data' from records_and_k()"
+    },
+    {
+     "round": 2,
+     "failing": 3,
+     "counterexamples": "1. Guarantee: The function must return exactly the k minimum records in ascending order.\n  Observed: AttributeError: \"'list' object has no attribute 'sorted' and no __dict__ for setting new attributes\"\n  while generating 'data' from records_and_k()\n2. Guarantee: The result must contain exactly k records, each taken from the input.\n  Observed: AttributeError: \"'list' object has no attribute 'sorted' and no __dict__ for setting new attributes\"\n  while generating 'data' from records_and_k()\n3. Guarantee: Every record not returned must be no smaller than every returned record.\n  Observed: AttributeError: \"'list' object has no attribute 'sorted' and no __dict__ for setting new attributes\"\n  while generating 'data' from records_and_k()"
+    },
+    {
+     "round": 3,
+     "failing": 3,
+     "counterexamples": "1. Guarantee: The function must return exactly the k minimum records in ascending order.\n  Observed: AttributeError: \"'list' object has no attribute 'sorted' and no __dict__ for setting new attributes\"\n  while generating 'data' from records_and_k()\n2. Guarantee: The result must contain exactly k records, each taken from the input.\n  Observed: AttributeError: \"'list' object has no attribute 'sorted' and no __dict__ for setting new attributes\"\n  while generating 'data' from records_and_k()\n3. Guarantee: Every record not returned must be no smaller than every returned record.\n  Observed: AttributeError: \"'list' object has no attribute 'sorted' and no __dict__ for setting new attributes\"\n  while generating 'data' from records_and_k()"
+    }
+   ],
+   "mutation": null,
+   "open_questions": [
+    "The sort key is not stated. The example fits the second element, the first element, or the whole tuple. Tests only use inputs where all of these agree.",
+    "Tie-breaking is not specified: which records are chosen, and in what order, when second elements are equal. Not tested.",
+    "`k > len(records)` is not specified (error, or return all). Not tested.",
+    "`k == 0`, negative `k`, and an empty list are not specified. Not tested.",
+    "Whether the input list is mutated is not specified. Not tested.",
+    "Non-integer values and non-2-tuples are not specified. Not tested."
+   ],
+   "usage": {
+    "builder": {
+     "input_tokens": 8359,
+     "output_tokens": 3067,
+     "calls": 3
+    },
+    "verifier": {
+     "input_tokens": 767,
+     "output_tokens": 3010,
+     "calls": 1
+    }
+   },
+   "verifier_backend": "anthropic:claude-sonnet-5-5"
+  },
+  "B": {
+   "programs": [
+    "def min_k(test_list, K):\n    if K is None or K <= 0:\n        return []\n    return sorted(test_list, key=lambda x: x[1])[:K]\n"
+   ],
+   "final": "def min_k(test_list, K):\n    if K is None or K <= 0:\n        return []\n    return sorted(test_list, key=lambda x: x[1])[:K]\n",
+   "evidence": {
+    "B": {
+     "test_phase_b": "from hypothesis import given, strategies as st\n\nfrom solution import min_k\n\n\ndef test_spec_example():\n    \"\"\"min_k returns the 2 records with smallest values in ascending order for the specification example.\"\"\"\n    x = [('Manjeet', 10), ('Akshat', 4), ('Akash', 2), ('Nikhil', 8)]\n    out = min_k(x, 2)\n    exp = [('Akash', 2), ('Akshat', 4)]\n    assert out == exp, f\"input={x!r} output={out!r}\"\n\n\ndef test_k_one_returns_single_minimum():\n    \"\"\"min_k with K=1 returns only the record with the smallest second element.\"\"\"\n    x = [('a', 5), ('b', 1), ('c', 3)]\n    out = min_k(x, 1)\n    assert out == [('b', 1)], f\"input={x!r} output={out!r}\"\n\n\ndef test_k_equals_length_returns_all_sorted():\n    \"\"\"min_k with K equal to the list length returns all records ordered by ascending second element.\"\"\"\n    x = [('a', 5), ('b', 1), ('c', 3)]\n    out = min_k(x, 3)\n    exp = [('b', 1), ('c', 3), ('a', 5)]\n    assert out == exp, f\"input={x!r} output={out!r}\"\n\n\ndef test_negative_values_ordering():\n    \"\"\"min_k orders records with negative second elements as smaller than positive ones.\"\"\"\n    x = [('a', 0), ('b', -7), ('c', 3), ('d', -2)]\n    out = min_k(x, 2)\n    exp = [('b', -7), ('d', -2)]\n    assert out == exp, f\"input={x!r} output={out!r}\"\n\n\ndef test_k_zero_returns_empty():\n    \"\"\"min_k with K=0 returns no records.\"\"\"\n    x = [('a', 5), ('b', 1)]\n    out = min_k(x, 0)\n    assert out == [], f\"input={x!r} output={out!r}\"\n\n\ndef test_single_element():\n    \"\"\"min_k of a one-record list with K=1 returns that record.\"\"\"\n    x = [('only', 9)]\n    out = min_k(x, 1)\n    assert out == [('only', 9)], f\"input={x!r} output={out!r}\"\n\n\n@st.composite\ndef records_and_k(draw):\n    vals = draw(st.lists(st.integers(-1000, 1000), min_size=1, max_size=30, unique=True))\n    names = draw(st.lists(st.text(max_size=5), min_size=len(vals), max_size=len(vals)))\n    recs = list(zip(names, vals))\n    k = draw(st.integers(1, len(recs)))\n    return recs, k\n\n\n@given(records_and_k())\ndef test_property_matches_k_smallest_in_order(data):\n    \"\"\"min_k returns exactly the K records with smallest second elements in ascending order.\"\"\"\n    recs, k = data\n    out = min_k(recs, k)\n    exp = sorted(recs, key=lambda r: r[1])[:k]\n    assert out == exp, f\"input={(recs, k)!r} output={out!r}\"\n\n\n@given(records_and_k())\ndef test_property_length_and_membership(data):\n    \"\"\"min_k returns K records, each taken from the input.\"\"\"\n    recs, k = data\n    out = min_k(recs, k)\n    assert len(out) == k, f\"input={(recs, k)!r} output={out!r}\"\n    assert all(r in recs for r in out), f\"input={(recs, k)!r} output={out!r}\"\n\n\n@given(records_and_k())\ndef test_property_every_excluded_not_smaller(data):\n    \"\"\"No record left out by min_k has a smaller second element than any returned record.\"\"\"\n    recs, k = data\n    out = min_k(recs, k)\n    rest = [r for r in recs if r not in out]\n    if rest:\n        assert max(r[1] for r in out) < min(r[1] for r in rest), f\"input={(recs, k)!r} output={out!r}\"\n    vals = [r[1] for r in out]\n    assert vals == sorted(vals), f\"input={(recs, k)!r} output={out!r}\"\n",
+     "test_phase_b_mutants": "# No additional tests: the surviving mutants (M001, M003) differ from the\n# implementation only on inputs the specification leaves undetermined\n# (None or negative K) or are equivalent (K == 0 yields [] either way).\n"
+    }
+   },
+   "rounds": [
+    {
+     "round": 1,
+     "failing": 0
+    }
+   ],
+   "mutation": {
+    "mutants": 8,
+    "survivors": 2,
+    "shown": 2
+   },
+   "open_questions": [],
+   "usage": {
+    "builder": {
+     "input_tokens": 0,
+     "output_tokens": 0,
+     "calls": 0
+    },
+    "verifier": {
+     "input_tokens": 3581,
+     "output_tokens": 2815,
+     "calls": 2
+    }
+   },
+   "verifier_backend": "anthropic:claude-sonnet-5-5"
+  },
+  "AB": {
+   "programs": [
+    "def min_k(test_list, K):\n    if K is None or K <= 0:\n        return []\n    return sorted(test_list, key=lambda x: x[1])[:K]\n"
+   ],
+   "final": "def min_k(test_list, K):\n    if K is None or K <= 0:\n        return []\n    return sorted(test_list, key=lambda x: x[1])[:K]\n",
+   "evidence": {
+    "A": {
+     "test_phase_a": "from hypothesis import given, strategies as st\nfrom solution import min_k\n\n\ndef test_spec_example():\n    \"\"\"The function must return the 2 minimum records, ascending, for the specification's example.\"\"\"\n    x = [('Manjeet', 10), ('Akshat', 4), ('Akash', 2), ('Nikhil', 8)]\n    out = min_k(x, 2)\n    exp = [('Akash', 2), ('Akshat', 4)]\n    assert out == exp, f\"input={x!r} output={out!r}\"\n\n\ndef test_k_equals_one_returns_minimum():\n    \"\"\"With k=1 the function must return only the minimum record.\"\"\"\n    x = [('c', 30), ('a', 5), ('b', 20)]\n    out = min_k(x, 1)\n    exp = [('a', 5)]\n    assert out == exp, f\"input={x!r} k=1 output={out!r}\"\n\n\ndef test_k_equals_length_returns_all_sorted():\n    \"\"\"With k equal to the list length the function must return all records in ascending order.\"\"\"\n    x = [('d', 40), ('b', 20), ('a', 10), ('c', 30)]\n    out = min_k(x, 4)\n    exp = [('a', 10), ('b', 20), ('c', 30), ('d', 40)]\n    assert out == exp, f\"input={x!r} k=4 output={out!r}\"\n\n\ndef test_k_three_of_five():\n    \"\"\"The function must return the 3 smallest records in ascending order.\"\"\"\n    x = [('e', 50), ('a', 1), ('d', 40), ('b', 2), ('c', 3)]\n    out = min_k(x, 3)\n    exp = [('a', 1), ('b', 2), ('c', 3)]\n    assert out == exp, f\"input={x!r} k=3 output={out!r}\"\n\n\n@st.composite\ndef consistent_records(draw):\n    vals = draw(st.lists(st.integers(-1000, 1000), unique=True, min_size=1, max_size=15))\n    vals = sorted(vals)\n    ranked = [(f\"n{i:03d}\", v) for i, v in enumerate(vals)]\n    shuffled = draw(st.permutations(ranked))\n    k = draw(st.integers(1, len(ranked)))\n    return list(shuffled), ranked, k\n\n\n@given(consistent_records())\ndef test_returns_k_smallest_ascending(data):\n    \"\"\"The function must return the k minimum records in ascending order.\"\"\"\n    x, ranked, k = data\n    out = min_k(list(x), k)\n    exp = ranked[:k]\n    assert out == exp, f\"input={x!r} k={k} output={out!r}\"\n\n\n@given(consistent_records())\ndef test_result_length_and_membership(data):\n    \"\"\"The result must contain exactly k records, each taken from the input.\"\"\"\n    x, ranked, k = data\n    out = min_k(list(x), k)\n    assert len(out) == k, f\"input={x!r} k={k} output={out!r}\"\n    assert all(r in x for r in out), f\"input={x!r} k={k} output={out!r}\"\n    assert len(set(out)) == len(out), f\"input={x!r} k={k} output={out!r}\"\n\n\n@given(consistent_records())\ndef test_every_excluded_record_not_smaller_than_included(data):\n    \"\"\"Every record not returned must be no smaller than every returned record.\"\"\"\n    x, ranked, k = data\n    out = min_k(list(x), k)\n    rest = [r for r in x if r not in out]\n    for r in rest:\n        for o in out:\n            assert r[1] > o[1], f\"input={x!r} k={k} output={out!r}\"\n"
+    },
+    "B": {
+     "test_phase_b": "from hypothesis import given, strategies as st\nfrom solution import min_k\n\n\ndef test_reverse_sorted_input_returns_smallest_not_first():\n    \"\"\"The function must return the k minimum records, not merely the first k of the input.\"\"\"\n    x = [('e', 50), ('d', 40), ('c', 30), ('b', 20), ('a', 10)]\n    out = min_k(x, 2)\n    exp = [('a', 10), ('b', 20)]\n    assert out == exp, f\"input={x!r} k=2 output={out!r}\"\n\n\ndef test_already_sorted_input():\n    \"\"\"The function must return the k minimum records in ascending order for already sorted input.\"\"\"\n    x = [('a', 1), ('b', 2), ('c', 3), ('d', 4)]\n    out = min_k(x, 3)\n    exp = [('a', 1), ('b', 2), ('c', 3)]\n    assert out == exp, f\"input={x!r} k=3 output={out!r}\"\n\n\ndef test_negative_and_zero_values():\n    \"\"\"The function must treat negative numbers and zero as smaller than positive numbers.\"\"\"\n    x = [('d', 7), ('b', -3), ('c', 0), ('a', -10)]\n    out = min_k(x, 3)\n    exp = [('a', -10), ('b', -3), ('c', 0)]\n    assert out == exp, f\"input={x!r} k=3 output={out!r}\"\n\n\ndef test_float_values():\n    \"\"\"The function must order records with float numbers correctly and return the minimum k.\"\"\"\n    x = [('c', 2.5), ('a', 0.5), ('b', 1.5), ('d', 9.75)]\n    out = min_k(x, 2)\n    exp = [('a', 0.5), ('b', 1.5)]\n    assert out == exp, f\"input={x!r} k=2 output={out!r}\"\n\n\ndef test_single_record_k_one():\n    \"\"\"For a single-record list with k=1 the function must return that record.\"\"\"\n    x = [('only', 42)]\n    out = min_k(x, 1)\n    exp = [('only', 42)]\n    assert out == exp, f\"input={x!r} k=1 output={out!r}\"\n\n\ndef test_exact_duplicate_records_kept_as_multiset():\n    \"\"\"Identical duplicate records must each count as separate records among the k minimum.\"\"\"\n    x = [('b', 5), ('a', 1), ('a', 1), ('c', 9)]\n    out = min_k(x, 2)\n    exp = [('a', 1), ('a', 1)]\n    assert out == exp, f\"input={x!r} k=2 output={out!r}\"\n\n\ndef test_exact_duplicates_partial_take():\n    \"\"\"The function must return the minimum k records including repeated identical records in ascending order.\"\"\"\n    x = [('b', 5), ('b', 5), ('a', 1), ('c', 9)]\n    out = min_k(x, 3)\n    exp = [('a', 1), ('b', 5), ('b', 5)]\n    assert out == exp, f\"input={x!r} k=3 output={out!r}\"\n\n\ndef test_returns_list_of_original_tuples():\n    \"\"\"The function must return a list whose elements are the original tuples.\"\"\"\n    x = [('b', 2), ('a', 1)]\n    out = min_k(x, 2)\n    assert isinstance(out, list), f\"input={x!r} output={out!r}\"\n    assert out[0] is x[1] and out[1] is x[0], f\"input={x!r} output={out!r}\"\n\n\n@st.composite\ndef records_with_repeats(draw):\n    vals = sorted(draw(st.lists(st.integers(-50, 50), unique=True, min_size=1, max_size=8)))\n    ranked = [(f\"n{i:02d}\", v) for i, v in enumerate(vals)]\n    counts = [draw(st.integers(1, 3)) for _ in ranked]\n    full = []\n    for r, c in zip(ranked, counts):\n        full.extend([r] * c)\n    shuffled = draw(st.permutations(full))\n    k = draw(st.integers(1, len(full)))\n    return list(shuffled), sorted(full), k\n\n\n@given(records_with_repeats())\ndef test_multiset_minimum_k_with_repeated_records(data):\n    \"\"\"The function must return the k minimum records in ascending order even when identical records repeat.\"\"\"\n    x, expected_sorted, k = data\n    out = min_k(list(x), k)\n    exp = expected_sorted[:k]\n    assert out == exp, f\"input={x!r} k={k} output={out!r}\"\n\n\n@given(records_with_repeats())\ndef test_output_is_ascending_and_submultiset(data):\n    \"\"\"The result must be in ascending order and be a sub-multiset of the input.\"\"\"\n    x, _, k = data\n    out = min_k(list(x), k)\n    assert [r[1] for r in out] == sorted(r[1] for r in out), f\"input={x!r} k={k} output={out!r}\"\n    remaining = list(x)\n    for r in out:\n        assert r in remaining, f\"input={x!r} k={k} output={out!r}\"\n        remaining.remove(r)\n\n\n@given(records_with_repeats())\ndef test_k_equal_length_returns_everything_sorted(data):\n    \"\"\"With k equal to the list length the function must return all records in ascending order.\"\"\"\n    x, expected_sorted, _ = data\n    out = min_k(list(x), len(x))\n    assert out == expected_sorted, f\"input={x!r} k={len(x)} output={out!r}\"\n\n\n@given(records_with_repeats())\ndef test_prefix_property_across_k(data):\n    \"\"\"The k minimum records must be a prefix of the k+1 minimum records.\"\"\"\n    x, _, k = data\n    if k >= len(x):\n        return\n    a = min_k(list(x), k)\n    b = min_k(list(x), k + 1)\n    assert b[:k] == a, f\"input={x!r} k={k} out_k={a!r} out_k1={b!r}\"\n",
+     "test_phase_b_mutants": "from solution import min_k\n\n\ndef test_k_one_on_spec_data_returns_minimum_record():\n    \"\"\"For the specification's example data, the single minimum record must be ('Akash', 2).\"\"\"\n    x = [('Manjeet', 10), ('Akshat', 4), ('Akash', 2), ('Nikhil', 8)]\n    out = min_k(x, 1)\n    exp = [('Akash', 2)]\n    assert out == exp, f\"input={x!r} k=1 output={out!r}\"\n"
+    }
+   },
+   "rounds": [
+    {
+     "round": 1,
+     "failing": 0
+    }
+   ],
+   "mutation": {
+    "mutants": 8,
+    "survivors": 3,
+    "shown": 3
+   },
+   "open_questions": [
+    "The ordering key is not stated. The example is consistent both with ordering by the numeric second element and with ordering by the whole tuple, because the names are alphabetical in the same order as the values. I only test inputs where the two orderings agree.",
+    "Tie behavior is unspecified: which records are chosen and in what order when numeric values are equal. I do not test ties.",
+    "`k = 0`, negative `k`, and `k > len(records)` are unspecified, and so is an empty list. I do not test them.",
+    "Whether the input list is mutated is unspecified. I do not test it.",
+    "Records with other shapes, such as non-tuples or tuples of different length, are unspecified. I do not test them."
+   ],
+   "usage": {
+    "builder": {
+     "input_tokens": 0,
+     "output_tokens": 0,
+     "calls": 0
+    },
+    "verifier": {
+     "input_tokens": 11911,
+     "output_tokens": 7449,
+     "calls": 3
+    }
+   },
+   "verifier_backend": "anthropic:claude-sonnet-5-5"
+  },
+  "ABp": {
+   "programs": [
+    "def min_k(test_list, K):\n    if K is None or K <= 0:\n        return []\n    return sorted(test_list, key=lambda x: x[1])[:K]\n"
+   ],
+   "final": "def min_k(test_list, K):\n    if K is None or K <= 0:\n        return []\n    return sorted(test_list, key=lambda x: x[1])[:K]\n",
+   "evidence": {
+    "A": {
+     "test_phase_a": "\"\"\"\nGuarantees imposed by the specification:\n- The module under test must provide a function named min_k.\n- min_k must accept a tuple-list and an integer k.\n- For the verbatim specified input, min_k([('Manjeet', 10), ('Akshat', 4), ('Akash', 2), ('Nikhil', 8)], 2)\n  must return [('Akash', 2), ('Akshat', 4)].\n- For nonempty tuple lists with unique, unambiguous ordering and 1 <= k <= len(input), the result must be the k\n  minimum records in increasing order.\n\nOPEN QUESTIONS:\n- How k=0, negative k, k greater than the input length, or an empty input list should be handled is unspecified.\n- How ties or duplicate records should be handled is unspecified.\n- Whether arbitrary tuple records are compared by the whole tuple or by a particular field is not fully specified; tests\n  beyond the verbatim example use records where these interpretations agree.\n- Whether the input list may be mutated is unspecified.\n- Supported record element types beyond the demonstrated string/integer pairs are unspecified.\n\"\"\"\n\nfrom hypothesis import given, strategies as st\n\nfrom solution import min_k\n\n\ndef _records_from_values(values):\n    return [(f\"{value:06d}\", value) for value in values]\n\n\ndef test_verbatim_specified_example():\n    \"\"\"min_k must return the exact minimum two records for the tuple list shown in the specification.\"\"\"\n    records = [('Manjeet', 10), ('Akshat', 4), ('Akash', 2), ('Nikhil', 8)]\n    k = 2\n    expected = [('Akash', 2), ('Akshat', 4)]\n\n    out = min_k(records, k)\n\n    assert out == expected, f\"input={(records, k)!r} output={out!r}\"\n\n\n@given(\n    st.lists(\n        st.integers(min_value=0, max_value=999999),\n        min_size=1,\n        max_size=50,\n        unique=True,\n    ),\n    st.data(),\n)\ndef test_returns_k_minimum_records_for_unambiguous_unique_inputs(values, data):\n    \"\"\"min_k must return exactly the k smallest records in increasing order when the tuple ordering is unambiguous.\"\"\"\n    records = _records_from_values(values)\n    k = data.draw(st.integers(min_value=1, max_value=len(records)))\n    expected = _records_from_values(sorted(values)[:k])\n\n    out = min_k(records, k)\n\n    assert out == expected, f\"input={(records, k)!r} output={out!r}\"\n\n\n@given(\n    st.lists(\n        st.integers(min_value=0, max_value=999999),\n        min_size=1,\n        max_size=50,\n        unique=True,\n    )\n)\ndef test_k_one_returns_the_single_minimum_record_for_unambiguous_inputs(values):\n    \"\"\"min_k must return a one-element list containing the minimum record when k is one.\"\"\"\n    records = _records_from_values(values)\n    k = 1\n    expected = _records_from_values([min(values)])\n\n    out = min_k(records, k)\n\n    assert out == expected, f\"input={(records, k)!r} output={out!r}\"\n\n\n@given(\n    st.lists(\n        st.integers(min_value=0, max_value=999999),\n        min_size=1,\n        max_size=50,\n        unique=True,\n    )\n)\ndef test_k_equal_to_input_length_returns_all_records_in_increasing_order_for_unambiguous_inputs(values):\n    \"\"\"min_k must return all records in increasing order when k equals the length of the tuple list.\"\"\"\n    records = _records_from_values(values)\n    k = len(records)\n    expected = _records_from_values(sorted(values))\n\n    out = min_k(records, k)\n\n    assert out == expected, f\"input={(records, k)!r} output={out!r}\"\n"
+    },
+    "B": {
+     "test_phase_b": "from hypothesis import given, strategies as st\n\nfrom solution import min_k\n\n\ndef test_returns_minimum_prefix_for_signed_records_when_k_excludes_one_record():\n    \"\"\"min_k must return the k minimum records in increasing order for a valid nonempty tuple list.\"\"\"\n    records = [(\"c\", 3), (\"a\", -7), (\"d\", 11), (\"b\", 0)]\n    k = 3\n    expected = [(\"a\", -7), (\"b\", 0), (\"c\", 3)]\n\n    out = min_k(records, k)\n\n    assert out == expected, f\"input={(records, k)!r} output={out!r}\"\n\n\ndef test_returns_minimum_records_when_input_order_is_descending():\n    \"\"\"min_k must compute the minimum records from the tuple list rather than preserving descending input order.\"\"\"\n    records = [(\"e\", 50), (\"d\", 40), (\"c\", 30), (\"b\", 20), (\"a\", 10)]\n    k = 2\n    expected = [(\"a\", 10), (\"b\", 20)]\n\n    out = min_k(records, k)\n\n    assert out == expected, f\"input={(records, k)!r} output={out!r}\"\n\n\n@given(\n    st.lists(\n        st.integers(min_value=-1_000_000, max_value=1_000_000),\n        min_size=2,\n        max_size=40,\n        unique=True,\n    ),\n    st.data(),\n)\ndef test_returns_k_minimum_records_for_unambiguous_signed_integer_scores(values, data):\n    \"\"\"min_k must return exactly the k minimum records in increasing order for valid unambiguous tuple lists with signed integers.\"\"\"\n    sorted_values = sorted(values)\n    labels = {value: f\"record_{rank:06d}\" for rank, value in enumerate(sorted_values)}\n    records = [(labels[value], value) for value in values]\n    k = data.draw(st.integers(min_value=1, max_value=len(records)))\n    expected = [(labels[value], value) for value in sorted_values[:k]]\n\n    out = min_k(records, k)\n\n    assert out == expected, f\"input={(records, k)!r} output={out!r}\"\n\n\n@given(\n    st.lists(\n        st.integers(min_value=-1_000_000, max_value=1_000_000),\n        min_size=2,\n        max_size=40,\n        unique=True,\n    )\n)\ndef test_k_len_minus_one_returns_all_but_largest_record_for_unambiguous_inputs(values):\n    \"\"\"min_k must return all except the largest record in increasing order when k is one less than the input length.\"\"\"\n    sorted_values = sorted(values)\n    labels = {value: f\"record_{rank:06d}\" for rank, value in enumerate(sorted_values)}\n    records = [(labels[value], value) for value in values]\n    k = len(records) - 1\n    expected = [(labels[value], value) for value in sorted_values[:k]]\n\n    out = min_k(records, k)\n\n    assert out == expected, f\"input={(records, k)!r} output={out!r}\"\n",
+     "test_phase_b_mutants": "from hypothesis import given, strategies as st\n\nfrom solution import min_k\n\n\ndef test_minimum_records_are_found_when_distinct_records_share_the_same_first_field():\n    \"\"\"min_k must return the k minimum distinct tuple records even when their first components are equal.\"\"\"\n    records = [(\"same\", 3), (\"same\", 1), (\"same\", 2)]\n    k = 2\n    expected = [(\"same\", 1), (\"same\", 2)]\n\n    out = min_k(records, k)\n\n    assert out == expected, f\"input={(records, k)!r} output={out!r}\"\n\n\n@given(\n    st.lists(\n        st.integers(min_value=-1000, max_value=1000),\n        min_size=2,\n        max_size=30,\n        unique=True,\n    ),\n    st.data(),\n)\ndef test_minimum_records_with_equal_first_components_are_returned_in_increasing_tuple_order(values, data):\n    \"\"\"min_k must return the first k records in increasing tuple order for valid distinct records sharing a first component.\"\"\"\n    records = [(\"record\", value) for value in values]\n    k = data.draw(st.integers(min_value=1, max_value=len(records)))\n    expected = sorted(records)[:k]\n\n    out = min_k(records, k)\n\n    assert out == expected, f\"input={(records, k)!r} output={out!r}\"\n"
+    }
+   },
+   "rounds": [
+    {
+     "round": 1,
+     "failing": 0
+    }
+   ],
+   "mutation": {
+    "mutants": 8,
+    "survivors": 3,
+    "shown": 3
+   },
+   "open_questions": [
+    "How k=0, negative k, k greater than the input length, or an empty input list should be handled is unspecified.",
+    "How ties or duplicate records should be handled is unspecified.",
+    "Whether arbitrary tuple records are compared by the whole tuple or by a particular field is not fully specified; tests",
+    "Whether the input list may be mutated is unspecified.",
+    "Supported record element types beyond the demonstrated string/integer pairs are unspecified."
+   ],
+   "usage": {
+    "builder": {
+     "input_tokens": 0,
+     "output_tokens": 0,
+     "calls": 0
+    },
+    "verifier": {
+     "input_tokens": 6982,
+     "output_tokens": 7791,
+     "calls": 3
+    }
+   },
+   "verifier_backend": "openai:gpt-5.5-2026-04-23"
+  }
+ },
+ "seconds": 289.5
+}

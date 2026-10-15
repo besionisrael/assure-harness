@@ -1,0 +1,79 @@
+# Analysis
+
+1 tasks, 3 runs, conditions ['SV', 'A', 'B', 'AB', 'ABp']. Pool and mutant definitions: see assure/scoring.py.
+## RQ1: evaluation gap
+
+| Benchmark | Cond. | Visible pass | Hidden pass | Gap |
+|---|---|---|---|---|
+| casestudy | SV | 100.0 | 100.0 | 0.0 |
+| casestudy | A | 100.0 | 100.0 | 0.0 |
+| casestudy | B | 100.0 | 100.0 | 0.0 |
+| casestudy | AB | 100.0 | 100.0 | 0.0 |
+| casestudy | ABp | 100.0 | 100.0 | 0.0 |
+
+## RQ2: evidence quality per condition (median of per-task means)
+
+| Cond. | Fault detection | Mutation score | False-oracle rate | Tokens (cond.) |
+|---|---|---|---|---|
+| SV | 96.7 | 80.0 | 0.0 | 0.0k |
+| A | 96.7 | 85.6 | 19.9 | 100.8k |
+| B | 90.0 | 83.3 | 18.3 | 115.8k |
+| AB | 90.0 | 83.3 | 19.2 | 214.2k |
+| ABp | 93.3 | 95.6 | 13.1 | 110.2k |
+
+## RQ3: complementarity of Phase A and Phase B
+
+Within AB (summed over task-runs): faults A-only/B-only/both = [3, 0, 24]; mutants A-only/B-only/both = [8, 4, 63]
+Within ABp (summed over task-runs): faults A-only/B-only/both = [14, 3, 11]; mutants A-only/B-only/both = [20, 19, 47]
+Conditions A vs B (separate verifiers): faults A-only/B-only/both = [2, 0, 27]; mutants = [6, 4, 71]
+
+### Case study: seeded-fault detection (10 seeded faults, runs detecting / runs)
+
+| Fault | SV | A | B | AB | ABp |
+|---|---|---|---|---|---|
+| F01 | 3/3 | 3/3 | 3/3 | 3/3 | 3/3 |
+| F02 | 3/3 | 3/3 | 3/3 | 3/3 | 3/3 |
+| F03 | 3/3 | 3/3 | 3/3 | 3/3 | 3/3 |
+| F04 | 3/3 | 3/3 | 3/3 | 3/3 | 3/3 |
+| F05 | 3/3 | 2/3 | 1/3 | 0/3 | 2/3 |
+| F06 | 2/3 | 3/3 | 3/3 | 3/3 | 2/3 |
+| F07 | 3/3 | 3/3 | 3/3 | 3/3 | 3/3 |
+| F08 | 3/3 | 3/3 | 3/3 | 3/3 | 3/3 |
+| F09 | 3/3 | 3/3 | 2/3 | 3/3 | 3/3 |
+| F10 | 3/3 | 3/3 | 3/3 | 3/3 | 3/3 |
+
+Case study, within AB: seeded faults A-only/B-only/both = [3, 0, 24]
+
+Case study, within ABp: seeded faults A-only/B-only/both = [14, 3, 11]
+Phase A reported at least one open question in 100.0% of task-runs.
+
+## RQ4: release decisions, raw evidence, as a release gate sees it
+
+| Cond. | TP (block faulty) | FN (release faulty) | FP (block correct) | TN | Precision(block) | Recall(block) |
+|---|---|---|---|---|---|---|
+| SV | 0 | 0 | 0 | 3 | -- | -- |
+| A | 0 | 0 | 3 | 0 | 0.0 | -- |
+| B | 0 | 0 | 3 | 0 | 0.0 | -- |
+| AB | 0 | 0 | 3 | 0 | 0.0 | -- |
+| ABp | 0 | 0 | 2 | 1 | 0.0 | -- |
+
+## RQ4: release decisions, valid tests only (false oracles removed)
+
+| Cond. | TP (block faulty) | FN (release faulty) | FP (block correct) | TN | Precision(block) | Recall(block) |
+|---|---|---|---|---|---|---|
+| SV | 0 | 0 | 0 | 3 | -- | -- |
+| A | 0 | 0 | 0 | 3 | -- | -- |
+| B | 0 | 0 | 0 | 3 | -- | -- |
+| AB | 0 | 0 | 1 | 2 | 0.0 | -- |
+| ABp | 0 | 0 | 1 | 2 | 0.0 | -- |
+
+## Statistical tests (Holm-corrected, alpha = 0.05)
+
+| RQ | Comparison | Test | n | Mean a | Mean b | Effect | p | p (Holm) |
+|---|---|---|---|---|---|---|---|---|
+| RQ1 | SV visible vs hidden (evaluation gap) | McNemar | 3 | 1.000 | 1.000 | discordant 0/0 | 1.0000 | 1.0000 |
+| RQ1 | Final correctness SV vs AB | McNemar | 3 | 1.000 | 1.000 | discordant 0/0 | 1.0000 | 1.0000 |
+| RQ1 | Final correctness SV vs ABp | McNemar | 3 | 1.000 | 1.000 | discordant 0/0 | 1.0000 | 1.0000 |
+| RQ1 | Final correctness SV vs A | McNemar | 3 | 1.000 | 1.000 | discordant 0/0 | 1.0000 | 1.0000 |
+| RQ1 | Final correctness SV vs B | McNemar | 3 | 1.000 | 1.000 | discordant 0/0 | 1.0000 | 1.0000 |
+| RQ4 | Faulty releases SV vs AB | McNemar | 3 | 0.000 | 0.000 | discordant 0/0 | 1.0000 | 1.0000 |

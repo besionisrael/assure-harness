@@ -1,0 +1,126 @@
+run,condition,item,label,raised_auto,tested_auto,tested_false_oracles_auto,builder_behavior,builder_matches_R,disputed_auto,coder_raised,coder_tested,coder_disputed,coder_notes,coder
+0,SV,O1,administrators,False,0,0,,,0,no,0,no,no candidate (rule),rule
+0,SV,O2,case folding beyond ASCII,False,0,0,"(200, 1)",True,0,no,0,no,no candidate (rule),rule
+0,SV,O3,is a key used by a rejected request,False,0,0,"(400, 201)",True,0,no,0,no,no candidate (rule),rule
+0,SV,O4,empty idempotency key,False,0,0,400,True,0,no,0,no,no candidate (rule),rule
+0,SV,O5,unencodable characters,False,0,0,raised UnicodeEncodeError,False,0,no,0,no,no candidate (rule),rule
+0,A,O1,administrators,False,0,0,,,0,no,0,no,no candidate (rule),rule
+0,A,O2,case folding beyond ASCII,True,0,0,"(200, 1)",True,0,yes,0,no,,Qwen 3.7-Plus
+0,A,O3,is a key used by a rejected request,False,0,0,"(400, 201)",True,0,no,0,no,no candidate (rule),rule
+0,A,O4,empty idempotency key,True,0,0,400,True,0,yes,0,no,,Qwen 3.7-Plus
+0,A,O5,unencodable characters,False,0,0,raised UnicodeEncodeError,False,0,no,0,no,no candidate (rule),rule
+0,B,O1,administrators,False,0,0,,,0,no,0,no,no candidate (rule),rule
+0,B,O2,case folding beyond ASCII,False,0,0,"(200, 1)",True,0,no,0,no,no candidate (rule),rule
+0,B,O3,is a key used by a rejected request,False,0,0,"(400, 201)",True,0,no,0,no,no candidate (rule),rule
+0,B,O4,empty idempotency key,False,0,0,400,True,0,no,0,no,no candidate (rule),rule
+0,B,O5,unencodable characters,False,0,0,raised UnicodeEncodeError,False,0,no,0,no,no candidate (rule),rule
+0,AB,O1,administrators,False,0,0,,,0,no,0,no,no candidate (rule),rule
+0,AB,O2,case folding beyond ASCII,True,1,0,"(200, 1)",True,0,yes,0,no,"Test checks exact match, not case folding.",Qwen 3.7-Plus
+0,AB,O3,is a key used by a rejected request,True,1,0,"(400, 201)",True,0,yes,1,no,,Qwen 3.7-Plus
+0,AB,O4,empty idempotency key,True,0,0,201,False,0,yes,0,no,,Qwen 3.7-Plus
+0,AB,O5,unencodable characters,False,4,0,201,True,0,no,4,no,,Qwen 3.7-Plus
+0,ABp,O1,administrators,False,0,0,,,0,no,0,no,no candidate (rule),rule
+0,ABp,O2,case folding beyond ASCII,False,0,0,"(200, 1)",True,0,no,0,no,no candidate (rule),rule
+0,ABp,O3,is a key used by a rejected request,False,1,0,"(400, 201)",True,0,no,1,no,,Qwen 3.7-Plus
+0,ABp,O4,empty idempotency key,False,0,0,400,True,0,no,0,no,no candidate (rule),rule
+0,ABp,O5,unencodable characters,False,0,0,raised UnicodeEncodeError,False,0,no,0,no,no candidate (rule),rule
+1,SV,O1,administrators,False,0,0,,,0,no,0,no,no candidate (rule),rule
+1,SV,O2,case folding beyond ASCII,False,0,0,"(200, 1)",True,0,no,0,no,no candidate (rule),rule
+1,SV,O3,is a key used by a rejected request,False,0,0,"(400, 201)",True,0,no,0,no,no candidate (rule),rule
+1,SV,O4,empty idempotency key,False,0,0,400,True,0,no,0,no,no candidate (rule),rule
+1,SV,O5,unencodable characters,False,0,0,201,True,0,no,0,no,no candidate (rule),rule
+1,A,O1,administrators,False,0,0,,,0,no,0,no,no candidate (rule),rule
+1,A,O2,case folding beyond ASCII,True,0,0,"(200, 1)",True,0,yes,0,no,,Qwen 3.7-Plus
+1,A,O3,is a key used by a rejected request,False,0,0,"(400, 201)",True,0,no,0,no,no candidate (rule),rule
+1,A,O4,empty idempotency key,True,0,0,400,True,0,yes,0,no,,Qwen 3.7-Plus
+1,A,O5,unencodable characters,False,0,0,201,True,0,no,0,no,no candidate (rule),rule
+1,B,O1,administrators,False,0,0,,,0,no,0,no,no candidate (rule),rule
+1,B,O2,case folding beyond ASCII,False,0,0,"(200, 1)",True,0,no,0,no,no candidate (rule),rule
+1,B,O3,is a key used by a rejected request,False,1,0,"(400, 201)",True,0,no,1,no,,Qwen 3.7-Plus
+1,B,O4,empty idempotency key,False,0,0,201,False,0,no,0,no,no candidate (rule),rule
+1,B,O5,unencodable characters,False,0,0,201,True,0,no,0,no,no candidate (rule),rule
+1,AB,O1,administrators,False,0,0,,,0,no,0,no,no candidate (rule),rule
+1,AB,O2,case folding beyond ASCII,True,2,0,"(200, 1)",True,0,yes,0,no,"Tests check username charset and length boundaries, not case folding.",Qwen 3.7-Plus
+1,AB,O3,is a key used by a rejected request,False,0,0,"(400, 201)",True,0,no,0,no,no candidate (rule),rule
+1,AB,O4,empty idempotency key,True,0,0,400,True,0,yes,0,no,,Qwen 3.7-Plus
+1,AB,O5,unencodable characters,False,0,0,201,True,0,no,0,no,no candidate (rule),rule
+1,ABp,O1,administrators,False,0,0,,,0,no,0,no,no candidate (rule),rule
+1,ABp,O2,case folding beyond ASCII,False,0,0,"(200, 1)",True,0,no,0,no,no candidate (rule),rule
+1,ABp,O3,is a key used by a rejected request,False,0,0,"(400, 201)",True,0,no,0,no,no candidate (rule),rule
+1,ABp,O4,empty idempotency key,False,0,0,400,True,0,no,0,no,no candidate (rule),rule
+1,ABp,O5,unencodable characters,False,0,0,201,True,0,no,0,no,no candidate (rule),rule
+2,SV,O1,administrators,False,0,0,,,0,no,0,no,no candidate (rule),rule
+2,SV,O2,case folding beyond ASCII,False,0,0,"(200, 1)",True,0,no,0,no,no candidate (rule),rule
+2,SV,O3,is a key used by a rejected request,False,0,0,"(400, 201)",True,0,no,0,no,no candidate (rule),rule
+2,SV,O4,empty idempotency key,False,0,0,201,False,0,no,0,no,no candidate (rule),rule
+2,SV,O5,unencodable characters,False,0,0,raised UnicodeEncodeError,False,0,no,0,no,no candidate (rule),rule
+2,A,O1,administrators,False,0,0,,,0,no,0,no,no candidate (rule),rule
+2,A,O2,case folding beyond ASCII,True,0,0,"(200, 1)",True,0,yes,0,no,,Qwen 3.7-Plus
+2,A,O3,is a key used by a rejected request,False,0,0,"(400, 201)",True,0,no,0,no,no candidate (rule),rule
+2,A,O4,empty idempotency key,False,0,0,201,False,0,no,0,no,no candidate (rule),rule
+2,A,O5,unencodable characters,False,0,0,raised UnicodeEncodeError,False,0,no,0,no,no candidate (rule),rule
+2,B,O1,administrators,False,0,0,,,0,no,0,no,no candidate (rule),rule
+2,B,O2,case folding beyond ASCII,False,1,0,"(200, 1)",True,0,no,0,no,"Test checks username charset, not case folding.",Qwen 3.7-Plus
+2,B,O3,is a key used by a rejected request,False,0,0,"(400, 201)",True,0,no,0,no,no candidate (rule),rule
+2,B,O4,empty idempotency key,False,0,0,201,False,0,no,0,no,no candidate (rule),rule
+2,B,O5,unencodable characters,False,0,0,raised UnicodeEncodeError,False,0,no,0,no,no candidate (rule),rule
+2,AB,O1,administrators,False,0,0,,,0,no,0,no,no candidate (rule),rule
+2,AB,O2,case folding beyond ASCII,False,2,1,"(200, 1)",True,1,no,0,no,"Tests check username charset and length boundaries, not case folding.",Qwen 3.7-Plus
+2,AB,O3,is a key used by a rejected request,False,2,0,"(400, 201)",True,0,no,1,no,,Qwen 3.7-Plus
+2,AB,O4,empty idempotency key,True,0,0,201,False,0,yes,0,no,,Qwen 3.7-Plus
+2,AB,O5,unencodable characters,False,1,0,raised UnicodeEncodeError,False,1,no,1,yes,,Qwen 3.7-Plus
+2,ABp,O1,administrators,False,0,0,,,0,no,0,no,no candidate (rule),rule
+2,ABp,O2,case folding beyond ASCII,False,0,0,"(200, 1)",True,0,no,0,no,no candidate (rule),rule
+2,ABp,O3,is a key used by a rejected request,False,2,1,"(400, 201)",True,0,no,2,no,,Qwen 3.7-Plus
+2,ABp,O4,empty idempotency key,False,0,0,201,False,0,no,0,no,no candidate (rule),rule
+2,ABp,O5,unencodable characters,False,0,0,raised UnicodeEncodeError,False,0,no,0,no,no candidate (rule),rule
+3,SV,O1,administrators,False,0,0,,,0,no,0,no,no candidate (rule),rule
+3,SV,O2,case folding beyond ASCII,False,0,0,"(200, 0)",False,0,no,0,no,no candidate (rule),rule
+3,SV,O3,is a key used by a rejected request,False,0,0,"(400, 201)",True,0,no,0,no,no candidate (rule),rule
+3,SV,O4,empty idempotency key,False,0,0,400,True,0,no,0,no,no candidate (rule),rule
+3,SV,O5,unencodable characters,False,0,0,raised UnicodeEncodeError,False,0,no,0,no,no candidate (rule),rule
+3,A,O1,administrators,False,0,0,,,0,no,0,no,no candidate (rule),rule
+3,A,O2,case folding beyond ASCII,False,0,0,"(200, 0)",False,0,no,0,no,no candidate (rule),rule
+3,A,O3,is a key used by a rejected request,True,0,0,"(400, 201)",True,0,yes,0,no,,Qwen 3.7-Plus
+3,A,O4,empty idempotency key,False,0,0,400,True,0,no,0,no,no candidate (rule),rule
+3,A,O5,unencodable characters,False,0,0,raised UnicodeEncodeError,False,0,no,0,no,no candidate (rule),rule
+3,B,O1,administrators,False,0,0,,,0,no,0,no,no candidate (rule),rule
+3,B,O2,case folding beyond ASCII,False,0,0,"(200, 0)",False,0,no,0,no,no candidate (rule),rule
+3,B,O3,is a key used by a rejected request,False,0,0,"(400, 201)",True,0,no,0,no,no candidate (rule),rule
+3,B,O4,empty idempotency key,False,0,0,400,True,0,no,0,no,no candidate (rule),rule
+3,B,O5,unencodable characters,False,0,0,raised UnicodeEncodeError,False,0,no,0,no,no candidate (rule),rule
+3,AB,O1,administrators,False,0,0,,,0,no,0,no,no candidate (rule),rule
+3,AB,O2,case folding beyond ASCII,False,1,0,"(200, 0)",False,0,no,0,no,"Test checks password length counting, not case folding.",Qwen 3.7-Plus
+3,AB,O3,is a key used by a rejected request,False,1,0,"(400, 201)",True,0,no,1,no,,Qwen 3.7-Plus
+3,AB,O4,empty idempotency key,True,0,0,400,True,0,yes,0,no,,Qwen 3.7-Plus
+3,AB,O5,unencodable characters,False,3,0,201,True,0,no,2,no,,Qwen 3.7-Plus
+3,ABp,O1,administrators,False,0,0,,,0,no,0,no,no candidate (rule),rule
+3,ABp,O2,case folding beyond ASCII,False,0,0,"(200, 0)",False,0,no,0,no,no candidate (rule),rule
+3,ABp,O3,is a key used by a rejected request,False,1,0,"(400, 201)",True,0,no,1,no,,Qwen 3.7-Plus
+3,ABp,O4,empty idempotency key,False,0,0,400,True,0,no,0,no,no candidate (rule),rule
+3,ABp,O5,unencodable characters,False,0,0,raised UnicodeEncodeError,False,0,no,0,no,no candidate (rule),rule
+4,SV,O1,administrators,False,0,0,,,0,no,0,no,no candidate (rule),rule
+4,SV,O2,case folding beyond ASCII,False,0,0,"(200, 0)",False,0,no,0,no,no candidate (rule),rule
+4,SV,O3,is a key used by a rejected request,False,0,0,"(400, 201)",True,0,no,0,no,no candidate (rule),rule
+4,SV,O4,empty idempotency key,False,0,0,400,True,0,no,0,no,no candidate (rule),rule
+4,SV,O5,unencodable characters,False,0,0,400,True,0,no,0,no,no candidate (rule),rule
+4,A,O1,administrators,False,0,0,,,0,no,0,no,no candidate (rule),rule
+4,A,O2,case folding beyond ASCII,True,0,0,"(200, 0)",False,0,yes,0,no,,Qwen 3.7-Plus
+4,A,O3,is a key used by a rejected request,True,0,0,"(400, 201)",True,0,yes,0,no,,Qwen 3.7-Plus
+4,A,O4,empty idempotency key,True,0,0,400,True,0,yes,0,no,,Qwen 3.7-Plus
+4,A,O5,unencodable characters,False,0,0,400,True,0,no,0,no,no candidate (rule),rule
+4,B,O1,administrators,False,0,0,,,0,no,0,no,no candidate (rule),rule
+4,B,O2,case folding beyond ASCII,False,1,0,"(200, 0)",False,0,no,0,no,"Test checks password length boundary, not case folding.",Qwen 3.7-Plus
+4,B,O3,is a key used by a rejected request,False,2,0,"(400, 201)",True,0,no,1,no,,Qwen 3.7-Plus
+4,B,O4,empty idempotency key,False,2,0,400,True,0,no,2,no,,Qwen 3.7-Plus
+4,B,O5,unencodable characters,False,3,0,400,True,0,no,3,no,,Qwen 3.7-Plus
+4,AB,O1,administrators,False,0,0,,,0,no,0,no,no candidate (rule),rule
+4,AB,O2,case folding beyond ASCII,True,0,0,"(200, 0)",False,0,yes,0,no,,Qwen 3.7-Plus
+4,AB,O3,is a key used by a rejected request,True,2,0,"(400, 201)",True,0,yes,2,no,,Qwen 3.7-Plus
+4,AB,O4,empty idempotency key,True,0,0,400,True,0,yes,0,no,,Qwen 3.7-Plus
+4,AB,O5,unencodable characters,False,4,0,400,True,2,no,4,yes,,Qwen 3.7-Plus
+4,ABp,O1,administrators,False,0,0,,,0,no,0,no,no candidate (rule),rule
+4,ABp,O2,case folding beyond ASCII,False,0,0,"(200, 0)",False,0,no,0,no,no candidate (rule),rule
+4,ABp,O3,is a key used by a rejected request,False,0,0,"(400, 201)",True,0,no,0,no,no candidate (rule),rule
+4,ABp,O4,empty idempotency key,False,1,0,201,False,0,no,1,no,,Qwen 3.7-Plus
+4,ABp,O5,unencodable characters,False,1,0,400,True,0,no,1,no,,Qwen 3.7-Plus

@@ -1,0 +1,21 @@
+family,rq,comparison,test,n,a,b,mean_a,mean_b,effect,p,p_holm,significant
+confirmatory,H,"H1 seeded-fault detection, AB vs SV",sign test over faults,32,AB.seeded,SV.seeded,1.0,0.0,32+/0-/0=,4.656612873077393e-10,9.313225746154785e-10,True
+confirmatory,H,"H2 seeded-fault detection, AB vs ABp",sign test over faults,32,AB.seeded,ABp.seeded,1.0,1.0,0+/0-/32=,1.0,1.0,False
+exploratory,RQ1,SV visible vs hidden (evaluation gap),McNemar,2,SV.visible_ok,SV.correct,1.0,1.0,discordant 0/0,1.0,1.0,False
+exploratory,RQ1,Final correctness SV vs AB,McNemar,2,SV.correct,AB.correct,1.0,0.5,discordant 1/0,1.0,1.0,False
+exploratory,RQ1,Final correctness SV vs ABp,McNemar,2,SV.correct,ABp.correct,1.0,0.5,discordant 1/0,1.0,1.0,False
+exploratory,RQ1,Final correctness SV vs A,McNemar,2,SV.correct,A.correct,1.0,1.0,discordant 0/0,1.0,1.0,False
+exploratory,RQ1,Final correctness SV vs B,McNemar,2,SV.correct,B.correct,1.0,1.0,discordant 0/0,1.0,1.0,False
+exploratory,RQ2,Context independence SV vs AB (detection_rate),Wilcoxon,2,SV.detection_rate,AB.detection_rate,0.0,1.0,A12=0.00,0.5,1.0,False
+exploratory,RQ2,Model independence AB vs ABp (detection_rate),Wilcoxon,2,AB.detection_rate,ABp.detection_rate,1.0,1.0,A12=0.50,1.0,1.0,False
+exploratory,RQ2,Context independence SV vs AB (mutation_score),Wilcoxon,2,SV.mutation_score,AB.mutation_score,0.5006385696040868,0.9814814814814814,A12=0.00,0.5,1.0,False
+exploratory,RQ2,Model independence AB vs ABp (mutation_score),Wilcoxon,2,AB.mutation_score,ABp.mutation_score,0.9814814814814814,0.9814814814814814,A12=0.50,1.0,1.0,False
+exploratory,RQ2,Context independence SV vs AB (false_oracle_rate),Wilcoxon,2,SV.false_oracle_rate,AB.false_oracle_rate,0.0,0.034482758620689655,A12=0.25,1.0,1.0,False
+exploratory,RQ2,Model independence AB vs ABp (false_oracle_rate),Wilcoxon,2,AB.false_oracle_rate,ABp.false_oracle_rate,0.034482758620689655,0.035098522167487683,A12=0.50,1.0,1.0,False
+exploratory,RQ3,A vs B (detection_rate),Wilcoxon,2,A.detection_rate,B.detection_rate,1.0,0.0,A12=1.00,0.5,1.0,False
+exploratory,RQ3,AB vs A (detection_rate),Wilcoxon,2,AB.detection_rate,A.detection_rate,1.0,1.0,A12=0.50,1.0,1.0,False
+exploratory,RQ3,AB vs B (detection_rate),Wilcoxon,2,AB.detection_rate,B.detection_rate,1.0,0.0,A12=1.00,0.5,1.0,False
+exploratory,RQ3,A vs B (mutation_score),Wilcoxon,2,A.mutation_score,B.mutation_score,0.9814814814814814,0.0,A12=1.00,0.5,1.0,False
+exploratory,RQ3,AB vs A (mutation_score),Wilcoxon,2,AB.mutation_score,A.mutation_score,0.9814814814814814,0.9814814814814814,A12=0.50,1.0,1.0,False
+exploratory,RQ3,AB vs B (mutation_score),Wilcoxon,2,AB.mutation_score,B.mutation_score,0.9814814814814814,0.0,A12=1.00,0.5,1.0,False
+exploratory,RQ4,Faulty releases SV vs AB,McNemar,2,SV.faulty_release,AB.faulty_release,0.0,0.0,discordant 0/0,1.0,1.0,False

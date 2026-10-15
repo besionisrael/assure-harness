@@ -1,0 +1,195 @@
+{
+ "task_id": "HumanEval/128",
+ "benchmark": "humaneval",
+ "run": 0,
+ "prompt_version": "2026-10-08.1",
+ "backends": {
+  "builder": "anthropic:claude-sonnet-5-5",
+  "verifier": "anthropic:claude-sonnet-5-5",
+  "verifier_alt": "openai:gpt-5.5-2026-04-23"
+ },
+ "p0": "def prod_signs(arr):\n    if not arr:\n        return None\n    sign = 1\n    total = 0\n    for x in arr:\n        if x == 0:\n            sign = 0\n        elif x < 0:\n            sign = -sign\n        total += abs(x)\n    return sign * total\n",
+ "p0_info": {
+  "self_rounds": 0,
+  "self_converged": true
+ },
+ "usage_shared": {
+  "input_tokens": 665,
+  "output_tokens": 489,
+  "calls": 1
+ },
+ "conditions": {
+  "SV": {
+   "programs": [
+    "def prod_signs(arr):\n    if not arr:\n        return None\n    sign = 1\n    total = 0\n    for x in arr:\n        if x == 0:\n            sign = 0\n        elif x < 0:\n            sign = -sign\n        total += abs(x)\n    return sign * total\n"
+   ],
+   "final": "def prod_signs(arr):\n    if not arr:\n        return None\n    sign = 1\n    total = 0\n    for x in arr:\n        if x == 0:\n            sign = 0\n        elif x < 0:\n            sign = -sign\n        total += abs(x)\n    return sign * total\n",
+   "evidence": {
+    "builder": {
+     "test_solution": "from solution import prod_signs\n\n\ndef test_examples():\n    assert prod_signs([1, 2, 2, -4]) == -9\n    assert prod_signs([0, 1]) == 0\n    assert prod_signs([]) is None\n\n\ndef test_more():\n    assert prod_signs([1, 1, 1, 2, 3, -1, 1]) == -10\n    assert prod_signs([2, 4, 1, 2, -1, -1, 9]) == 20\n    assert prod_signs([-1, 1, -1, 1]) == 4\n    assert prod_signs([-1, 1, 1, 1]) == -4\n    assert prod_signs([-1, 1, 1, 0]) == 0\n\n\ndef test_single():\n    assert prod_signs([-5]) == -5\n    assert prod_signs([5]) == 5\n    assert prod_signs([0]) == 0\n\n\ndef test_zero_with_negatives():\n    assert prod_signs([0, -3, -4]) == 0\n"
+    }
+   },
+   "rounds": [],
+   "usage": {
+    "input_tokens": 0,
+    "output_tokens": 0,
+    "calls": 0
+   },
+   "open_questions": []
+  },
+  "A": {
+   "programs": [
+    "def prod_signs(arr):\n    if not arr:\n        return None\n    sign = 1\n    total = 0\n    for x in arr:\n        if x == 0:\n            sign = 0\n        elif x < 0:\n            sign = -sign\n        total += abs(x)\n    return sign * total\n"
+   ],
+   "final": "def prod_signs(arr):\n    if not arr:\n        return None\n    sign = 1\n    total = 0\n    for x in arr:\n        if x == 0:\n            sign = 0\n        elif x < 0:\n            sign = -sign\n        total += abs(x)\n    return sign * total\n",
+   "evidence": {
+    "A": {
+     "test_phase_a": "from hypothesis import given, strategies as st\nfrom solution import prod_signs\n\nints = st.integers(min_value=-10**6, max_value=10**6)\nint_lists = st.lists(ints, min_size=1, max_size=30)\n\n\ndef ref(arr):\n    if not arr:\n        return None\n    s = 1\n    for x in arr:\n        if x == 0:\n            s = 0\n            break\n        if x < 0:\n            s = -s\n    return s * sum(abs(x) for x in arr)\n\n\ndef test_example_negative_product():\n    \"\"\"The spec example [1, 2, 2, -4] must return -9.\"\"\"\n    out = prod_signs([1, 2, 2, -4])\n    assert out == -9, f\"input={[1, 2, 2, -4]!r} output={out!r}\"\n\n\ndef test_example_zero():\n    \"\"\"An array containing zero, such as [0, 1], must return 0.\"\"\"\n    out = prod_signs([0, 1])\n    assert out == 0, f\"input={[0, 1]!r} output={out!r}\"\n\n\ndef test_example_empty():\n    \"\"\"An empty array must return None.\"\"\"\n    out = prod_signs([])\n    assert out is None, f\"input={[]!r} output={out!r}\"\n\n\ndef test_two_negatives_positive():\n    \"\"\"Two negatives give a positive product of signs, so the result is the positive sum of magnitudes.\"\"\"\n    x = [-1, -2]\n    out = prod_signs(x)\n    assert out == 3, f\"input={x!r} output={out!r}\"\n\n\ndef test_single_elements():\n    \"\"\"For a single element x the result must equal x.\"\"\"\n    for v in (-5, 0, 7):\n        out = prod_signs([v])\n        assert out == v, f\"input={[v]!r} output={out!r}\"\n\n\ndef test_all_negative_odd_count():\n    \"\"\"Three negatives give a negative sign product times the sum of magnitudes.\"\"\"\n    x = [-1, -2, -3]\n    out = prod_signs(x)\n    assert out == -6, f\"input={x!r} output={out!r}\"\n\n\n@given(int_lists)\ndef test_matches_definition(x):\n    \"\"\"The result must equal the sum of magnitudes times the product of signs.\"\"\"\n    out = prod_signs(list(x))\n    assert out == ref(x), f\"input={x!r} output={out!r}\"\n\n\n@given(int_lists, st.data())\ndef test_zero_gives_zero(x, data):\n    \"\"\"If any element is zero the result must be 0.\"\"\"\n    i = data.draw(st.integers(min_value=0, max_value=len(x)))\n    y = x[:i] + [0] + x[i:]\n    out = prod_signs(y)\n    assert out == 0, f\"input={y!r} output={out!r}\"\n\n\n@given(st.lists(ints.filter(lambda v: v != 0), min_size=1, max_size=30))\ndef test_magnitude_and_sign(x):\n    \"\"\"Without zeros the result magnitude is the sum of magnitudes and its sign is negative iff the negative count is odd.\"\"\"\n    out = prod_signs(x)\n    assert abs(out) == sum(abs(v) for v in x), f\"input={x!r} output={out!r}\"\n    negs = sum(1 for v in x if v < 0)\n    assert (out < 0) == (negs % 2 == 1), f\"input={x!r} output={out!r}\"\n\n\n@given(int_lists, st.randoms())\ndef test_order_independent(x, rnd):\n    \"\"\"The result must not depend on the order of the elements.\"\"\"\n    y = list(x)\n    rnd.shuffle(y)\n    a = prod_signs(list(x))\n    b = prod_signs(y)\n    assert a == b, f\"input={x!r} output={a!r} shuffled={y!r} output2={b!r}\"\n\n\n@given(int_lists)\ndef test_negation_effect(x):\n    \"\"\"Negating every element flips the sign of a nonzero result for odd length and keeps it for even length.\"\"\"\n    neg = [-v for v in x]\n    a = prod_signs(list(x))\n    b = prod_signs(neg)\n    exp = -a if len(x) % 2 == 1 else a\n    assert b == exp, f\"input={x!r} output={a!r} negated={neg!r} output2={b!r}\"\n\n\n@given(int_lists)\ndef test_returns_int(x):\n    \"\"\"For a nonempty integer array the result must be an integer.\"\"\"\n    out = prod_signs(list(x))\n    assert isinstance(out, int), f\"input={x!r} output={out!r}\"\n"
+    }
+   },
+   "rounds": [
+    {
+     "round": 1,
+     "failing": 0
+    }
+   ],
+   "mutation": null,
+   "open_questions": [],
+   "usage": {
+    "builder": {
+     "input_tokens": 0,
+     "output_tokens": 0,
+     "calls": 0
+    },
+    "verifier": {
+     "input_tokens": 800,
+     "output_tokens": 1723,
+     "calls": 1
+    }
+   },
+   "verifier_backend": "anthropic:claude-sonnet-5-5"
+  },
+  "B": {
+   "programs": [
+    "def prod_signs(arr):\n    if not arr:\n        return None\n    sign = 1\n    total = 0\n    for x in arr:\n        if x == 0:\n            sign = 0\n        elif x < 0:\n            sign = -sign\n        total += abs(x)\n    return sign * total\n"
+   ],
+   "final": "def prod_signs(arr):\n    if not arr:\n        return None\n    sign = 1\n    total = 0\n    for x in arr:\n        if x == 0:\n            sign = 0\n        elif x < 0:\n            sign = -sign\n        total += abs(x)\n    return sign * total\n",
+   "evidence": {
+    "B": {
+     "test_phase_b": "from hypothesis import given, strategies as st\nfrom solution import prod_signs\n\nints = st.integers(min_value=-10**6, max_value=10**6)\nlists = st.lists(ints, min_size=1, max_size=30)\n\n\ndef ref(arr):\n    s = 1\n    for x in arr:\n        if x == 0:\n            s = 0\n        elif x < 0:\n            s = -s\n    return s * sum(abs(x) for x in arr)\n\n\ndef test_example_mixed():\n    \"\"\"The spec example [1,2,2,-4] must give -9.\"\"\"\n    out = prod_signs([1, 2, 2, -4])\n    assert out == -9, f\"input={[1, 2, 2, -4]!r} output={out!r}\"\n\n\ndef test_example_zero():\n    \"\"\"An array containing zero must give 0 per the spec example.\"\"\"\n    out = prod_signs([0, 1])\n    assert out == 0, f\"input={[0, 1]!r} output={out!r}\"\n\n\ndef test_empty_returns_none():\n    \"\"\"An empty array must return None.\"\"\"\n    out = prod_signs([])\n    assert out is None, f\"input={[]!r} output={out!r}\"\n\n\ndef test_single_zero_is_zero_not_none():\n    \"\"\"An array [0] is nonempty so the result must be 0, not None.\"\"\"\n    out = prod_signs([0])\n    assert out == 0 and out is not None, f\"input={[0]!r} output={out!r}\"\n\n\ndef test_single_negative():\n    \"\"\"A single negative number has sign -1 so the result is -magnitude.\"\"\"\n    out = prod_signs([-5])\n    assert out == -5, f\"input={[-5]!r} output={out!r}\"\n\n\ndef test_single_positive():\n    \"\"\"A single positive number returns itself.\"\"\"\n    out = prod_signs([7])\n    assert out == 7, f\"input={[7]!r} output={out!r}\"\n\n\ndef test_two_negatives_positive_sign():\n    \"\"\"Two negatives give product sign +1 so the result is the sum of magnitudes.\"\"\"\n    out = prod_signs([-1, -2])\n    assert out == 3, f\"input={[-1, -2]!r} output={out!r}\"\n\n\ndef test_three_negatives_negative_sign():\n    \"\"\"Three negatives give product sign -1.\"\"\"\n    out = prod_signs([-1, -2, -3])\n    assert out == -6, f\"input={[-1, -2, -3]!r} output={out!r}\"\n\n\ndef test_zero_after_negatives():\n    \"\"\"A zero after negatives still forces result 0.\"\"\"\n    arr = [-3, -4, 0]\n    out = prod_signs(arr)\n    assert out == 0, f\"input={arr!r} output={out!r}\"\n\n\ndef test_zero_before_negatives():\n    \"\"\"A zero before negatives still forces result 0.\"\"\"\n    arr = [0, -3, 5, -4]\n    out = prod_signs(arr)\n    assert out == 0, f\"input={arr!r} output={out!r}\"\n\n\ndef test_all_zeros():\n    \"\"\"An array of all zeros gives 0.\"\"\"\n    arr = [0, 0, 0]\n    out = prod_signs(arr)\n    assert out == 0, f\"input={arr!r} output={out!r}\"\n\n\ndef test_large_values():\n    \"\"\"Large magnitudes are summed exactly.\"\"\"\n    arr = [10**18, -10**18]\n    out = prod_signs(arr)\n    assert out == -2 * 10**18, f\"input={arr!r} output={out!r}\"\n\n\n@given(lists)\ndef test_matches_spec_definition(arr):\n    \"\"\"The result must equal sign-product times sum of magnitudes.\"\"\"\n    out = prod_signs(arr)\n    assert out == ref(arr), f\"input={arr!r} output={out!r}\"\n\n\n@given(lists)\ndef test_absolute_value_is_sum_or_zero(arr):\n    \"\"\"The result magnitude must be the sum of magnitudes, or 0 if any element is 0.\"\"\"\n    out = prod_signs(arr)\n    exp = 0 if 0 in arr else sum(abs(x) for x in arr)\n    assert abs(out) == exp, f\"input={arr!r} output={out!r}\"\n\n\n@given(lists, st.randoms())\ndef test_permutation_invariant(arr, rnd):\n    \"\"\"The result must not depend on element order.\"\"\"\n    shuffled = list(arr)\n    rnd.shuffle(shuffled)\n    a, b = prod_signs(arr), prod_signs(shuffled)\n    assert a == b, f\"input={arr!r} output={a!r} shuffled={shuffled!r} output2={b!r}\"\n\n\n@given(lists, st.integers(min_value=0, max_value=29))\ndef test_zero_anywhere_gives_zero(arr, i):\n    \"\"\"Any array containing a zero must give 0.\"\"\"\n    a = list(arr)\n    a[i % len(a)] = 0\n    out = prod_signs(a)\n    assert out == 0, f\"input={a!r} output={out!r}\"\n\n\n@given(st.lists(ints.filter(lambda v: v != 0), min_size=1, max_size=30),\n       st.integers(min_value=0, max_value=29))\ndef test_negating_one_nonzero_flips_sign_and_keeps_magnitude(arr, i):\n    \"\"\"Negating one element of a zero-free array must flip the sign of the result.\"\"\"\n    j = i % len(arr)\n    b = list(arr)\n    b[j] = -b[j]\n    o1, o2 = prod_signs(arr), prod_signs(b)\n    assert o1 == -o2, f\"input={arr!r} output={o1!r} negated={b!r} output2={o2!r}\"\n\n\n@given(st.lists(ints.filter(lambda v: v != 0), min_size=1, max_size=30))\ndef test_sign_matches_parity_of_negatives(arr):\n    \"\"\"For zero-free arrays the result is negative iff the count of negatives is odd.\"\"\"\n    out = prod_signs(arr)\n    neg = sum(1 for x in arr if x < 0)\n    assert (out < 0) == (neg % 2 == 1), f\"input={arr!r} output={out!r}\"\n",
+     "test_phase_b_mutants": "# No new tests: mutants M013 and M015 are equivalent to the implementation\n# for all inputs permitted by the specification (arrays of integers), because\n# zero is handled by an earlier branch and, for nonzero integers,\n# `x < 1`, `x <= 0` and `x < 0` are the same condition.\n"
+    }
+   },
+   "rounds": [
+    {
+     "round": 1,
+     "failing": 0
+    }
+   ],
+   "mutation": {
+    "mutants": 17,
+    "survivors": 2,
+    "shown": 2
+   },
+   "open_questions": [],
+   "usage": {
+    "builder": {
+     "input_tokens": 0,
+     "output_tokens": 0,
+     "calls": 0
+    },
+    "verifier": {
+     "input_tokens": 4395,
+     "output_tokens": 2844,
+     "calls": 2
+    }
+   },
+   "verifier_backend": "anthropic:claude-sonnet-5-5"
+  },
+  "AB": {
+   "programs": [
+    "def prod_signs(arr):\n    if not arr:\n        return None\n    sign = 1\n    total = 0\n    for x in arr:\n        if x == 0:\n            sign = 0\n        elif x < 0:\n            sign = -sign\n        total += abs(x)\n    return sign * total\n"
+   ],
+   "final": "def prod_signs(arr):\n    if not arr:\n        return None\n    sign = 1\n    total = 0\n    for x in arr:\n        if x == 0:\n            sign = 0\n        elif x < 0:\n            sign = -sign\n        total += abs(x)\n    return sign * total\n",
+   "evidence": {
+    "A": {
+     "test_phase_a": "from hypothesis import given, strategies as st\n\nfrom solution import prod_signs\n\nints = st.integers(min_value=-1000, max_value=1000)\nnonempty = st.lists(ints, min_size=1, max_size=20)\nnonzero = st.integers(min_value=-1000, max_value=1000).filter(lambda v: v != 0)\n\n\ndef model(arr):\n    sign = 1\n    for v in arr:\n        if v == 0:\n            sign = 0\n        elif v < 0:\n            sign = -sign\n    return sum(abs(v) for v in arr) * sign\n\n\ndef test_example_mixed_signs():\n    \"\"\"The spec example [1, 2, 2, -4] must return -9.\"\"\"\n    out = prod_signs([1, 2, 2, -4])\n    assert out == -9, f\"input={[1, 2, 2, -4]!r} output={out!r}\"\n\n\ndef test_example_zero():\n    \"\"\"The spec example [0, 1] must return 0.\"\"\"\n    out = prod_signs([0, 1])\n    assert out == 0, f\"input={[0, 1]!r} output={out!r}\"\n\n\ndef test_example_empty():\n    \"\"\"An empty array must return None.\"\"\"\n    out = prod_signs([])\n    assert out is None, f\"input={[]!r} output={out!r}\"\n\n\ndef test_two_negatives_positive():\n    \"\"\"An even number of negatives yields the positive sum of magnitudes.\"\"\"\n    x = [-3, -5]\n    out = prod_signs(x)\n    assert out == 8, f\"input={x!r} output={out!r}\"\n\n\ndef test_three_negatives_negative():\n    \"\"\"An odd number of negatives yields the negative sum of magnitudes.\"\"\"\n    x = [-1, -2, -3]\n    out = prod_signs(x)\n    assert out == -6, f\"input={x!r} output={out!r}\"\n\n\ndef test_all_zero():\n    \"\"\"An array of only zeros must return 0.\"\"\"\n    x = [0, 0, 0]\n    out = prod_signs(x)\n    assert out == 0, f\"input={x!r} output={out!r}\"\n\n\n@given(ints)\ndef test_single_element_returns_itself(v):\n    \"\"\"For a single element x the result is abs(x)*sign(x), i.e. x.\"\"\"\n    out = prod_signs([v])\n    assert out == v, f\"input={[v]!r} output={out!r}\"\n\n\n@given(st.lists(ints, min_size=0, max_size=20))\ndef test_matches_definition(arr):\n    \"\"\"The result must equal the sum of magnitudes times the product of signs (None if empty).\"\"\"\n    out = prod_signs(list(arr))\n    if not arr:\n        assert out is None, f\"input={arr!r} output={out!r}\"\n    else:\n        exp = model(arr)\n        assert out == exp, f\"input={arr!r} output={out!r}\"\n\n\n@given(st.lists(nonzero, min_size=1, max_size=20))\ndef test_magnitude_and_sign_without_zeros(arr):\n    \"\"\"Without zeros, the magnitude is the sum of absolute values and the sign follows parity of negatives.\"\"\"\n    out = prod_signs(list(arr))\n    assert abs(out) == sum(abs(v) for v in arr), f\"input={arr!r} output={out!r}\"\n    negs = sum(1 for v in arr if v < 0)\n    if negs % 2 == 0:\n        assert out > 0, f\"input={arr!r} output={out!r}\"\n    else:\n        assert out < 0, f\"input={arr!r} output={out!r}\"\n\n\n@given(st.lists(ints, min_size=0, max_size=20), st.integers(min_value=0, max_value=20))\ndef test_any_zero_gives_zero(arr, pos):\n    \"\"\"If the array contains a zero, the result must be 0.\"\"\"\n    pos = min(pos, len(arr))\n    x = arr[:pos] + [0] + arr[pos:]\n    out = prod_signs(list(x))\n    assert out == 0, f\"input={x!r} output={out!r}\"\n\n\n@given(nonempty, st.randoms(use_true_random=False))\ndef test_order_independent(arr, rnd):\n    \"\"\"The result must not depend on the order of the elements.\"\"\"\n    shuffled = list(arr)\n    rnd.shuffle(shuffled)\n    a = prod_signs(list(arr))\n    b = prod_signs(list(shuffled))\n    assert a == b, f\"input={arr!r} output={a!r} shuffled={shuffled!r} shuffled_output={b!r}\"\n\n\n@given(nonempty, st.integers(min_value=0, max_value=19))\ndef test_negating_one_element_negates_result(arr, idx):\n    \"\"\"Negating one element keeps magnitudes and flips the sign product, so the result is negated.\"\"\"\n    idx = idx % len(arr)\n    other = list(arr)\n    other[idx] = -other[idx]\n    a = prod_signs(list(arr))\n    b = prod_signs(list(other))\n    assert b == -a, f\"input={arr!r} output={a!r} modified={other!r} modified_output={b!r}\"\n\n\n@given(st.lists(st.integers(min_value=0, max_value=1000), min_size=1, max_size=20))\ndef test_nonnegative_inputs_sum(arr):\n    \"\"\"With no negative numbers the result is the plain sum (0 if a zero is present).\"\"\"\n    out = prod_signs(list(arr))\n    exp = 0 if 0 in arr else sum(arr)\n    assert out == exp, f\"input={arr!r} output={out!r}\"\n\n\n@given(st.lists(ints, min_size=0, max_size=20))\ndef test_input_not_mutated(arr):\n    \"\"\"The function must be usable without altering the caller's array.\"\"\"\n    copy = list(arr)\n    prod_signs(copy)\n    assert copy == arr, f\"input={arr!r} after_call={copy!r}\"\n"
+    },
+    "B": {
+     "test_phase_b": "from hypothesis import given, strategies as st\n\nfrom solution import prod_signs\n\nbig = st.integers(min_value=-10**18, max_value=10**18)\nsmall = st.integers(min_value=-50, max_value=50)\nnonzero_small = small.filter(lambda v: v != 0)\n\n\ndef expected(arr):\n    if not arr:\n        return None\n    sign = 1\n    for v in arr:\n        if v == 0:\n            sign = 0\n        elif v < 0:\n            sign = -sign\n    return sign * sum(abs(v) for v in arr)\n\n\ndef test_single_zero_is_zero_not_none():\n    \"\"\"A non-empty array [0] must return 0, not None.\"\"\"\n    x = [0]\n    out = prod_signs(x)\n    assert out is not None and out == 0, f\"input={x!r} output={out!r}\"\n\n\ndef test_zero_first_then_negatives():\n    \"\"\"A zero anywhere makes the result 0 even if negatives follow it.\"\"\"\n    x = [0, -1, -2, -3]\n    out = prod_signs(x)\n    assert out == 0, f\"input={x!r} output={out!r}\"\n\n\ndef test_zero_last_after_negatives():\n    \"\"\"A zero after negatives still makes the result 0.\"\"\"\n    x = [-4, -5, 0]\n    out = prod_signs(x)\n    assert out == 0, f\"input={x!r} output={out!r}\"\n\n\ndef test_zero_in_middle():\n    \"\"\"A zero between nonzero numbers makes the result 0.\"\"\"\n    x = [7, 0, -9]\n    out = prod_signs(x)\n    assert out == 0, f\"input={x!r} output={out!r}\"\n\n\ndef test_multiple_zeros_with_negatives():\n    \"\"\"Several zeros mixed with negatives still give 0.\"\"\"\n    x = [0, -2, 0, -3, 0]\n    out = prod_signs(x)\n    assert out == 0, f\"input={x!r} output={out!r}\"\n\n\ndef test_single_minus_one_and_one():\n    \"\"\"Single elements -1 and 1 return themselves.\"\"\"\n    for x in ([-1], [1]):\n        out = prod_signs(x)\n        assert out == x[0], f\"input={x!r} output={out!r}\"\n\n\ndef test_negative_single_is_negative():\n    \"\"\"A single negative number returns itself (its magnitude times sign -1).\"\"\"\n    x = [-17]\n    out = prod_signs(x)\n    assert out == -17, f\"input={x!r} output={out!r}\"\n\n\ndef test_ones_and_minus_one_magnitudes_summed():\n    \"\"\"Magnitudes are summed, not multiplied: [1, 1, 1, -1] gives -4.\"\"\"\n    x = [1, 1, 1, -1]\n    out = prod_signs(x)\n    assert out == -4, f\"input={x!r} output={out!r}\"\n\n\ndef test_magnitudes_summed_not_product_of_values():\n    \"\"\"The result for [2, 3] is the sum 5, not the product 6.\"\"\"\n    x = [2, 3]\n    out = prod_signs(x)\n    assert out == 5, f\"input={x!r} output={out!r}\"\n\n\ndef test_zero_contributes_no_magnitude_but_nonzero_sign_absent():\n    \"\"\"For [0, 0, 5, -5] the result is 0 regardless of magnitude sum 10.\"\"\"\n    x = [0, 0, 5, -5]\n    out = prod_signs(x)\n    assert out == 0, f\"input={x!r} output={out!r}\"\n\n\ndef test_large_integers_exact():\n    \"\"\"Arbitrarily large integers must be summed exactly with the correct sign.\"\"\"\n    x = [10**30, -10**30, 5]\n    out = prod_signs(x)\n    assert out == -(2 * 10**30 + 5), f\"input={x!r} output={out!r}\"\n\n\ndef test_four_negatives_positive():\n    \"\"\"Four negatives (even count) give the positive sum of magnitudes.\"\"\"\n    x = [-1, -2, -3, -4]\n    out = prod_signs(x)\n    assert out == 10, f\"input={x!r} output={out!r}\"\n\n\n@given(st.lists(big, min_size=0, max_size=30))\ndef test_large_values_match_definition(arr):\n    \"\"\"The result equals the sum of magnitudes times the product of signs for any integers, None if empty.\"\"\"\n    out = prod_signs(list(arr))\n    exp = expected(arr)\n    assert out == exp, f\"input={arr!r} output={out!r}\"\n\n\n@given(st.lists(st.sampled_from([-2, -1, 0, 0, 1, 2]), min_size=1, max_size=15))\ndef test_zero_heavy_lists(arr):\n    \"\"\"With many zeros and small values the result follows the definition exactly.\"\"\"\n    out = prod_signs(list(arr))\n    exp = expected(arr)\n    assert out == exp, f\"input={arr!r} output={out!r}\"\n\n\n@given(st.lists(nonzero_small, min_size=1, max_size=10),\n       st.lists(nonzero_small, min_size=1, max_size=10))\ndef test_concatenation_of_nonzero_lists(a, b):\n    \"\"\"For zero-free lists, the sign of a concatenation is the product of the signs and magnitudes add.\"\"\"\n    def sgn(lst):\n        return -1 if sum(1 for v in lst if v < 0) % 2 else 1\n\n    out = prod_signs(a + b)\n    exp = sgn(a) * sgn(b) * (sum(map(abs, a)) + sum(map(abs, b)))\n    assert out == exp, f\"input={a + b!r} output={out!r}\"\n\n\n@given(st.lists(small, min_size=1, max_size=15))\ndef test_result_is_integer(arr):\n    \"\"\"The result for a non-empty integer array is an integer.\"\"\"\n    out = prod_signs(list(arr))\n    assert isinstance(out, int), f\"input={arr!r} output={out!r}\"\n\n\n@given(st.lists(small, min_size=1, max_size=15))\ndef test_abs_result_bounded_by_magnitude_sum(arr):\n    \"\"\"The result's magnitude is either 0 (zero present) or exactly the sum of magnitudes.\"\"\"\n    out = prod_signs(list(arr))\n    total = sum(abs(v) for v in arr)\n    if 0 in arr:\n        assert out == 0, f\"input={arr!r} output={out!r}\"\n    else:\n        assert abs(out) == total, f\"input={arr!r} output={out!r}\"\n\n\n@given(st.lists(nonzero_small, min_size=1, max_size=15))\ndef test_flipping_all_signs_parity(arr):\n    \"\"\"Negating every element multiplies the result by (-1)**len(arr) for zero-free input.\"\"\"\n    out = prod_signs(list(arr))\n    flipped = [-v for v in arr]\n    out2 = prod_signs(flipped)\n    exp = out * (-1) ** len(arr)\n    assert out2 == exp, f\"input={arr!r} output={out!r} flipped={flipped!r} flipped_output={out2!r}\"\n",
+     "test_phase_b_mutants": "# No new tests: mutants M013 and M015 are equivalent to the original for all\n# integer inputs, which is the only input domain the specification defines.\n# - M013: the `elif` branch is only reached when x != 0, so `x <= 0` == `x < 0`.\n# - M015: for integers, `x < 1` == `x <= 0`, which equals `x < 0` once x != 0.\n"
+    }
+   },
+   "rounds": [
+    {
+     "round": 1,
+     "failing": 0
+    }
+   ],
+   "mutation": {
+    "mutants": 17,
+    "survivors": 2,
+    "shown": 2
+   },
+   "open_questions": [],
+   "usage": {
+    "builder": {
+     "input_tokens": 0,
+     "output_tokens": 0,
+     "calls": 0
+    },
+    "verifier": {
+     "input_tokens": 15033,
+     "output_tokens": 6364,
+     "calls": 3
+    }
+   },
+   "verifier_backend": "anthropic:claude-sonnet-5-5"
+  },
+  "ABp": {
+   "programs": [
+    "def prod_signs(arr):\n    if not arr:\n        return None\n    sign = 1\n    total = 0\n    for x in arr:\n        if x == 0:\n            sign = 0\n        elif x < 0:\n            sign = -sign\n        total += abs(x)\n    return sign * total\n"
+   ],
+   "final": "def prod_signs(arr):\n    if not arr:\n        return None\n    sign = 1\n    total = 0\n    for x in arr:\n        if x == 0:\n            sign = 0\n        elif x < 0:\n            sign = -sign\n        total += abs(x)\n    return sign * total\n",
+   "evidence": {
+    "A": {
+     "test_phase_a": "from hypothesis import given, strategies as st\n\nfrom solution import prod_signs\n\n\nINTS = st.integers(min_value=-10**6, max_value=10**6)\n\n\ndef _expected_prod_signs(arr):\n    if not arr:\n        return None\n\n    magnitude_sum = sum(abs(x) for x in arr)\n    sign_product = 1\n    for x in arr:\n        if x > 0:\n            sign_product *= 1\n        elif x < 0:\n            sign_product *= -1\n        else:\n            sign_product *= 0\n\n    return magnitude_sum * sign_product\n\n\ndef test_documented_examples():\n    \"\"\"The function must satisfy the examples given in the specification.\"\"\"\n    cases = [\n        ([1, 2, 2, -4], -9),\n        ([0, 1], 0),\n        ([], None),\n    ]\n\n    for arr, exp in cases:\n        out = prod_signs(arr)\n        assert out == exp, f\"input={arr!r} output={out!r}\"\n\n\ndef test_empty_array_returns_none():\n    \"\"\"The function must return None for an empty array.\"\"\"\n    arr = []\n    out = prod_signs(arr)\n    assert out is None, f\"input={arr!r} output={out!r}\"\n\n\n@given(INTS)\ndef test_singleton_array_returns_the_integer_itself(x):\n    \"\"\"For a singleton integer array, the function must return that integer.\"\"\"\n    arr = [x]\n    out = prod_signs(arr)\n    assert out == x, f\"input={arr!r} output={out!r}\"\n\n\n@given(st.lists(INTS, min_size=0, max_size=50))\ndef test_matches_sum_of_magnitudes_times_product_of_signs(arr):\n    \"\"\"The function must equal the sum of magnitudes multiplied by the product of element signs.\"\"\"\n    exp = _expected_prod_signs(arr)\n    out = prod_signs(arr)\n    assert out == exp, f\"input={arr!r} output={out!r}\"\n\n\n@given(\n    st.lists(INTS, min_size=0, max_size=25),\n    st.lists(INTS, min_size=0, max_size=25),\n)\ndef test_nonempty_array_containing_zero_returns_zero(prefix, suffix):\n    \"\"\"Any non-empty array containing at least one zero must return zero.\"\"\"\n    arr = prefix + [0] + suffix\n    out = prod_signs(arr)\n    assert out == 0, f\"input={arr!r} output={out!r}\"\n\n\n@given(st.lists(INTS.filter(lambda x: x != 0), min_size=1, max_size=50))\ndef test_nonzero_arrays_have_magnitude_equal_to_sum_of_magnitudes(arr):\n    \"\"\"For non-empty arrays without zero, the absolute result must equal the sum of magnitudes.\"\"\"\n    out = prod_signs(arr)\n    exp_abs = sum(abs(x) for x in arr)\n    assert abs(out) == exp_abs, f\"input={arr!r} output={out!r}\"\n\n\n@given(st.lists(INTS, min_size=0, max_size=50))\ndef test_result_is_independent_of_element_order(arr):\n    \"\"\"The result must be independent of the order of integers in the array.\"\"\"\n    reversed_arr = list(reversed(arr))\n\n    out = prod_signs(arr)\n    reversed_out = prod_signs(reversed_arr)\n\n    assert out == reversed_out, (\n        f\"input={arr!r} output={out!r}; \"\n        f\"input={reversed_arr!r} output={reversed_out!r}\"\n    )\n"
+    },
+    "B": {
+     "test_phase_b": "from hypothesis import given, strategies as st\n\nfrom solution import prod_signs\n\n\nPOSITIVE_INTS = st.integers(min_value=1, max_value=10**12)\nNONZERO_INTS = st.integers(min_value=-10**12, max_value=10**12).filter(lambda x: x != 0)\n\n\ndef test_large_integers_with_odd_negative_count_return_negative_sum_of_magnitudes():\n    \"\"\"For non-empty integer arrays without zero and an odd number of negatives, the result must be the negative sum of magnitudes.\"\"\"\n    arr = [10**100, -2 * 10**100, 3]\n    exp = -(abs(arr[0]) + abs(arr[1]) + abs(arr[2]))\n\n    out = prod_signs(arr)\n\n    assert out == exp, f\"input={arr!r} output={out!r}\"\n\n\ndef test_large_integers_with_even_negative_count_return_positive_sum_of_magnitudes():\n    \"\"\"For non-empty integer arrays without zero and an even number of negatives, the result must be the positive sum of magnitudes.\"\"\"\n    arr = [10**100, -2 * 10**100, -3]\n    exp = abs(arr[0]) + abs(arr[1]) + abs(arr[2])\n\n    out = prod_signs(arr)\n\n    assert out == exp, f\"input={arr!r} output={out!r}\"\n\n\ndef test_zero_followed_by_negative_integers_still_returns_zero():\n    \"\"\"If any integer in the array is zero, the product of signs must be zero regardless of later negative integers.\"\"\"\n    arr = [0, -1, -2, 3]\n    exp = 0\n\n    out = prod_signs(arr)\n\n    assert out == exp, f\"input={arr!r} output={out!r}\"\n\n\ndef test_negative_integers_before_and_after_zero_still_return_zero():\n    \"\"\"If any integer in the array is zero, the result must be zero regardless of surrounding negative integers.\"\"\"\n    arr = [-5, -4, 0, -3, 2]\n    exp = 0\n\n    out = prod_signs(arr)\n\n    assert out == exp, f\"input={arr!r} output={out!r}\"\n\n\n@given(st.lists(POSITIVE_INTS, min_size=1, max_size=50))\ndef test_all_positive_arrays_return_the_plain_sum(arr):\n    \"\"\"For non-empty arrays of positive integers, the product of signs is one and the result must equal the sum of the integers.\"\"\"\n    exp = sum(arr)\n\n    out = prod_signs(arr)\n\n    assert out == exp, f\"input={arr!r} output={out!r}\"\n\n\n@given(\n    st.lists(POSITIVE_INTS, min_size=2, max_size=20).filter(lambda xs: len(xs) % 2 == 0),\n    st.lists(POSITIVE_INTS, min_size=0, max_size=20),\n)\ndef test_even_number_of_negative_integers_returns_positive_sum(negative_magnitudes, positives):\n    \"\"\"For non-empty arrays without zero and an even number of negative integers, the result must be the positive sum of magnitudes.\"\"\"\n    arr = [-x for x in negative_magnitudes] + positives\n    exp = sum(negative_magnitudes) + sum(positives)\n\n    out = prod_signs(arr)\n\n    assert out == exp, f\"input={arr!r} output={out!r}\"\n\n\n@given(\n    st.lists(POSITIVE_INTS, min_size=1, max_size=19).filter(lambda xs: len(xs) % 2 == 1),\n    st.lists(POSITIVE_INTS, min_size=0, max_size=20),\n)\ndef test_odd_number_of_negative_integers_returns_negative_sum(negative_magnitudes, positives):\n    \"\"\"For non-empty arrays without zero and an odd number of negative integers, the result must be the negative sum of magnitudes.\"\"\"\n    arr = [-x for x in negative_magnitudes] + positives\n    exp = -(sum(negative_magnitudes) + sum(positives))\n\n    out = prod_signs(arr)\n\n    assert out == exp, f\"input={arr!r} output={out!r}\"\n\n\n@given(\n    st.lists(NONZERO_INTS, min_size=0, max_size=20),\n    st.lists(NONZERO_INTS, min_size=0, max_size=20),\n)\ndef test_zero_keeps_result_zero_even_when_later_values_change_sign(prefix, suffix):\n    \"\"\"A zero sign factor must make the result zero even when later nonzero integers would otherwise affect sign parity.\"\"\"\n    arr = prefix + [0, -1] + suffix\n    exp = 0\n\n    out = prod_signs(arr)\n\n    assert out == exp, f\"input={arr!r} output={out!r}\"\n",
+     "test_phase_b_mutants": "\"\"\"No additional tests are added because the listed mutants are equivalent under the integer-array specification.\"\"\"\n"
+    }
+   },
+   "rounds": [
+    {
+     "round": 1,
+     "failing": 0
+    }
+   ],
+   "mutation": {
+    "mutants": 17,
+    "survivors": 2,
+    "shown": 2
+   },
+   "open_questions": [
+    "Whether \u201carray\u201d includes tuples, generators, or other sequence types is not specified.",
+    "Whether boolean values are intended to count as integers is not specified.",
+    "Behavior for non-integer elements or non-array inputs is not specified."
+   ],
+   "usage": {
+    "builder": {
+     "input_tokens": 0,
+     "output_tokens": 0,
+     "calls": 0
+    },
+    "verifier": {
+     "input_tokens": 7522,
+     "output_tokens": 4892,
+     "calls": 3
+    }
+   },
+   "verifier_backend": "openai:gpt-5.5-2026-04-23"
+  }
+ },
+ "seconds": 439.3
+}

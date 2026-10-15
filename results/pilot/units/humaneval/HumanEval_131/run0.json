@@ -1,0 +1,187 @@
+{
+ "task_id": "HumanEval/131",
+ "benchmark": "humaneval",
+ "run": 0,
+ "prompt_version": "2026-10-08.1",
+ "backends": {
+  "builder": "anthropic:claude-sonnet-5-5",
+  "verifier": "anthropic:claude-sonnet-5-5",
+  "verifier_alt": "openai:gpt-5.5-2026-04-23"
+ },
+ "p0": "def digits(n):\n    s = str(abs(int(n)))\n    product = 1\n    found = False\n    for ch in s:\n        d = int(ch)\n        if d % 2 == 1:\n            product *= d\n            found = True\n    return product if found else 0\n",
+ "p0_info": {
+  "self_rounds": 0,
+  "self_converged": true
+ },
+ "usage_shared": {
+  "input_tokens": 471,
+  "output_tokens": 428,
+  "calls": 1
+ },
+ "conditions": {
+  "SV": {
+   "programs": [
+    "def digits(n):\n    s = str(abs(int(n)))\n    product = 1\n    found = False\n    for ch in s:\n        d = int(ch)\n        if d % 2 == 1:\n            product *= d\n            found = True\n    return product if found else 0\n"
+   ],
+   "final": "def digits(n):\n    s = str(abs(int(n)))\n    product = 1\n    found = False\n    for ch in s:\n        d = int(ch)\n        if d % 2 == 1:\n            product *= d\n            found = True\n    return product if found else 0\n",
+   "evidence": {
+    "builder": {
+     "test_solution": "from solution import digits\n\n\ndef test_single():\n    assert digits(1) == 1\n    assert digits(4) == 0\n    assert digits(5) == 5\n\n\ndef test_examples():\n    assert digits(235) == 15\n    assert digits(54) == 5\n    assert digits(120) == 1\n    assert digits(5014) == 5\n    assert digits(98765) == 315\n    assert digits(5576543) == 2625\n\n\ndef test_all_even():\n    assert digits(2468) == 0\n    assert digits(200) == 0\n\n\ndef test_zero_digits_ignored():\n    assert digits(101) == 1\n    assert digits(3003) == 9\n"
+    }
+   },
+   "rounds": [],
+   "usage": {
+    "input_tokens": 0,
+    "output_tokens": 0,
+    "calls": 0
+   },
+   "open_questions": []
+  },
+  "A": {
+   "programs": [
+    "def digits(n):\n    s = str(abs(int(n)))\n    product = 1\n    found = False\n    for ch in s:\n        d = int(ch)\n        if d % 2 == 1:\n            product *= d\n            found = True\n    return product if found else 0\n"
+   ],
+   "final": "def digits(n):\n    s = str(abs(int(n)))\n    product = 1\n    found = False\n    for ch in s:\n        d = int(ch)\n        if d % 2 == 1:\n            product *= d\n            found = True\n    return product if found else 0\n",
+   "evidence": {
+    "A": {
+     "test_phase_a": "from math import prod\n\nfrom hypothesis import given, strategies as st\n\nfrom solution import digits\n\n\ndef _expected(n):\n    odd = [int(c) for c in str(n) if int(c) % 2 == 1]\n    return prod(odd) if odd else 0\n\n\ndef test_example_single_odd():\n    \"\"\"A single odd digit n must return n itself.\"\"\"\n    out = digits(1)\n    assert out == 1, f\"input=1 output={out!r}\"\n\n\ndef test_example_single_even():\n    \"\"\"A number with only even digits must return 0.\"\"\"\n    out = digits(4)\n    assert out == 0, f\"input=4 output={out!r}\"\n\n\ndef test_example_mixed():\n    \"\"\"The odd digits of 235 (3 and 5) must multiply to 15.\"\"\"\n    out = digits(235)\n    assert out == 15, f\"input=235 output={out!r}\"\n\n\ndef test_all_single_digits():\n    \"\"\"Each single digit 1-9 returns itself if odd, else 0.\"\"\"\n    for d in range(1, 10):\n        out = digits(d)\n        exp = d if d % 2 else 0\n        assert out == exp, f\"input={d!r} output={out!r}\"\n\n\ndef test_all_even_multi_digit():\n    \"\"\"A multi-digit number with only even digits must return 0.\"\"\"\n    for n in (2468, 20, 4000, 888888, 200):\n        out = digits(n)\n        assert out == 0, f\"input={n!r} output={out!r}\"\n\n\ndef test_zero_digit_does_not_zero_product():\n    \"\"\"Even digits such as 0 must be ignored, not multiply into the product.\"\"\"\n    for n, exp in ((105, 5), (30, 3), (1001, 1), (907, 63)):\n        out = digits(n)\n        assert out == exp, f\"input={n!r} output={out!r}\"\n\n\ndef test_repeated_odd_digits():\n    \"\"\"Repeated odd digits each contribute to the product.\"\"\"\n    for n, exp in ((33, 9), (111, 1), (999, 729), (5555, 625)):\n        out = digits(n)\n        assert out == exp, f\"input={n!r} output={out!r}\"\n\n\ndef test_large_number():\n    \"\"\"The product of odd digits must be correct for large integers.\"\"\"\n    n = int(\"13579\" * 4)\n    out = digits(n)\n    exp = (1 * 3 * 5 * 7 * 9) ** 4\n    assert out == exp, f\"input={n!r} output={out!r}\"\n\n\n@given(st.integers(min_value=1, max_value=10**18))\ndef test_matches_definition(n):\n    \"\"\"The result must equal the product of the odd digits, or 0 if none.\"\"\"\n    out = digits(n)\n    exp = _expected(n)\n    assert out == exp, f\"input={n!r} output={out!r}\"\n\n\n@given(st.integers(min_value=1, max_value=10**18))\ndef test_zero_iff_no_odd_digit(n):\n    \"\"\"The result is 0 exactly when all digits are even, and positive otherwise.\"\"\"\n    out = digits(n)\n    has_odd = any(c in \"13579\" for c in str(n))\n    if has_odd:\n        assert out > 0, f\"input={n!r} output={out!r}\"\n    else:\n        assert out == 0, f\"input={n!r} output={out!r}\"\n\n\n@given(st.lists(st.integers(min_value=0, max_value=9), min_size=1, max_size=15)\n       .filter(lambda ds: any(ds)), st.randoms())\ndef test_digit_order_irrelevant(ds, rnd):\n    \"\"\"The result must not depend on the order of the digits.\"\"\"\n    ds2 = ds[:]\n    rnd.shuffle(ds2)\n    a = int(\"\".join(map(str, ds)))\n    b = int(\"\".join(map(str, ds2)))\n    if b == 0:\n        return\n    out_a, out_b = digits(a), digits(b)\n    assert out_a == out_b, f\"inputs={a!r},{b!r} outputs={out_a!r},{out_b!r}\"\n\n\n@given(st.integers(min_value=1, max_value=10**12))\ndef test_appending_zero_or_even_digit_unchanged(n):\n    \"\"\"Appending an even digit to n must not change the result.\"\"\"\n    base = digits(n)\n    for e in (0, 2, 4, 6, 8):\n        m = n * 10 + e\n        out = digits(m)\n        assert out == base, f\"input={m!r} output={out!r} expected={base!r}\"\n\n\n@given(st.integers(min_value=1, max_value=10**12), st.sampled_from([1, 3, 5, 7, 9]))\ndef test_appending_odd_digit_multiplies(n, d):\n    \"\"\"Appending odd digit d to n must multiply the odd-digit product by d, or give d if n had none.\"\"\"\n    base = digits(n)\n    m = n * 10 + d\n    out = digits(m)\n    exp = base * d if base != 0 else d\n    assert out == exp, f\"input={m!r} output={out!r} expected={exp!r}\"\n"
+    }
+   },
+   "rounds": [
+    {
+     "round": 1,
+     "failing": 0
+    }
+   ],
+   "mutation": null,
+   "open_questions": [],
+   "usage": {
+    "builder": {
+     "input_tokens": 0,
+     "output_tokens": 0,
+     "calls": 0
+    },
+    "verifier": {
+     "input_tokens": 719,
+     "output_tokens": 1884,
+     "calls": 1
+    }
+   },
+   "verifier_backend": "anthropic:claude-sonnet-5-5"
+  },
+  "B": {
+   "programs": [
+    "def digits(n):\n    s = str(abs(int(n)))\n    product = 1\n    found = False\n    for ch in s:\n        d = int(ch)\n        if d % 2 == 1:\n            product *= d\n            found = True\n    return product if found else 0\n"
+   ],
+   "final": "def digits(n):\n    s = str(abs(int(n)))\n    product = 1\n    found = False\n    for ch in s:\n        d = int(ch)\n        if d % 2 == 1:\n            product *= d\n            found = True\n    return product if found else 0\n",
+   "evidence": {
+    "B": {
+     "test_phase_b": "import math\nfrom hypothesis import given, strategies as st, settings\nfrom solution import digits\n\n\ndef ref(n):\n    odds = []\n    while n > 0:\n        n, d = divmod(n, 10)\n        if d % 2 == 1:\n            odds.append(d)\n    return math.prod(odds) if odds else 0\n\n\ndef test_spec_examples():\n    \"\"\"digits(1)==1, digits(4)==0, digits(235)==15 as in the specification.\"\"\"\n    for x, e in [(1, 1), (4, 0), (235, 15)]:\n        out = digits(x)\n        assert out == e, f\"input={x!r} output={out!r}\"\n\n\ndef test_single_digits():\n    \"\"\"A single-digit number returns itself if odd, else 0.\"\"\"\n    for x in range(1, 10):\n        out = digits(x)\n        e = x if x % 2 else 0\n        assert out == e, f\"input={x!r} output={out!r}\"\n\n\ndef test_all_even_returns_zero():\n    \"\"\"If all digits are even, the result is 0.\"\"\"\n    for x in [2, 8, 20, 246, 8888, 2468024680, 400, 1000000 * 2]:\n        out = digits(x)\n        assert out == 0, f\"input={x!r} output={out!r}\"\n\n\ndef test_zero_digits_are_not_odd():\n    \"\"\"Zero digits are even and must not affect the product of odd digits.\"\"\"\n    for x, e in [(101, 1), (105, 5), (3003, 9), (907, 63), (50, 5), (10, 1)]:\n        out = digits(x)\n        assert out == e, f\"input={x!r} output={out!r}\"\n\n\ndef test_even_digits_ignored_with_odd_present():\n    \"\"\"Even digits are ignored when at least one odd digit exists.\"\"\"\n    for x, e in [(246801, 1), (2223, 3), (4567, 35), (1234567, 105)]:\n        out = digits(x)\n        assert out == e, f\"input={x!r} output={out!r}\"\n\n\ndef test_repeated_odd_digits():\n    \"\"\"Each occurrence of an odd digit contributes to the product.\"\"\"\n    for x, e in [(11, 1), (33, 9), (999, 729), (13579, 945), (5555, 625)]:\n        out = digits(x)\n        assert out == e, f\"input={x!r} output={out!r}\"\n\n\ndef test_large_number():\n    \"\"\"Large positive integers are handled with exact product.\"\"\"\n    x = int(\"9\" * 40)\n    out = digits(x)\n    assert out == 9 ** 40, f\"input={x!r} output={out!r}\"\n\n\ndef test_power_of_ten_boundaries():\n    \"\"\"Numbers at powers of ten boundaries follow the digit rule.\"\"\"\n    for k in range(1, 15):\n        x = 10 ** k\n        out = digits(x)\n        assert out == 1, f\"input={x!r} output={out!r}\"\n        x = 10 ** k - 1\n        out = digits(x)\n        assert out == 9 ** k, f\"input={x!r} output={out!r}\"\n\n\n@given(st.integers(min_value=1, max_value=10 ** 30))\ndef test_matches_reference(n):\n    \"\"\"The result equals the product of odd digits, or 0 if none are odd.\"\"\"\n    out = digits(n)\n    assert out == ref(n), f\"input={n!r} output={out!r} expected={ref(n)!r}\"\n\n\n@given(st.lists(st.integers(0, 9), min_size=1, max_size=15).filter(lambda l: l[0] != 0),\n       st.randoms())\ndef test_digit_order_invariance(ds, rnd):\n    \"\"\"The result depends only on the multiset of digits, not their order.\"\"\"\n    a = int(\"\".join(map(str, ds)))\n    sh = ds[:]\n    rnd.shuffle(sh)\n    if sh[0] == 0:\n        i = next(i for i, d in enumerate(sh) if d != 0)\n        sh[0], sh[i] = sh[i], sh[0]\n    b = int(\"\".join(map(str, sh)))\n    oa, ob = digits(a), digits(b)\n    assert oa == ob, f\"inputs={a!r},{b!r} outputs={oa!r},{ob!r}\"\n\n\n@given(st.integers(min_value=1, max_value=10 ** 20), st.sampled_from([0, 2, 4, 6, 8]))\ndef test_appending_even_digit(n, e):\n    \"\"\"Appending an even digit does not change the result.\"\"\"\n    m = n * 10 + e\n    a, b = digits(n), digits(m)\n    assert a == b, f\"inputs={n!r},{m!r} outputs={a!r},{b!r}\"\n\n\n@given(st.integers(min_value=1, max_value=10 ** 20))\ndef test_appending_one(n):\n    \"\"\"Appending digit 1 keeps the product unless all digits were even, where it gives 1.\"\"\"\n    m = n * 10 + 1\n    a, b = digits(n), digits(m)\n    e = a if a != 0 else 1\n    assert b == e, f\"inputs={n!r},{m!r} outputs={a!r},{b!r}\"\n\n\n@given(st.integers(min_value=1, max_value=10 ** 20), st.sampled_from([3, 5, 7, 9]))\ndef test_appending_odd_digit_multiplies(n, d):\n    \"\"\"Appending odd digit d multiplies the previous product by d (or yields d if none were odd).\"\"\"\n    m = n * 10 + d\n    a, b = digits(n), digits(m)\n    e = a * d if a != 0 else d\n    assert b == e, f\"inputs={n!r},{m!r} outputs={a!r},{b!r}\"\n\n\n@given(st.integers(min_value=1, max_value=10 ** 25))\ndef test_result_nonnegative_and_zero_iff_no_odd(n):\n    \"\"\"The result is positive iff some digit is odd, otherwise 0.\"\"\"\n    out = digits(n)\n    has_odd = any(c in \"13579\" for c in str(n))\n    assert (out > 0) == has_odd and out >= 0, f\"input={n!r} output={out!r}\"\n"
+    }
+   },
+   "rounds": [
+    {
+     "round": 1,
+     "failing": 0
+    }
+   ],
+   "mutation": {
+    "mutants": 14,
+    "survivors": 0
+   },
+   "open_questions": [],
+   "usage": {
+    "builder": {
+     "input_tokens": 0,
+     "output_tokens": 0,
+     "calls": 0
+    },
+    "verifier": {
+     "input_tokens": 786,
+     "output_tokens": 2269,
+     "calls": 1
+    }
+   },
+   "verifier_backend": "anthropic:claude-sonnet-5-5"
+  },
+  "AB": {
+   "programs": [
+    "def digits(n):\n    s = str(abs(int(n)))\n    product = 1\n    found = False\n    for ch in s:\n        d = int(ch)\n        if d % 2 == 1:\n            product *= d\n            found = True\n    return product if found else 0\n"
+   ],
+   "final": "def digits(n):\n    s = str(abs(int(n)))\n    product = 1\n    found = False\n    for ch in s:\n        d = int(ch)\n        if d % 2 == 1:\n            product *= d\n            found = True\n    return product if found else 0\n",
+   "evidence": {
+    "A": {
+     "test_phase_a": "import math\nfrom hypothesis import given, strategies as st\n\nfrom solution import digits\n\n\ndef ref(n):\n    odds = [int(c) for c in str(n) if int(c) % 2 == 1]\n    if not odds:\n        return 0\n    return math.prod(odds)\n\n\ndef test_example_single_odd():\n    \"\"\"digits(1) must equal 1.\"\"\"\n    out = digits(1)\n    assert out == 1, f\"input={1!r} output={out!r}\"\n\n\ndef test_example_single_even():\n    \"\"\"digits(4) must equal 0 since all digits are even.\"\"\"\n    out = digits(4)\n    assert out == 0, f\"input={4!r} output={out!r}\"\n\n\ndef test_example_mixed():\n    \"\"\"digits(235) must equal 15, the product of odd digits 3 and 5.\"\"\"\n    out = digits(235)\n    assert out == 15, f\"input={235!r} output={out!r}\"\n\n\ndef test_all_even_multi_digit():\n    \"\"\"A number whose digits are all even must return 0.\"\"\"\n    for n in (20, 2468, 8080, 400, 2222222):\n        out = digits(n)\n        assert out == 0, f\"input={n!r} output={out!r}\"\n\n\ndef test_zero_digits_ignored_with_odd_present():\n    \"\"\"Even digits including 0 must not zero the product when an odd digit exists.\"\"\"\n    for n, exp in ((101, 1), (907, 63), (30, 3), (1000003, 3)):\n        out = digits(n)\n        assert out == exp, f\"input={n!r} output={out!r}\"\n\n\ndef test_all_odd_digits():\n    \"\"\"The product of all digits is returned when every digit is odd.\"\"\"\n    for n, exp in ((11, 1), (357, 105), (99, 81), (13579, 945)):\n        out = digits(n)\n        assert out == exp, f\"input={n!r} output={out!r}\"\n\n\ndef test_single_digits():\n    \"\"\"Each single digit returns itself if odd and 0 if even.\"\"\"\n    for n in range(1, 10):\n        exp = n if n % 2 else 0\n        out = digits(n)\n        assert out == exp, f\"input={n!r} output={out!r}\"\n\n\n@given(st.integers(min_value=1, max_value=10**18))\ndef test_matches_definition(n):\n    \"\"\"The result must equal the product of the odd digits, or 0 if none.\"\"\"\n    out = digits(n)\n    exp = ref(n)\n    assert out == exp, f\"input={n!r} output={out!r}\"\n\n\n@given(st.integers(min_value=1, max_value=10**18))\ndef test_positive_iff_odd_digit(n):\n    \"\"\"The result must be positive exactly when n has an odd digit, else 0.\"\"\"\n    out = digits(n)\n    has_odd = any(c in \"13579\" for c in str(n))\n    if has_odd:\n        assert out > 0, f\"input={n!r} output={out!r}\"\n    else:\n        assert out == 0, f\"input={n!r} output={out!r}\"\n\n\n@given(st.lists(st.sampled_from([1, 3, 5, 7, 9]), min_size=1, max_size=15),\n       st.randoms(use_true_random=False))\ndef test_order_independent(odds, rnd):\n    \"\"\"The result must not depend on the order of the digits.\"\"\"\n    shuffled = odds[:]\n    rnd.shuffle(shuffled)\n    a = int(\"\".join(map(str, odds)))\n    b = int(\"\".join(map(str, shuffled)))\n    oa, ob = digits(a), digits(b)\n    assert oa == ob == math.prod(odds), f\"inputs={a!r},{b!r} outputs={oa!r},{ob!r}\"\n\n\n@given(st.integers(min_value=1, max_value=10**12),\n       st.integers(min_value=1, max_value=5))\ndef test_appending_even_zeros_preserves_result(n, k):\n    \"\"\"Appending trailing zeros (even digits) must not change the result.\"\"\"\n    m = int(str(n) + \"0\" * k)\n    on, om = digits(n), digits(m)\n    if on == 0:\n        assert om == 0, f\"input={m!r} output={om!r}\"\n    else:\n        assert om == on, f\"input={m!r} output={om!r} expected={on!r}\"\n\n\n@given(st.integers(min_value=1, max_value=10**12),\n       st.sampled_from([1, 3, 5, 7, 9]))\ndef test_appending_odd_digit_multiplies(n, d):\n    \"\"\"Appending an odd digit d must multiply the odd-digit product by d (or give d if none).\"\"\"\n    m = int(str(n) + str(d))\n    on = digits(n)\n    out = digits(m)\n    exp = d if on == 0 else on * d\n    assert out == exp, f\"input={m!r} output={out!r} expected={exp!r}\"\n\n\n@given(st.lists(st.sampled_from([1, 3, 5, 7, 9]), min_size=1, max_size=15))\ndef test_all_odd_nonzero_product(odds):\n    \"\"\"A number made only of odd digits must give their product, which is nonzero.\"\"\"\n    n = int(\"\".join(map(str, odds)))\n    out = digits(n)\n    assert out == math.prod(odds) and out != 0, f\"input={n!r} output={out!r}\"\n"
+    },
+    "B": {
+     "test_phase_b": "import math\nfrom hypothesis import given, strategies as st\n\nfrom solution import digits\n\n\ndef expected(n):\n    odds = [int(c) for c in str(n) if c in \"13579\"]\n    return math.prod(odds) if odds else 0\n\n\ndef test_exhaustive_small_range():\n    \"\"\"For every positive n up to 20000 the result is the product of the odd digits, or 0 if none.\"\"\"\n    for n in range(1, 20001):\n        out = digits(n)\n        exp = expected(n)\n        assert out == exp, f\"input={n!r} output={out!r} expected={exp!r}\"\n\n\ndef test_powers_of_ten_give_one():\n    \"\"\"10**k has the single odd digit 1, so the product of its odd digits is 1, not 0.\"\"\"\n    for k in range(0, 40):\n        n = 10 ** k\n        out = digits(n)\n        assert out == 1, f\"input={n!r} output={out!r}\"\n\n\ndef test_two_times_powers_of_ten_give_zero():\n    \"\"\"2*10**k has only even digits, so the result is 0.\"\"\"\n    for k in range(0, 40):\n        n = 2 * 10 ** k\n        out = digits(n)\n        assert out == 0, f\"input={n!r} output={out!r}\"\n\n\ndef test_repunits_give_one():\n    \"\"\"A number made only of the digit 1 has odd-digit product 1 (an existing odd digit, not 'none').\"\"\"\n    for k in range(1, 60):\n        n = int(\"1\" * k)\n        out = digits(n)\n        assert out == 1, f\"input={n!r} output={out!r}\"\n\n\ndef test_large_product_of_nines():\n    \"\"\"A number of thirty 9s must return 9**30 exactly.\"\"\"\n    n = int(\"9\" * 30)\n    out = digits(n)\n    assert out == 9 ** 30, f\"input={n!r} output={out!r}\"\n\n\ndef test_large_all_even_number():\n    \"\"\"A very long number with only even digits must return 0.\"\"\"\n    n = int(\"2468024680\" * 10)\n    out = digits(n)\n    assert out == 0, f\"input={n!r} output={out!r}\"\n\n\ndef test_even_digits_between_odd_digits():\n    \"\"\"Even digits interleaved with odd digits must be skipped, not multiply the product.\"\"\"\n    cases = ((30507, 105), (2123, 3), (80901, 9), (7000000001, 7), (1357902468, 945))\n    for n, exp in cases:\n        out = digits(n)\n        assert out == exp, f\"input={n!r} output={out!r} expected={exp!r}\"\n\n\ndef test_result_is_integer():\n    \"\"\"The product of digits of an integer must be an integer value.\"\"\"\n    for n in (1, 4, 235, 1000, 99):\n        out = digits(n)\n        assert isinstance(out, int), f\"input={n!r} output={out!r}\"\n\n\ndigit_lists = st.lists(st.integers(min_value=0, max_value=9), min_size=0, max_size=80)\nleading = st.integers(min_value=1, max_value=9)\n\n\n@given(leading, digit_lists)\ndef test_long_numbers_match_definition(first, rest):\n    \"\"\"For numbers of up to 81 digits the result is the product of odd digits, or 0 if none.\"\"\"\n    n = int(str(first) + \"\".join(map(str, rest)))\n    out = digits(n)\n    exp = expected(n)\n    assert out == exp, f\"input={n!r} output={out!r} expected={exp!r}\"\n\n\n@given(leading, digit_lists)\ndef test_inserting_zeros_does_not_change_result(first, rest):\n    \"\"\"Inserting zero digits after the leading digit must not change the result.\"\"\"\n    s = str(first) + \"\".join(map(str, rest))\n    n = int(s)\n    m = int(s[0] + \"000\" + s[1:])\n    on, om = digits(n), digits(m)\n    assert on == om, f\"inputs={n!r},{m!r} outputs={on!r},{om!r}\"\n\n\n@given(leading, digit_lists)\ndef test_replacing_evens_with_other_evens_is_invariant(first, rest):\n    \"\"\"Replacing every even digit by 2 (another even digit, nonzero lead preserved) must not change the result.\"\"\"\n    s = str(first) + \"\".join(map(str, rest))\n    t = \"\".join(c if c in \"13579\" else \"2\" for c in s)\n    n, m = int(s), int(t)\n    on, om = digits(n), digits(m)\n    assert on == om, f\"inputs={n!r},{m!r} outputs={on!r},{om!r}\"\n\n\n@given(st.integers(min_value=1, max_value=10**15), st.integers(min_value=1, max_value=10**15))\ndef test_concatenation_multiplicative(a, b):\n    \"\"\"The odd-digit product of a concatenation is the product of the parts' products when both contain odd digits.\"\"\"\n    oa, ob = digits(a), digits(b)\n    m = int(str(a) + str(b))\n    out = digits(m)\n    if oa and ob:\n        exp = oa * ob\n    elif oa:\n        exp = oa\n    elif ob:\n        exp = ob\n    else:\n        exp = 0\n    assert out == exp, f\"input={m!r} output={out!r} expected={exp!r}\"\n\n\n@given(st.integers(min_value=1, max_value=10**30))\ndef test_zero_iff_no_odd_digit_large(n):\n    \"\"\"The result is 0 exactly when n has no odd digit, even for large n.\"\"\"\n    out = digits(n)\n    has_odd = any(c in \"13579\" for c in str(n))\n    assert (out == 0) == (not has_odd), f\"input={n!r} output={out!r}\"\n"
+    }
+   },
+   "rounds": [
+    {
+     "round": 1,
+     "failing": 0
+    }
+   ],
+   "mutation": {
+    "mutants": 14,
+    "survivors": 0
+   },
+   "open_questions": [],
+   "usage": {
+    "builder": {
+     "input_tokens": 0,
+     "output_tokens": 0,
+     "calls": 0
+    },
+    "verifier": {
+     "input_tokens": 5763,
+     "output_tokens": 4598,
+     "calls": 2
+    }
+   },
+   "verifier_backend": "anthropic:claude-sonnet-5-5"
+  },
+  "ABp": {
+   "programs": [
+    "def digits(n):\n    s = str(abs(int(n)))\n    product = 1\n    found = False\n    for ch in s:\n        d = int(ch)\n        if d % 2 == 1:\n            product *= d\n            found = True\n    return product if found else 0\n"
+   ],
+   "final": "def digits(n):\n    s = str(abs(int(n)))\n    product = 1\n    found = False\n    for ch in s:\n        d = int(ch)\n        if d % 2 == 1:\n            product *= d\n            found = True\n    return product if found else 0\n",
+   "evidence": {
+    "A": {
+     "test_phase_a": "from functools import reduce\nfrom operator import mul\n\nfrom hypothesis import given, strategies as st\n\nfrom solution import digits\n\n\ndef expected_digits(n):\n    odd_digits = [int(ch) for ch in str(n) if int(ch) % 2 == 1]\n    if not odd_digits:\n        return 0\n    return reduce(mul, odd_digits, 1)\n\n\ndef all_even_positive_integers():\n    first = st.sampled_from(\"2468\")\n    rest = st.lists(st.sampled_from(\"02468\"), min_size=0, max_size=40).map(\"\".join)\n    return st.builds(lambda a, b: int(a + b), first, rest)\n\n\ndef positive_integer_strings():\n    first = st.sampled_from(\"123456789\")\n    rest = st.lists(st.sampled_from(\"0123456789\"), min_size=0, max_size=40).map(\"\".join)\n    return st.builds(lambda a, b: int(a + b), first, rest)\n\n\ndef test_given_examples():\n    \"\"\"The function must satisfy the examples stated in the specification.\"\"\"\n    examples = {\n        1: 1,\n        4: 0,\n        235: 15,\n    }\n    for n, exp in examples.items():\n        out = digits(n)\n        assert out == exp, f\"input={n!r} output={out!r}\"\n\n\ndef test_single_digits():\n    \"\"\"A single digit must return itself when odd and 0 when even.\"\"\"\n    for n in range(1, 10):\n        exp = n if n % 2 == 1 else 0\n        out = digits(n)\n        assert out == exp, f\"input={n!r} output={out!r}\"\n\n\ndef test_mixed_digits_ignore_even_digits():\n    \"\"\"Even digits must be ignored when computing the product of odd digits.\"\"\"\n    cases = {\n        101: 1,\n        1000: 1,\n        907: 63,\n        2468135: 15,\n        13579: 945,\n        8080801: 1,\n        2222229: 9,\n    }\n    for n, exp in cases.items():\n        out = digits(n)\n        assert out == exp, f\"input={n!r} output={out!r}\"\n\n\ndef test_all_even_digits_examples_return_zero():\n    \"\"\"Numbers whose decimal digits are all even must return 0.\"\"\"\n    for n in [2, 4, 6, 8, 20, 200, 24860, 86420, 222222]:\n        out = digits(n)\n        assert out == 0, f\"input={n!r} output={out!r}\"\n\n\n@given(positive_integer_strings())\ndef test_matches_decimal_definition_for_positive_integers(n):\n    \"\"\"For every positive integer, the result must equal the product of its odd decimal digits.\"\"\"\n    exp = expected_digits(n)\n    out = digits(n)\n    assert out == exp, f\"input={n!r} output={out!r}\"\n\n\n@given(all_even_positive_integers())\ndef test_all_even_digit_numbers_return_zero(n):\n    \"\"\"Every positive integer containing only even decimal digits must return 0.\"\"\"\n    out = digits(n)\n    assert out == 0, f\"input={n!r} output={out!r}\"\n\n\n@given(positive_integer_strings(), st.integers(min_value=0, max_value=12))\ndef test_appending_zero_digits_does_not_change_result(n, zero_count):\n    \"\"\"Appending decimal zero digits must not change the product of odd digits.\"\"\"\n    appended = n * (10 ** zero_count)\n    exp = expected_digits(appended)\n    out = digits(appended)\n    assert out == exp, f\"input={(n, zero_count, appended)!r} output={out!r}\"\n\n\n@given(\n    positive_integer_strings(),\n    st.lists(st.sampled_from([0, 2, 4, 6, 8]), min_size=1, max_size=20),\n)\ndef test_appending_even_digits_does_not_change_expected_odd_product(n, even_suffix):\n    \"\"\"Appending even decimal digits must leave the product determined only by the odd digits.\"\"\"\n    appended = int(str(n) + \"\".join(str(d) for d in even_suffix))\n    exp = expected_digits(appended)\n    out = digits(appended)\n    assert out == exp, f\"input={(n, even_suffix, appended)!r} output={out!r}\"\n"
+    },
+    "B": {
+     "test_phase_b": "from math import prod\n\nfrom hypothesis import given, strategies as st\n\nfrom solution import digits\n\n\ndef expected_digits(n):\n    odd_digits = [int(ch) for ch in str(n) if int(ch) % 2 == 1]\n    return prod(odd_digits) if odd_digits else 0\n\n\ndef positive_decimal_integers(max_rest_size=80):\n    first = st.sampled_from(\"123456789\")\n    rest = st.lists(st.sampled_from(\"0123456789\"), min_size=0, max_size=max_rest_size).map(\"\".join)\n    return st.builds(lambda a, b: int(a + b), first, rest)\n\n\ndef positive_integers_with_an_odd_digit(max_rest_size=80):\n    return positive_decimal_integers(max_rest_size).filter(lambda n: any(int(ch) % 2 == 1 for ch in str(n)))\n\n\ndef positive_integers_with_only_even_digits(max_rest_size=80):\n    first = st.sampled_from(\"2468\")\n    rest = st.lists(st.sampled_from(\"02468\"), min_size=0, max_size=max_rest_size).map(\"\".join)\n    return st.builds(lambda a, b: int(a + b), first, rest)\n\n\ndef test_large_power_of_ten_has_product_from_its_single_odd_digit():\n    \"\"\"A positive integer with decimal form 1 followed only by zero digits must return 1.\"\"\"\n    for exponent in [1, 2, 13, 50, 200]:\n        n = 10 ** exponent\n        out = digits(n)\n        assert out == 1, f\"input={n!r} output={out!r}\"\n\n\ndef test_even_digit_followed_by_many_zero_digits_returns_zero():\n    \"\"\"A positive integer whose decimal digits are one even nonzero digit followed by zeros must return 0.\"\"\"\n    for leading in [2, 4, 6, 8]:\n        for exponent in [1, 37, 250]:\n            n = leading * (10 ** exponent)\n            out = digits(n)\n            assert out == 0, f\"input={n!r} output={out!r}\"\n\n\ndef test_very_large_number_containing_only_odd_digits_returns_product_of_all_digits():\n    \"\"\"A positive integer containing only odd decimal digits must return the product of all of its digits.\"\"\"\n    n = int(\"97531\" * 40)\n    exp = prod(int(ch) for ch in str(n))\n    out = digits(n)\n    assert out == exp, f\"input={n!r} output={out!r}\"\n\n\n@given(positive_integers_with_an_odd_digit(), positive_integers_with_an_odd_digit())\ndef test_concatenating_two_numbers_with_odd_digits_multiplies_their_products(left, right):\n    \"\"\"Concatenating two positive integers that each contain an odd digit must return the product of their odd-digit products.\"\"\"\n    n = int(str(left) + str(right))\n    exp = expected_digits(left) * expected_digits(right)\n    out = digits(n)\n    assert out == exp, f\"input={(left, right, n)!r} output={out!r}\"\n\n\n@given(positive_integers_with_only_even_digits(), positive_integers_with_an_odd_digit())\ndef test_even_digit_prefix_does_not_change_product_of_suffix_odd_digits(prefix, suffix):\n    \"\"\"Adding a prefix made only of even decimal digits must not change the product of the suffix's odd digits.\"\"\"\n    n = int(str(prefix) + str(suffix))\n    exp = expected_digits(suffix)\n    out = digits(n)\n    assert out == exp, f\"input={(prefix, suffix, n)!r} output={out!r}\"\n\n\n@given(positive_decimal_integers(), st.sampled_from([1, 3, 5, 7, 9]))\ndef test_appending_one_odd_digit_updates_the_decimal_odd_digit_product(n, appended_digit):\n    \"\"\"Appending an odd decimal digit must make the result equal to the product of all odd digits in the new number.\"\"\"\n    combined = n * 10 + appended_digit\n    exp = expected_digits(combined)\n    out = digits(combined)\n    assert out == exp, f\"input={(n, appended_digit, combined)!r} output={out!r}\"\n"
+    }
+   },
+   "rounds": [
+    {
+     "round": 1,
+     "failing": 0
+    }
+   ],
+   "mutation": {
+    "mutants": 14,
+    "survivors": 0
+   },
+   "open_questions": [
+    "Behavior for inputs that are not positive integers is unspecified and is not tested."
+   ],
+   "usage": {
+    "builder": {
+     "input_tokens": 0,
+     "output_tokens": 0,
+     "calls": 0
+    },
+    "verifier": {
+     "input_tokens": 3427,
+     "output_tokens": 4428,
+     "calls": 2
+    }
+   },
+   "verifier_backend": "openai:gpt-5.5-2026-04-23"
+  }
+ },
+ "seconds": 268.7
+}

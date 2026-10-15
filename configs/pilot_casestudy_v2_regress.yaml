@@ -1,0 +1,22 @@
+# Pilot of the case-study service, version 2 (data/casestudy_v2/DESIGN.md). Use it to check prompts,
+# output size (max_tokens), parsing, and cost per unit before the full campaign.
+campaign: pilot_casestudy_v2_regress
+output_dir: results
+seed: 2026
+runs: 3
+benchmarks:
+  casestudy_v2: {}
+workers: 3
+models:
+  builder:
+    provider: anthropic
+    max_tokens: 64000       # includes thinking/reasoning tokens
+    model: claude-sonnet-5-5
+  verifier:
+    provider: anthropic
+    max_tokens: 64000       # includes thinking/reasoning tokens
+    model: claude-sonnet-5-5
+  verifier_alt:
+    provider: openai
+    max_tokens: 64000       # includes thinking/reasoning tokens
+    model: gpt-5.5-2026-04-23

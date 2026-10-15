@@ -1,0 +1,11 @@
+The validator reported these problems:
+
+1. Fault F04 (REQ-3, due date computed backwards) fails the visible test test_renew_nominal.
+2. Fault F14 (REQ-7, available flag inverted) fails the visible test
+   test_item_available_before_checkout.
+
+Every fault must pass T_v (otherwise it is trivial to spot) and fail T_h. Change
+these two faults, or replace them with other realistic faults, so that they pass
+T_v and fail T_h. Do not weaken T_v to make them pass.
+
+Output all files again in full, in the same format.

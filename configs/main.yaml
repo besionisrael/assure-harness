@@ -1,0 +1,27 @@
+# EvalPlus main campaign (not run; see PROTOCOL.md, DECIDE-4). Fix every value before launching and
+# do not change prompts (assure/prompts.py, PROMPT_VERSION) during the campaign.
+campaign: main
+output_dir: results
+seed: 2026
+runs: 3                    # paper macro \nRuns
+benchmarks:
+  humaneval: {n: 40}       # random sample with the seed above; use "all" for the full set
+  mbpp: {n: 40}
+max_hidden: null
+conditions: [SV, A, B, AB, ABp]
+budgets:
+  self_rounds: 5           # builder self-validation rounds producing P0
+  cex_rounds: 3            # paper macro \nRounds
+  inner_repair_rounds: 2
+  max_counterexamples: 5
+  phase_b_mutants: 30
+  phase_b_survivors_shown: 6
+hypothesis_max_examples: 100
+scoring_max_examples: 50
+scoring_mutants: 30
+workers: 6
+scoring_workers: 6
+models:
+  builder:      {provider: anthropic, model: claude-sonnet-5-5, max_tokens: 64000}
+  verifier:     {provider: anthropic, model: claude-sonnet-5-5, max_tokens: 64000}
+  verifier_alt: {provider: openai, model: SET-ME, max_tokens: 64000}

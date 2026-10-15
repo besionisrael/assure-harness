@@ -1,0 +1,241 @@
+{
+ "task_id": "Mbpp/99",
+ "benchmark": "mbpp",
+ "run": 0,
+ "prompt_version": "2026-10-08.1",
+ "backends": {
+  "builder": "anthropic:claude-sonnet-5-5",
+  "verifier": "anthropic:claude-sonnet-5-5",
+  "verifier_alt": "openai:gpt-5.5-2026-04-23"
+ },
+ "p0": "def decimal_to_binary(n):\n    \"\"\"Convert an integer to its binary string representation, no leading zeros.\"\"\"\n    if n == 0:\n        return '0'\n    if n < 0:\n        return '-' + bin(-n)[2:]\n    return bin(n)[2:]\n",
+ "p0_info": {
+  "self_rounds": 0,
+  "self_converged": true
+ },
+ "usage_shared": {
+  "input_tokens": 456,
+  "output_tokens": 525,
+  "calls": 1
+ },
+ "conditions": {
+  "SV": {
+   "programs": [
+    "def decimal_to_binary(n):\n    \"\"\"Convert an integer to its binary string representation, no leading zeros.\"\"\"\n    if n == 0:\n        return '0'\n    if n < 0:\n        return '-' + bin(-n)[2:]\n    return bin(n)[2:]\n"
+   ],
+   "final": "def decimal_to_binary(n):\n    \"\"\"Convert an integer to its binary string representation, no leading zeros.\"\"\"\n    if n == 0:\n        return '0'\n    if n < 0:\n        return '-' + bin(-n)[2:]\n    return bin(n)[2:]\n",
+   "evidence": {
+    "builder": {
+     "test_solution": "from solution import decimal_to_binary\n\n\ndef test_visible():\n    assert decimal_to_binary(8) == '1000'\n    assert decimal_to_binary(18) == '10010'\n    assert decimal_to_binary(7) == '111'\n\n\ndef test_zero_and_one():\n    assert decimal_to_binary(0) == '0'\n    assert decimal_to_binary(1) == '1'\n\n\ndef test_powers_of_two():\n    for k in range(0, 40):\n        assert decimal_to_binary(2 ** k) == '1' + '0' * k\n\n\ndef test_no_leading_zeros():\n    for n in range(1, 300):\n        s = decimal_to_binary(n)\n        assert s[0] == '1'\n        assert int(s, 2) == n\n\n\ndef test_large():\n    assert decimal_to_binary(2 ** 100 - 1) == '1' * 100\n\n\ndef test_negative():\n    assert decimal_to_binary(-5) == '-101'\n"
+    }
+   },
+   "rounds": [],
+   "usage": {
+    "input_tokens": 0,
+    "output_tokens": 0,
+    "calls": 0
+   },
+   "open_questions": []
+  },
+  "A": {
+   "programs": [
+    "def decimal_to_binary(n):\n    \"\"\"Convert an integer to its binary string representation, no leading zeros.\"\"\"\n    if n == 0:\n        return '0'\n    if n < 0:\n        return '-' + bin(-n)[2:]\n    return bin(n)[2:]\n"
+   ],
+   "final": "def decimal_to_binary(n):\n    \"\"\"Convert an integer to its binary string representation, no leading zeros.\"\"\"\n    if n == 0:\n        return '0'\n    if n < 0:\n        return '-' + bin(-n)[2:]\n    return bin(n)[2:]\n",
+   "evidence": {
+    "A": {
+     "test_phase_a": "from hypothesis import given, strategies as st\n\nfrom solution import decimal_to_binary\n\npositive_ints = st.integers(min_value=1, max_value=10**30)\n\n\ndef test_spec_example_8():\n    \"\"\"The binary representation of 8 must be '1000'.\"\"\"\n    out = decimal_to_binary(8)\n    assert out == '1000', f\"input={8!r} output={out!r}\"\n\n\ndef test_small_examples():\n    \"\"\"Positive integers must be converted to their base-2 string without leading zeros.\"\"\"\n    cases = {1: '1', 2: '10', 3: '11', 4: '100', 5: '101', 7: '111',\n             10: '1010', 16: '10000', 255: '11111111', 256: '100000000',\n             1023: '1111111111', 1024: '10000000000'}\n    for x, exp in cases.items():\n        out = decimal_to_binary(x)\n        assert out == exp, f\"input={x!r} output={out!r} expected={exp!r}\"\n\n\ndef test_returns_str():\n    \"\"\"The result must be represented as a string.\"\"\"\n    for x in (1, 2, 8, 100):\n        out = decimal_to_binary(x)\n        assert isinstance(out, str), f\"input={x!r} output={out!r}\"\n\n\n@given(positive_ints)\ndef test_roundtrip(n):\n    \"\"\"The output must be a binary numeral whose value equals the input.\"\"\"\n    out = decimal_to_binary(n)\n    assert isinstance(out, str), f\"input={n!r} output={out!r}\"\n    assert int(out, 2) == n, f\"input={n!r} output={out!r}\"\n\n\n@given(positive_ints)\ndef test_only_binary_digits(n):\n    \"\"\"The output must consist only of the characters '0' and '1'.\"\"\"\n    out = decimal_to_binary(n)\n    assert out != '' and set(out) <= {'0', '1'}, f\"input={n!r} output={out!r}\"\n\n\n@given(positive_ints)\ndef test_no_leading_zeros(n):\n    \"\"\"The output for a positive number must have no leading zeros, so it starts with '1'.\"\"\"\n    out = decimal_to_binary(n)\n    assert out[:1] == '1', f\"input={n!r} output={out!r}\"\n\n\n@given(positive_ints)\ndef test_length_is_bit_length(n):\n    \"\"\"The output must have exactly as many digits as the minimal binary representation.\"\"\"\n    out = decimal_to_binary(n)\n    assert len(out) == n.bit_length(), f\"input={n!r} output={out!r}\"\n\n\n@given(positive_ints)\ndef test_matches_reference(n):\n    \"\"\"The output must equal the canonical minimal binary representation of n.\"\"\"\n    out = decimal_to_binary(n)\n    exp = bin(n)[2:]\n    assert out == exp, f\"input={n!r} output={out!r} expected={exp!r}\"\n\n\n@given(positive_ints)\ndef test_doubling_appends_zero(n):\n    \"\"\"Doubling a number must append '0' to its binary representation.\"\"\"\n    a = decimal_to_binary(n)\n    b = decimal_to_binary(2 * n)\n    assert b == a + '0', f\"input={2 * n!r} output={b!r} base_output={a!r}\"\n\n\n@given(positive_ints)\ndef test_double_plus_one_appends_one(n):\n    \"\"\"Doubling a number and adding one must append '1' to its binary representation.\"\"\"\n    a = decimal_to_binary(n)\n    b = decimal_to_binary(2 * n + 1)\n    assert b == a + '1', f\"input={2 * n + 1!r} output={b!r} base_output={a!r}\"\n\n\n@given(st.integers(min_value=0, max_value=200))\ndef test_powers_of_two(k):\n    \"\"\"A power of two must be '1' followed by that many zeros.\"\"\"\n    out = decimal_to_binary(2 ** k)\n    assert out == '1' + '0' * k, f\"input={2 ** k!r} output={out!r}\"\n\n\n@given(positive_ints, positive_ints)\ndef test_order_preserved(a, b):\n    \"\"\"A larger number must not have a shorter representation than a smaller one.\"\"\"\n    if a > b:\n        a, b = b, a\n    oa, ob = decimal_to_binary(a), decimal_to_binary(b)\n    assert len(oa) <= len(ob), f\"inputs={(a, b)!r} outputs={(oa, ob)!r}\"\n    if a != b:\n        assert oa != ob, f\"inputs={(a, b)!r} outputs={(oa, ob)!r}\"\n"
+    }
+   },
+   "rounds": [
+    {
+     "round": 1,
+     "failing": 0
+    }
+   ],
+   "mutation": null,
+   "open_questions": [],
+   "usage": {
+    "builder": {
+     "input_tokens": 0,
+     "output_tokens": 0,
+     "calls": 0
+    },
+    "verifier": {
+     "input_tokens": 731,
+     "output_tokens": 2197,
+     "calls": 1
+    }
+   },
+   "verifier_backend": "anthropic:claude-sonnet-5-5"
+  },
+  "B": {
+   "programs": [
+    "def decimal_to_binary(n):\n    \"\"\"Convert an integer to its binary string representation, no leading zeros.\"\"\"\n    if n == 0:\n        return '0'\n    if n < 0:\n        return '-' + bin(-n)[2:]\n    return bin(n)[2:]\n",
+    "def decimal_to_binary(n):\n    \"\"\"Convert an integer to its binary string representation, no leading zeros.\"\"\"\n    if n == 0:\n        return '0'\n    if n < 0:\n        return '-' + bin(-n)[2:]\n    return bin(n)[2:]\n",
+    "def decimal_to_binary(n):\n    \"\"\"Convert an integer to its binary string representation, no leading zeros.\"\"\"\n    if n == 0:\n        return '0'\n    if n < 0:\n        return '-' + bin(-n)[2:]\n    return bin(n)[2:]\n",
+    "def decimal_to_binary(n):\n    \"\"\"Convert an integer to its binary string representation, no leading zeros.\"\"\"\n    if n == 0:\n        return '0'\n    if n < 0:\n        return '-' + bin(-n)[2:]\n    return bin(n)[2:]\n"
+   ],
+   "final": "def decimal_to_binary(n):\n    \"\"\"Convert an integer to its binary string representation, no leading zeros.\"\"\"\n    if n == 0:\n        return '0'\n    if n < 0:\n        return '-' + bin(-n)[2:]\n    return bin(n)[2:]\n",
+   "evidence": {
+    "B": {
+     "test_phase_b": "import pytest\nfrom hypothesis import given, strategies as st, settings\n\nfrom solution import decimal_to_binary\n\n\ndef test_spec_example():\n    \"\"\"decimal_to_binary(8) must return '1000' as given in the specification.\"\"\"\n    out = decimal_to_binary(8)\n    assert out == '1000', f\"input=8 output={out!r}\"\n\n\n@pytest.mark.parametrize(\"n,exp\", [\n    (0, '0'),\n    (1, '1'),\n    (2, '10'),\n    (3, '11'),\n    (4, '100'),\n    (5, '101'),\n    (7, '111'),\n    (10, '1010'),\n    (255, '11111111'),\n    (256, '100000000'),\n    (1023, '1111111111'),\n])\ndef test_known_values(n, exp):\n    \"\"\"The binary string of a non-negative integer must be its base-2 representation without leading zeros.\"\"\"\n    out = decimal_to_binary(n)\n    assert out == exp, f\"input={n!r} output={out!r} expected={exp!r}\"\n\n\ndef test_zero_single_digit():\n    \"\"\"Zero must be represented by a single digit '0' with no extra leading zeros.\"\"\"\n    out = decimal_to_binary(0)\n    assert out == '0', f\"input=0 output={out!r}\"\n\n\n@pytest.mark.parametrize(\"k\", list(range(0, 70)))\ndef test_power_of_two_boundaries(k):\n    \"\"\"Around each power of two the output must have the correct binary form with no leading zeros.\"\"\"\n    p = 1 << k\n    out = decimal_to_binary(p)\n    assert out == '1' + '0' * k, f\"input={p!r} output={out!r}\"\n    out = decimal_to_binary(p - 1)\n    exp = '1' * k if k > 0 else '0'\n    assert out == exp, f\"input={p - 1!r} output={out!r} expected={exp!r}\"\n    out = decimal_to_binary(p + 1)\n    exp = bin(p + 1)[2:]\n    assert out == exp, f\"input={p + 1!r} output={out!r} expected={exp!r}\"\n\n\ndef test_large_value():\n    \"\"\"Very large non-negative integers must be converted exactly.\"\"\"\n    n = 2**200 + 12345\n    out = decimal_to_binary(n)\n    assert int(out, 2) == n and out[0] == '1', f\"input={n!r} output={out!r}\"\n\n\ndef test_returns_str():\n    \"\"\"The result must be represented as a string.\"\"\"\n    for n in (0, 1, 8, 1000):\n        out = decimal_to_binary(n)\n        assert isinstance(out, str), f\"input={n!r} output={out!r}\"\n\n\n@given(st.integers(min_value=0, max_value=10**30))\n@settings(max_examples=300)\ndef test_roundtrip(n):\n    \"\"\"Interpreting the output as base 2 must give back the input number.\"\"\"\n    out = decimal_to_binary(n)\n    assert isinstance(out, str) and out != '', f\"input={n!r} output={out!r}\"\n    assert int(out, 2) == n, f\"input={n!r} output={out!r}\"\n\n\n@given(st.integers(min_value=0, max_value=10**30))\n@settings(max_examples=300)\ndef test_only_binary_digits(n):\n    \"\"\"The output must consist only of the characters '0' and '1'.\"\"\"\n    out = decimal_to_binary(n)\n    assert set(out) <= {'0', '1'} and out != '', f\"input={n!r} output={out!r}\"\n\n\n@given(st.integers(min_value=0, max_value=10**30))\n@settings(max_examples=300)\ndef test_no_leading_zeros(n):\n    \"\"\"The output must have no leading zeros unless the number is zero itself.\"\"\"\n    out = decimal_to_binary(n)\n    if n == 0:\n        assert out == '0', f\"input={n!r} output={out!r}\"\n    else:\n        assert out[0] == '1', f\"input={n!r} output={out!r}\"\n\n\n@given(st.integers(min_value=1, max_value=10**30))\n@settings(max_examples=300)\ndef test_length_is_bit_length(n):\n    \"\"\"For positive n the output length must equal the number of significant bits.\"\"\"\n    out = decimal_to_binary(n)\n    assert len(out) == n.bit_length(), f\"input={n!r} output={out!r}\"\n\n\n@given(st.integers(min_value=1, max_value=10**30))\n@settings(max_examples=200)\ndef test_doubling_appends_zero(n):\n    \"\"\"Doubling a positive number must append a '0' to its binary representation.\"\"\"\n    a = decimal_to_binary(n)\n    b = decimal_to_binary(2 * n)\n    assert b == a + '0', f\"input={n!r} output={a!r} doubled_output={b!r}\"\n\n\n@given(st.integers(min_value=0, max_value=10**30))\n@settings(max_examples=200)\ndef test_double_plus_one_appends_one(n):\n    \"\"\"2n+1 must have the binary representation of n followed by '1' (for n > 0), or '1' for n = 0.\"\"\"\n    a = decimal_to_binary(n)\n    b = decimal_to_binary(2 * n + 1)\n    exp = '1' if n == 0 else a + '1'\n    assert b == exp, f\"input={n!r} output={a!r} next_output={b!r}\"\n\n\n@given(st.integers(min_value=0, max_value=10**9), st.integers(min_value=0, max_value=10**9))\n@settings(max_examples=200)\ndef test_order_preserved(a, b):\n    \"\"\"A larger number must never have a shorter binary string, and equal-length strings compare like the numbers.\"\"\"\n    sa, sb = decimal_to_binary(a), decimal_to_binary(b)\n    if a < b:\n        assert len(sa) <= len(sb), f\"inputs={a!r},{b!r} outputs={sa!r},{sb!r}\"\n        if len(sa) == len(sb):\n            assert sa < sb, f\"inputs={a!r},{b!r} outputs={sa!r},{sb!r}\"\n    elif a == b:\n        assert sa == sb, f\"inputs={a!r},{b!r} outputs={sa!r},{sb!r}\"\n",
+     "test_phase_b_mutants": "# No additional tests: mutants M003 and M007 are equivalent (n == 0 is handled\n# by an earlier branch), and mutants M008, M009, M012, M013 only alter behavior\n# for negative inputs, which the specification leaves undefined.\n"
+    }
+   },
+   "rounds": [
+    {
+     "round": 1,
+     "failing": 2,
+     "counterexamples": "1. Guarantee: The binary string of a non-negative integer must be its base-2 representation without leading zeros.\n  Observed: TypeError: \"test_known_values() missing 2 required positional arguments: 'n' and 'exp'\"\n2. Guarantee: Around each power of two the output must have the correct binary form with no leading zeros.\n  Observed: TypeError: \"test_power_of_two_boundaries() missing 1 required positional argument: 'k'\""
+    },
+    {
+     "round": 2,
+     "failing": 2,
+     "counterexamples": "1. Guarantee: The binary string of a non-negative integer must be its base-2 representation without leading zeros.\n  Observed: TypeError: \"test_known_values() missing 2 required positional arguments: 'n' and 'exp'\"\n2. Guarantee: Around each power of two the output must have the correct binary form with no leading zeros.\n  Observed: TypeError: \"test_power_of_two_boundaries() missing 1 required positional argument: 'k'\""
+    },
+    {
+     "round": 3,
+     "failing": 2,
+     "counterexamples": "1. Guarantee: The binary string of a non-negative integer must be its base-2 representation without leading zeros.\n  Observed: TypeError: \"test_known_values() missing 2 required positional arguments: 'n' and 'exp'\"\n2. Guarantee: Around each power of two the output must have the correct binary form with no leading zeros.\n  Observed: TypeError: \"test_power_of_two_boundaries() missing 1 required positional argument: 'k'\""
+    }
+   ],
+   "mutation": {
+    "mutants": 15,
+    "survivors": 7,
+    "shown": 6
+   },
+   "open_questions": [],
+   "usage": {
+    "builder": {
+     "input_tokens": 6693,
+     "output_tokens": 2468,
+     "calls": 3
+    },
+    "verifier": {
+     "input_tokens": 4836,
+     "output_tokens": 2984,
+     "calls": 2
+    }
+   },
+   "verifier_backend": "anthropic:claude-sonnet-5-5"
+  },
+  "AB": {
+   "programs": [
+    "def decimal_to_binary(n):\n    \"\"\"Convert an integer to its binary string representation, no leading zeros.\"\"\"\n    if n == 0:\n        return '0'\n    if n < 0:\n        return '-' + bin(-n)[2:]\n    return bin(n)[2:]\n",
+    "def decimal_to_binary(n):\n    \"\"\"Convert an integer to its binary string representation, no leading zeros.\"\"\"\n    if n == 0:\n        return '0'\n    if n < 0:\n        return '-' + bin(-n)[2:]\n    return bin(n)[2:]\n",
+    "def decimal_to_binary(n):\n    \"\"\"Convert an integer to its binary string representation, no leading zeros.\"\"\"\n    if n == 0:\n        return '0'\n    if n < 0:\n        return '-' + bin(-n)[2:]\n    return bin(n)[2:]\n",
+    "def decimal_to_binary(n):\n    \"\"\"Convert an integer to its binary string representation, no leading zeros.\"\"\"\n    if n == 0:\n        return '0'\n    if n < 0:\n        return '-' + bin(-n)[2:]\n    return bin(n)[2:]\n"
+   ],
+   "final": "def decimal_to_binary(n):\n    \"\"\"Convert an integer to its binary string representation, no leading zeros.\"\"\"\n    if n == 0:\n        return '0'\n    if n < 0:\n        return '-' + bin(-n)[2:]\n    return bin(n)[2:]\n",
+   "evidence": {
+    "A": {
+     "test_phase_a": "import pytest\nfrom hypothesis import given, strategies as st\n\nfrom solution import decimal_to_binary\n\n\ndef test_spec_example_8():\n    \"\"\"The function must return '1000' for input 8.\"\"\"\n    out = decimal_to_binary(8)\n    assert out == '1000', f\"input=8 output={out!r}\"\n\n\n@pytest.mark.parametrize(\"n,exp\", [\n    (1, '1'), (2, '10'), (3, '11'), (4, '100'), (5, '101'),\n    (7, '111'), (10, '1010'), (15, '1111'), (16, '10000'),\n    (255, '11111111'), (256, '100000000'), (1023, '1111111111'),\n])\ndef test_known_values(n, exp):\n    \"\"\"The function must return the binary representation of a positive integer as a string.\"\"\"\n    out = decimal_to_binary(n)\n    assert out == exp, f\"input={n!r} output={out!r}\"\n\n\ndef test_returns_str():\n    \"\"\"The function must return a string.\"\"\"\n    out = decimal_to_binary(5)\n    assert isinstance(out, str), f\"input=5 output={out!r}\"\n\n\n@pytest.mark.parametrize(\"k\", [0, 1, 2, 10, 31, 32, 63, 64, 100])\ndef test_powers_of_two(k):\n    \"\"\"A power of two 2**k must convert to '1' followed by k zeros.\"\"\"\n    n = 2 ** k\n    out = decimal_to_binary(n)\n    assert out == '1' + '0' * k, f\"input={n!r} output={out!r}\"\n\n\n@given(st.integers(min_value=1, max_value=10**30))\ndef test_round_trip(n):\n    \"\"\"Parsing the output as base 2 must give back the input number.\"\"\"\n    out = decimal_to_binary(n)\n    assert isinstance(out, str), f\"input={n!r} output={out!r}\"\n    assert int(out, 2) == n, f\"input={n!r} output={out!r}\"\n\n\n@given(st.integers(min_value=1, max_value=10**30))\ndef test_only_binary_digits(n):\n    \"\"\"The output must consist only of the characters '0' and '1'.\"\"\"\n    out = decimal_to_binary(n)\n    assert out != '' and set(out) <= {'0', '1'}, f\"input={n!r} output={out!r}\"\n\n\n@given(st.integers(min_value=1, max_value=10**30))\ndef test_no_leading_zeros(n):\n    \"\"\"The output for a positive number must have no leading zeros.\"\"\"\n    out = decimal_to_binary(n)\n    assert out.startswith('1'), f\"input={n!r} output={out!r}\"\n\n\n@given(st.integers(min_value=1, max_value=10**30))\ndef test_length_is_bit_length(n):\n    \"\"\"The output length must equal the number of significant bits of the input.\"\"\"\n    out = decimal_to_binary(n)\n    assert len(out) == n.bit_length(), f\"input={n!r} output={out!r}\"\n\n\n@given(st.integers(min_value=1, max_value=10**6))\ndef test_doubling_appends_zero(n):\n    \"\"\"Doubling a number must append '0' to its binary representation.\"\"\"\n    a = decimal_to_binary(n)\n    b = decimal_to_binary(2 * n)\n    assert b == a + '0', f\"input={n!r} output={a!r} doubled_output={b!r}\"\n\n\n@given(st.integers(min_value=1, max_value=10**6))\ndef test_double_plus_one_appends_one(n):\n    \"\"\"Doubling a number and adding one must append '1' to its binary representation.\"\"\"\n    a = decimal_to_binary(n)\n    b = decimal_to_binary(2 * n + 1)\n    assert b == a + '1', f\"input={n!r} output={a!r} next_output={b!r}\"\n\n\n@given(st.integers(min_value=1, max_value=10**9), st.integers(min_value=1, max_value=10**9))\ndef test_distinct_inputs_distinct_outputs(a, b):\n    \"\"\"Different numbers must have different binary representations.\"\"\"\n    oa, ob = decimal_to_binary(a), decimal_to_binary(b)\n    assert (oa == ob) == (a == b), f\"inputs={(a, b)!r} outputs={(oa, ob)!r}\"\n"
+    },
+    "B": {
+     "test_phase_b": "import pytest\nfrom hypothesis import given, strategies as st\n\nfrom solution import decimal_to_binary\n\n\ndef _oracle(n):\n    \"\"\"Independent repeated-division conversion for positive n.\"\"\"\n    digits = []\n    while n > 0:\n        digits.append('1' if n % 2 else '0')\n        n //= 2\n    return ''.join(reversed(digits))\n\n\n@pytest.mark.parametrize(\"k\", [1, 2, 3, 4, 7, 8, 9, 15, 16, 17, 31, 32, 33, 63, 64, 65, 127, 128, 200])\ndef test_power_of_two_boundaries(k):\n    \"\"\"Numbers just below, at, and just above 2**k must convert to their exact binary strings.\"\"\"\n    p = 2 ** k\n    out = decimal_to_binary(p - 1)\n    assert out == '1' * k, f\"input={p - 1!r} output={out!r}\"\n    out = decimal_to_binary(p)\n    assert out == '1' + '0' * k, f\"input={p!r} output={out!r}\"\n    out = decimal_to_binary(p + 1)\n    assert out == '1' + '0' * (k - 1) + '1', f\"input={p + 1!r} output={out!r}\"\n\n\n@pytest.mark.parametrize(\"n\", [1, 2, 3, 6, 9, 100, 255, 1000, 12345, 65535, 65536, 10**9, 2**40 + 5])\ndef test_matches_division_oracle_examples(n):\n    \"\"\"The output must equal the binary representation of the positive integer n.\"\"\"\n    out = decimal_to_binary(n)\n    assert out == _oracle(n), f\"input={n!r} output={out!r}\"\n\n\n@given(st.integers(min_value=1, max_value=2**200))\ndef test_matches_division_oracle(n):\n    \"\"\"The output must equal the binary representation obtained by repeated division by 2.\"\"\"\n    out = decimal_to_binary(n)\n    assert out == _oracle(n), f\"input={n!r} output={out!r}\"\n\n\n@given(st.integers(min_value=1, max_value=2**200))\ndef test_ones_count_is_popcount(n):\n    \"\"\"The number of '1' characters must equal the number of set bits of the input.\"\"\"\n    out = decimal_to_binary(n)\n    assert out.count('1') == bin(n).count('1'), f\"input={n!r} output={out!r}\"\n\n\n@given(st.integers(min_value=2, max_value=2**100))\ndef test_prefix_is_binary_of_half(n):\n    \"\"\"The binary of n must be the binary of n//2 followed by the last bit n%2.\"\"\"\n    out = decimal_to_binary(n)\n    half = decimal_to_binary(n // 2)\n    assert out == half + str(n % 2), f\"input={n!r} output={out!r} half_output={half!r}\"\n\n\n@given(st.integers(min_value=1, max_value=2**100), st.integers(min_value=1, max_value=2**100))\ndef test_order_preserved(a, b):\n    \"\"\"A larger number must have an output that is longer, or equal length and lexicographically larger.\"\"\"\n    oa, ob = decimal_to_binary(a), decimal_to_binary(b)\n    ka, kb = (len(oa), oa), (len(ob), ob)\n    assert (a < b) == (ka < kb), f\"inputs={(a, b)!r} outputs={(oa, ob)!r}\"\n\n\n@given(st.integers(min_value=1, max_value=2**100), st.integers(min_value=1, max_value=64))\ndef test_shift_appends_zeros(n, k):\n    \"\"\"Multiplying by 2**k must append k zeros to the binary representation.\"\"\"\n    a = decimal_to_binary(n)\n    b = decimal_to_binary(n << k)\n    assert b == a + '0' * k, f\"input={n << k!r} output={b!r} base_output={a!r}\"\n\n\n@given(st.integers(min_value=1, max_value=2**100))\ndef test_output_has_no_prefix_or_sign(n):\n    \"\"\"The output for a positive number must contain no sign, base prefix, or whitespace characters.\"\"\"\n    out = decimal_to_binary(n)\n    assert out.isdigit() and set(out) <= {'0', '1'}, f\"input={n!r} output={out!r}\"\n",
+     "test_phase_b_mutants": "from solution import decimal_to_binary\n\n\ndef test_positive_output_has_no_sign_and_matches_spec_example():\n    \"\"\"The function must return '1000' for 8, a plain binary string with no sign character.\"\"\"\n    out = decimal_to_binary(8)\n    assert out == '1000' and '-' not in out, f\"input=8 output={out!r}\"\n"
+    }
+   },
+   "rounds": [
+    {
+     "round": 1,
+     "failing": 4,
+     "counterexamples": "1. Guarantee: The function must return the binary representation of a positive integer as a string.\n  Observed: TypeError: \"test_known_values() missing 2 required positional arguments: 'n' and 'exp'\"\n2. Guarantee: A power of two 2**k must convert to '1' followed by k zeros.\n  Observed: TypeError: \"test_powers_of_two() missing 1 required positional argument: 'k'\"\n3. Guarantee: Numbers just below, at, and just above 2**k must convert to their exact binary strings.\n  Observed: TypeError: \"test_power_of_two_boundaries() missing 1 required positional argument: 'k'\"\n4. Guarantee: The output must equal the binary representation of the positive integer n.\n  Observed: TypeError: \"test_matches_division_oracle_examples() missing 1 required positional argument: 'n'\""
+    },
+    {
+     "round": 2,
+     "failing": 4,
+     "counterexamples": "1. Guarantee: The function must return the binary representation of a positive integer as a string.\n  Observed: TypeError: \"test_known_values() missing 2 required positional arguments: 'n' and 'exp'\"\n2. Guarantee: A power of two 2**k must convert to '1' followed by k zeros.\n  Observed: TypeError: \"test_powers_of_two() missing 1 required positional argument: 'k'\"\n3. Guarantee: Numbers just below, at, and just above 2**k must convert to their exact binary strings.\n  Observed: TypeError: \"test_power_of_two_boundaries() missing 1 required positional argument: 'k'\"\n4. Guarantee: The output must equal the binary representation of the positive integer n.\n  Observed: TypeError: \"test_matches_division_oracle_examples() missing 1 required positional argument: 'n'\""
+    },
+    {
+     "round": 3,
+     "failing": 4,
+     "counterexamples": "1. Guarantee: The function must return the binary representation of a positive integer as a string.\n  Observed: TypeError: \"test_known_values() missing 2 required positional arguments: 'n' and 'exp'\"\n2. Guarantee: A power of two 2**k must convert to '1' followed by k zeros.\n  Observed: TypeError: \"test_powers_of_two() missing 1 required positional argument: 'k'\"\n3. Guarantee: Numbers just below, at, and just above 2**k must convert to their exact binary strings.\n  Observed: TypeError: \"test_power_of_two_boundaries() missing 1 required positional argument: 'k'\"\n4. Guarantee: The output must equal the binary representation of the positive integer n.\n  Observed: TypeError: \"test_matches_division_oracle_examples() missing 1 required positional argument: 'n'\""
+    }
+   ],
+   "mutation": {
+    "mutants": 15,
+    "survivors": 8,
+    "shown": 6
+   },
+   "open_questions": [
+    "Output for 0 is not determined (could be '0' or '').",
+    "Behavior for negative inputs is not specified (sign prefix, two's complement, or error).",
+    "Behavior for non-integer (float) inputs is not specified."
+   ],
+   "usage": {
+    "builder": {
+     "input_tokens": 7792,
+     "output_tokens": 2630,
+     "calls": 3
+    },
+    "verifier": {
+     "input_tokens": 12060,
+     "output_tokens": 4796,
+     "calls": 3
+    }
+   },
+   "verifier_backend": "anthropic:claude-sonnet-5-5"
+  },
+  "ABp": {
+   "programs": [
+    "def decimal_to_binary(n):\n    \"\"\"Convert an integer to its binary string representation, no leading zeros.\"\"\"\n    if n == 0:\n        return '0'\n    if n < 0:\n        return '-' + bin(-n)[2:]\n    return bin(n)[2:]\n",
+    "def decimal_to_binary(n):\n    \"\"\"Convert an integer to its binary string representation, no leading zeros.\"\"\"\n    if n == 0:\n        return '0'\n    if n < 0:\n        return '-' + bin(-n)[2:]\n    return bin(n)[2:]\n",
+    "def decimal_to_binary(n):\n    \"\"\"Convert an integer to its binary string representation, no leading zeros.\"\"\"\n    if n == 0:\n        return '0'\n    if n < 0:\n        return '-' + bin(-n)[2:]\n    return bin(n)[2:]\n",
+    "def decimal_to_binary(n):\n    \"\"\"Convert an integer to its binary string representation, no leading zeros.\"\"\"\n    if n == 0:\n        return '0'\n    if n < 0:\n        return '-' + bin(-n)[2:]\n    return bin(n)[2:]\n"
+   ],
+   "final": "def decimal_to_binary(n):\n    \"\"\"Convert an integer to its binary string representation, no leading zeros.\"\"\"\n    if n == 0:\n        return '0'\n    if n < 0:\n        return '-' + bin(-n)[2:]\n    return bin(n)[2:]\n",
+   "evidence": {
+    "A": {
+     "test_phase_a": "import pytest\nfrom hypothesis import given, strategies as st\n\nfrom solution import decimal_to_binary\n\n\ndef test_example_eight():\n    \"\"\"The function must convert the specified example input 8 to the binary string '1000'.\"\"\"\n    x = 8\n    out = decimal_to_binary(x)\n    assert out == \"1000\", f\"input={x!r} output={out!r}\"\n\n\n@pytest.mark.parametrize(\n    \"x, exp\",\n    [\n        (0, \"0\"),\n        (1, \"1\"),\n        (2, \"10\"),\n        (3, \"11\"),\n        (4, \"100\"),\n        (5, \"101\"),\n        (15, \"1111\"),\n        (16, \"10000\"),\n        (31, \"11111\"),\n        (32, \"100000\"),\n        (255, \"11111111\"),\n        (256, \"100000000\"),\n    ],\n)\ndef test_known_nonnegative_integer_conversions(x, exp):\n    \"\"\"The function must return the standard base-2 representation for nonnegative decimal integers.\"\"\"\n    out = decimal_to_binary(x)\n    assert out == exp, f\"input={x!r} output={out!r}\"\n\n\n@given(st.integers(min_value=0, max_value=2**2048))\ndef test_matches_python_base_two_representation_for_nonnegative_integers(x):\n    \"\"\"The function must produce the same no-prefix base-2 digits as the mathematical binary representation.\"\"\"\n    out = decimal_to_binary(x)\n    exp = bin(x)[2:]\n    assert out == exp, f\"input={x!r} output={out!r}\"\n\n\n@given(st.integers(min_value=0, max_value=2**2048))\ndef test_output_is_a_string_of_binary_digits(x):\n    \"\"\"The function must return a string containing only binary digit characters for valid inputs.\"\"\"\n    out = decimal_to_binary(x)\n    assert isinstance(out, str), f\"input={x!r} output={out!r}\"\n    assert out != \"\", f\"input={x!r} output={out!r}\"\n    assert set(out) <= {\"0\", \"1\"}, f\"input={x!r} output={out!r}\"\n\n\n@given(st.integers(min_value=1, max_value=2**2048))\ndef test_positive_outputs_have_no_leading_zero(x):\n    \"\"\"The binary string for a positive integer must have no leading zeros.\"\"\"\n    out = decimal_to_binary(x)\n    assert not out.startswith(\"0\"), f\"input={x!r} output={out!r}\"\n\n\n@given(st.integers(min_value=0, max_value=2**2048))\ndef test_binary_output_round_trips_to_original_integer(x):\n    \"\"\"Parsing the returned binary string as base 2 must recover the original nonnegative integer.\"\"\"\n    out = decimal_to_binary(x)\n    assert int(out, 2) == x, f\"input={x!r} output={out!r}\"\n"
+    },
+    "B": {
+     "test_phase_b": "import pytest\nfrom hypothesis import given, strategies as st\n\nfrom solution import decimal_to_binary\n\n\n@pytest.mark.parametrize(\"exponent\", [2049, 2050, 4096, 8192])\ndef test_large_powers_of_two_are_one_followed_by_zeros(exponent):\n    \"\"\"The function must represent any nonnegative decimal integer power of two as '1' followed by the correct number of zeros.\"\"\"\n    x = 2**exponent\n    out = decimal_to_binary(x)\n    exp = \"1\" + (\"0\" * exponent)\n    assert out == exp, f\"input={x!r} output={out!r}\"\n\n\n@pytest.mark.parametrize(\"exponent\", [2049, 2050, 4096, 8192])\ndef test_large_numbers_one_less_than_power_of_two_are_all_ones(exponent):\n    \"\"\"The function must represent one less than a power of two as a string of only ones of the correct length.\"\"\"\n    x = (2**exponent) - 1\n    out = decimal_to_binary(x)\n    exp = \"1\" * exponent\n    assert out == exp, f\"input={x!r} output={out!r}\"\n\n\n@pytest.mark.parametrize(\"exponent\", [2049, 2050, 4096, 8192])\ndef test_large_numbers_one_more_than_power_of_two_have_edge_ones(exponent):\n    \"\"\"The function must represent one more than a power of two with leading and trailing ones and intervening zeros.\"\"\"\n    x = (2**exponent) + 1\n    out = decimal_to_binary(x)\n    exp = \"1\" + (\"0\" * (exponent - 1)) + \"1\"\n    assert out == exp, f\"input={x!r} output={out!r}\"\n\n\n@given(st.integers(min_value=2**2048 + 1, max_value=2**4096))\ndef test_large_valid_inputs_match_mathematical_binary_representation(x):\n    \"\"\"The function must return the standard no-prefix base-2 representation for large nonnegative decimal integers.\"\"\"\n    out = decimal_to_binary(x)\n    exp = bin(x)[2:]\n    assert out == exp, f\"input={x!r} output={out!r}\"\n\n\n@given(st.integers(min_value=2**2048 + 1, max_value=2**4096))\ndef test_large_valid_inputs_have_no_leading_zero_and_round_trip(x):\n    \"\"\"The function must return a no-leading-zero binary string that parses back to the original large nonnegative integer.\"\"\"\n    out = decimal_to_binary(x)\n    assert isinstance(out, str), f\"input={x!r} output={out!r}\"\n    assert out.startswith(\"1\"), f\"input={x!r} output={out!r}\"\n    assert int(out, 2) == x, f\"input={x!r} output={out!r}\"\n",
+     "test_phase_b_mutants": "\"\"\"No additional tests: the listed mutants do not change specification-determined behavior for valid inputs.\"\"\"\n"
+    }
+   },
+   "rounds": [
+    {
+     "round": 1,
+     "failing": 4,
+     "counterexamples": "1. Guarantee: The function must return the standard base-2 representation for nonnegative decimal integers.\n  Observed: TypeError: \"test_known_nonnegative_integer_conversions() missing 2 required positional arguments: 'x' and 'exp'\"\n2. Guarantee: The function must represent any nonnegative decimal integer power of two as '1' followed by the correct number of zeros.\n  Observed: TypeError: \"test_large_powers_of_two_are_one_followed_by_zeros() missing 1 required positional argument: 'exponent'\"\n3. Guarantee: The function must represent one less than a power of two as a string of only ones of the correct length.\n  Observed: TypeError: \"test_large_numbers_one_less_than_power_of_two_are_all_ones() missing 1 required positional argument: 'exponent'\"\n4. Guarantee: The function must represent one more than a power of two with leading and trailing ones and intervening zeros.\n  Observed: TypeError: \"test_large_numbers_one_more_than_power_of_two_have_edge_ones() missing 1 required positional argument: 'exponent'\""
+    },
+    {
+     "round": 2,
+     "failing": 4,
+     "counterexamples": "1. Guarantee: The function must return the standard base-2 representation for nonnegative decimal integers.\n  Observed: TypeError: \"test_known_nonnegative_integer_conversions() missing 2 required positional arguments: 'x' and 'exp'\"\n2. Guarantee: The function must represent any nonnegative decimal integer power of two as '1' followed by the correct number of zeros.\n  Observed: TypeError: \"test_large_powers_of_two_are_one_followed_by_zeros() missing 1 required positional argument: 'exponent'\"\n3. Guarantee: The function must represent one less than a power of two as a string of only ones of the correct length.\n  Observed: TypeError: \"test_large_numbers_one_less_than_power_of_two_are_all_ones() missing 1 required positional argument: 'exponent'\"\n4. Guarantee: The function must represent one more than a power of two with leading and trailing ones and intervening zeros.\n  Observed: TypeError: \"test_large_numbers_one_more_than_power_of_two_have_edge_ones() missing 1 required positional argument: 'exponent'\""
+    },
+    {
+     "round": 3,
+     "failing": 4,
+     "counterexamples": "1. Guarantee: The function must return the standard base-2 representation for nonnegative decimal integers.\n  Observed: TypeError: \"test_known_nonnegative_integer_conversions() missing 2 required positional arguments: 'x' and 'exp'\"\n2. Guarantee: The function must represent any nonnegative decimal integer power of two as '1' followed by the correct number of zeros.\n  Observed: TypeError: \"test_large_powers_of_two_are_one_followed_by_zeros() missing 1 required positional argument: 'exponent'\"\n3. Guarantee: The function must represent one less than a power of two as a string of only ones of the correct length.\n  Observed: TypeError: \"test_large_numbers_one_less_than_power_of_two_are_all_ones() missing 1 required positional argument: 'exponent'\"\n4. Guarantee: The function must represent one more than a power of two with leading and trailing ones and intervening zeros.\n  Observed: TypeError: \"test_large_numbers_one_more_than_power_of_two_have_edge_ones() missing 1 required positional argument: 'exponent'\""
+    }
+   ],
+   "mutation": {
+    "mutants": 15,
+    "survivors": 7,
+    "shown": 6
+   },
+   "open_questions": [
+    "The specification does not define behavior for negative numbers.",
+    "The specification does not define behavior for non-integer numeric inputs such as floats or `decimal.Decimal`.",
+    "The specification does not define behavior for non-numeric inputs."
+   ],
+   "usage": {
+    "builder": {
+     "input_tokens": 8171,
+     "output_tokens": 2514,
+     "calls": 3
+    },
+    "verifier": {
+     "input_tokens": 6335,
+     "output_tokens": 2860,
+     "calls": 3
+    }
+   },
+   "verifier_backend": "openai:gpt-5.5-2026-04-23"
+  }
+ },
+ "seconds": 247.2
+}

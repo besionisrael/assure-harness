@@ -1,0 +1,15 @@
+# Offline dry run: validates the pipeline end to end. Numbers are meaningless.
+campaign: mock
+output_dir: results
+seed: 2026
+runs: 2
+benchmarks:
+  humaneval: {n: 4}
+  mbpp: {n: 4}
+max_hidden: 200
+workers: 4
+scoring_workers: 4
+models:
+  builder:      {provider: mock, seed: 1, label: mock-builder}
+  verifier:     {provider: mock, seed: 2, label: mock-verifier}
+  verifier_alt: {provider: mock, seed: 3, label: mock-verifier-alt}

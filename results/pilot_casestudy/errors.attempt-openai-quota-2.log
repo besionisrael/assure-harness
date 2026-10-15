@@ -1,0 +1,102 @@
+casestudy/docpay run1
+Traceback (most recent call last):
+  File "/app/assure/pipeline.py", line 124, in run_campaign
+    status = f.result()
+  File "/usr/local/lib/python3.13/concurrent/futures/_base.py", line 453, in result
+    return self.__get_result()
+           ~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.13/concurrent/futures/_base.py", line 402, in __get_result
+    raise self._exception
+  File "/usr/local/lib/python3.13/concurrent/futures/thread.py", line 59, in run
+    result = self.fn(*self.args, **self.kwargs)
+  File "/app/assure/pipeline.py", line 83, in run_unit
+    unit["conditions"][cond] = run_condition(cond, task, run, builder0, backends, cfg, log)
+                               ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/assure/pipeline.py", line 45, in run_condition
+    evidence["A"] = verifier.phase_a()
+                    ~~~~~~~~~~~~~~~~^^
+  File "/app/assure/agents.py", line 160, in phase_a
+    text = self._ask(self.system, prompts.VERIFIER_PHASE_A.format(
+        spec=self.task.spec, entry_point=self.task.entry_point, rules=self.rules,
+        **self.fields),
+        phase="A")
+  File "/app/assure/agents.py", line 21, in _ask
+    text, usage = self.backend.complete(system, self.messages, meta)
+                  ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/assure/llm.py", line 95, in complete
+    resp = _retry(lambda: self.client.chat.completions.create(**kwargs))
+  File "/app/assure/llm.py", line 21, in _retry
+    return call()
+  File "/app/assure/llm.py", line 95, in <lambda>
+    resp = _retry(lambda: self.client.chat.completions.create(**kwargs))
+                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "/usr/local/lib/python3.13/site-packages/openai/_utils/_utils.py", line 298, in wrapper
+    return func(*args, **kwargs)
+  File "/usr/local/lib/python3.13/site-packages/openai/resources/chat/completions/completions.py", line 1318, in create
+    return self._post(
+           ~~~~~~~~~~^
+        "/chat/completions",
+        ^^^^^^^^^^^^^^^^^^^^
+    ...<53 lines>...
+        stream_cls=Stream[ChatCompletionChunk],
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/usr/local/lib/python3.13/site-packages/openai/_base_client.py", line 1440, in post
+    return cast(ResponseT, self.request(cast_to, opts, stream=stream, stream_cls=stream_cls))
+                           ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.13/site-packages/openai/_base_client.py", line 1213, in request
+    raise self._make_status_error_from_response(err.response) from None
+openai.RateLimitError: Error code: 429 - {'error': {'message': 'You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.', 'type': 'insufficient_quota', 'param': None, 'code': 'credit_balance_exhausted'}}
+
+casestudy/docpay run2
+Traceback (most recent call last):
+  File "/app/assure/pipeline.py", line 124, in run_campaign
+    status = f.result()
+  File "/usr/local/lib/python3.13/concurrent/futures/_base.py", line 453, in result
+    return self.__get_result()
+           ~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.13/concurrent/futures/_base.py", line 402, in __get_result
+    raise self._exception
+  File "/usr/local/lib/python3.13/concurrent/futures/thread.py", line 59, in run
+    result = self.fn(*self.args, **self.kwargs)
+  File "/app/assure/pipeline.py", line 83, in run_unit
+    unit["conditions"][cond] = run_condition(cond, task, run, builder0, backends, cfg, log)
+                               ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/assure/pipeline.py", line 47, in run_condition
+    evidence["B"], mutation_info = verifier.phase_b(p0, evidence.get("A"))
+                                   ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/assure/agents.py", line 170, in phase_b
+    text = self._ask(self.system, prompts.VERIFIER_PHASE_B.format(
+        frozen_note=note, spec=self.task.spec, program=program, rules=self.rules,
+        **self.fields),
+        phase="B")
+  File "/app/assure/agents.py", line 21, in _ask
+    text, usage = self.backend.complete(system, self.messages, meta)
+                  ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/assure/llm.py", line 95, in complete
+    resp = _retry(lambda: self.client.chat.completions.create(**kwargs))
+  File "/app/assure/llm.py", line 21, in _retry
+    return call()
+  File "/app/assure/llm.py", line 95, in <lambda>
+    resp = _retry(lambda: self.client.chat.completions.create(**kwargs))
+                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "/usr/local/lib/python3.13/site-packages/openai/_utils/_utils.py", line 298, in wrapper
+    return func(*args, **kwargs)
+  File "/usr/local/lib/python3.13/site-packages/openai/resources/chat/completions/completions.py", line 1318, in create
+    return self._post(
+           ~~~~~~~~~~^
+        "/chat/completions",
+        ^^^^^^^^^^^^^^^^^^^^
+    ...<53 lines>...
+        stream_cls=Stream[ChatCompletionChunk],
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/usr/local/lib/python3.13/site-packages/openai/_base_client.py", line 1440, in post
+    return cast(ResponseT, self.request(cast_to, opts, stream=stream, stream_cls=stream_cls))
+                           ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.13/site-packages/openai/_base_client.py", line 1213, in request
+    raise self._make_status_error_from_response(err.response) from None
+openai.RateLimitError: Error code: 429 - {'error': {'message': 'You have no credits remaining. Add credits to continue using the API at https://platform.openai.com/settings/organization/billing/.', 'type': 'insufficient_quota', 'param': None, 'code': 'credit_balance_exhausted'}}
+

@@ -1,0 +1,39 @@
+   run,condition,item,coder_raised,coder_tested,coder_disputed,coder_notes
+0,A,O2,yes,0,no,
+0,A,O4,yes,0,no,
+0,AB,O2,yes,0,no,"Test checks exact match, not case folding."
+0,AB,O3,yes,1,no,
+0,AB,O4,yes,0,no,
+0,AB,O5,no,4,no,
+0,ABp,O3,no,1,no,
+1,A,O2,yes,0,no,
+1,A,O4,yes,0,no,
+1,B,O3,no,1,no,
+1,AB,O2,yes,0,no,"Tests check username charset and length boundaries, not case folding."
+1,AB,O4,yes,0,no,
+2,A,O2,yes,0,no,
+2,B,O2,no,0,no,"Test checks username charset, not case folding."
+2,AB,O2,no,0,no,"Tests check username charset and length boundaries, not case folding."
+2,AB,O3,no,1,no,
+2,AB,O4,yes,0,no,
+2,AB,O5,no,1,yes,
+2,ABp,O3,no,2,no,
+3,A,O3,yes,0,no,
+3,AB,O2,no,0,no,"Test checks password length counting, not case folding."
+3,AB,O3,no,1,no,
+3,AB,O4,yes,0,no,
+3,AB,O5,no,2,no,
+3,ABp,O3,no,1,no,
+4,A,O2,yes,0,no,
+4,A,O3,yes,0,no,
+4,A,O4,yes,0,no,
+4,B,O2,no,0,no,"Test checks password length boundary, not case folding."
+4,B,O3,no,1,no,
+4,B,O4,no,2,no,
+4,B,O5,no,3,no,
+4,AB,O2,yes,0,no,
+4,AB,O3,yes,2,no,
+4,AB,O4,yes,0,no,
+4,AB,O5,no,4,yes,
+4,ABp,O4,no,1,no,
+4,ABp,O5,no,1,no,

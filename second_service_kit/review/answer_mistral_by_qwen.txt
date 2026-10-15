@@ -1,0 +1,33 @@
+## Review Table
+
+| # | test | spec lines that justify each assertion | verdict | reason if PROBLEM |
+|---|------|----------------------------------------|---------|-------------------|
+| 1 | test_req1_invalid_names | 40-42 (room must be a string, non-empty, no leading/trailing whitespace; invalid → 400) | OK | |
+| 2 | test_req1_capacity_bounds | 41-42 (capacity must be integer 1..50; bool not integer; invalid → 400), 45 (201 {"room": room}) | OK | |
+| 3 | test_req1_duplicate_room | 43-45 (duplicate → 409 None; success → 201 {"room": room}) | OK | |
+| 4 | test_req2_day_bounds | 48-51 (0 ≤ day ≤ 365, day ≥ today; bool rejected; invalid → 400) | OK | |
+| 5 | test_req2_hours | 48-51 (0 ≤ start < end ≤ 24; integers, bools rejected; invalid → 400) | OK | |
+| 6 | test_req3_unknown_room | 53-54 (room must exist, else 404), 17-18 (non-2xx → None) | OK | |
+| 7 | test_req3_seats | 55-56 (seats integer 1..capacity; invalid → 400) | OK | |
+| 8 | test_req3_check_order | 53-56 (check order: 404, 400, 400, 409) | OK | |
+| 9 | test_req4_exact_fill_allowed | 58-61 (sum must not exceed capacity; ≤ is allowed) | OK | |
+| 10 | test_req4_conflict_at_last_hour | 49 ([start, end) half-open), 58-61 (capacity check per hour) | OK | |
+| 11 | test_req4_conflict_changes_nothing | 61 (409 changes nothing) | OK | |
+| 12 | test_req5_sequential_ids | 63-66 (IDs start at 1, increment, never reused) | OK | |
+| 13 | test_req5_record_shape | 20-22 (booking record has exactly these keys), 65-66 (201 with record) | OK | |
+| 14 | test_req6_cancel_other_users_booking | 69-72 (other user's booking → 404; missing → 404), 75-76 (own active → 200) | OK | |
+| 15 | test_req6_move_other_users_booking | 69-72 (other user's → 404; missing → 404), 71-72 (list only user's) | OK | |
+| 16 | test_req7_double_cancel | 75-77 (active → 200; already cancelled → 409) | OK | |
+| 17 | test_req7_cancel_releases_capacity | 75-76 (cancelled seats stop counting for REQ-4) | OK | |
+| 18 | test_req8_move_self_overlap | 84-86 (own seats don't count at current hours), 86-87 (success → 200 updated record) | OK | |
+| 19 | test_req8_move_releases_old_slot | 86-88 (success updates record; implies old slot freed) | OK | |
+| 20 | test_req8_move_conflict_leaves_unchanged | 87-88 (failure → unchanged booking and capacity) | OK | |
+| 21 | test_req8_move_invalid_time | 83 (invalid new time → 400), 87-88 (failure → unchanged) | OK | |
+| 22 | test_req8_move_cancelled | 82 (must be active, else 409), 96-97 (cancelled cannot be moved) | OK | |
+| 23 | test_req9_list_order | 92 (sorted by day, start, booking_id ascending) | OK | |
+| 24 | test_req9_list_tie_break | 92 (sorted by day, start, booking_id ascending) | OK | |
+| 25 | test_req9_list_excludes_cancelled | 91-92 (active bookings only), 96 (cancelled not in listings) | OK | |
+| 26 | test_req10_cancelled_occupies_nothing | 95-96 (cancelled does not occupy capacity) | OK | |
+| 27 | test_stateful_reservations | 58-61 (capacity), 63-66 (IDs), 75-77 (cancel), 81-88 (move), 92 (list sort) | OK | |
+
+PROBLEMS: none

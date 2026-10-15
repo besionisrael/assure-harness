@@ -1,0 +1,199 @@
+{
+ "task_id": "Mbpp/619",
+ "benchmark": "mbpp",
+ "run": 0,
+ "prompt_version": "2026-10-08.1",
+ "backends": {
+  "builder": "anthropic:claude-sonnet-5-5",
+  "verifier": "anthropic:claude-sonnet-5-5",
+  "verifier_alt": "openai:gpt-5.5-2026-04-23"
+ },
+ "p0": "def move_num(s):\n    letters = []\n    digits = []\n    for c in s:\n        if '0' <= c <= '9':\n            digits.append(c)\n        else:\n            letters.append(c)\n    return ''.join(letters) + ''.join(digits)\n",
+ "p0_info": {
+  "self_rounds": 0,
+  "self_converged": true
+ },
+ "usage_shared": {
+  "input_tokens": 506,
+  "output_tokens": 566,
+  "calls": 1
+ },
+ "conditions": {
+  "SV": {
+   "programs": [
+    "def move_num(s):\n    letters = []\n    digits = []\n    for c in s:\n        if '0' <= c <= '9':\n            digits.append(c)\n        else:\n            letters.append(c)\n    return ''.join(letters) + ''.join(digits)\n"
+   ],
+   "final": "def move_num(s):\n    letters = []\n    digits = []\n    for c in s:\n        if '0' <= c <= '9':\n            digits.append(c)\n        else:\n            letters.append(c)\n    return ''.join(letters) + ''.join(digits)\n",
+   "evidence": {
+    "builder": {
+     "test_solution": "from solution import move_num\n\n\ndef test_visible():\n    assert move_num('I1love143you55three3000thousand') == 'Iloveyouthreethousand1143553000'\n    assert move_num('Avengers124Assemble') == 'AvengersAssemble124'\n    assert move_num('Its11our12path13to14see15things16do17things') == 'Itsourpathtoseethingsdothings11121314151617'\n\n\ndef test_empty():\n    assert move_num('') == ''\n\n\ndef test_no_digits():\n    assert move_num('hello world') == 'hello world'\n\n\ndef test_only_digits():\n    assert move_num('12345') == '12345'\n\n\ndef test_digits_first():\n    assert move_num('12ab34') == 'ab1234'\n\n\ndef test_spaces_and_symbols():\n    assert move_num('a 1-b 2') == 'a -b 12'\n"
+    }
+   },
+   "rounds": [],
+   "usage": {
+    "input_tokens": 0,
+    "output_tokens": 0,
+    "calls": 0
+   },
+   "open_questions": []
+  },
+  "A": {
+   "programs": [
+    "def move_num(s):\n    letters = []\n    digits = []\n    for c in s:\n        if '0' <= c <= '9':\n            digits.append(c)\n        else:\n            letters.append(c)\n    return ''.join(letters) + ''.join(digits)\n"
+   ],
+   "final": "def move_num(s):\n    letters = []\n    digits = []\n    for c in s:\n        if '0' <= c <= '9':\n            digits.append(c)\n        else:\n            letters.append(c)\n    return ''.join(letters) + ''.join(digits)\n",
+   "evidence": {
+    "A": {
+     "test_phase_a": "import string\n\nfrom hypothesis import given, strategies as st\n\nfrom solution import move_num\n\nDIGITS = \"0123456789\"\n# Avoid '-', '+', '.', ',' and non-ASCII digits (ambiguous per spec).\nALPHABET = string.ascii_letters + DIGITS + \" _\"\ntexts = st.text(alphabet=ALPHABET, max_size=60)\nnondigit_texts = st.text(alphabet=string.ascii_letters + \" _\", max_size=40)\ndigit_texts = st.text(alphabet=DIGITS, max_size=40)\n\n\ndef expected(s):\n    return \"\".join(c for c in s if c not in DIGITS) + \"\".join(c for c in s if c in DIGITS)\n\n\ndef test_spec_example():\n    \"\"\"The given example must move all numbers to the end in their original order.\"\"\"\n    x = 'I1love143you55three3000thousand'\n    out = move_num(x)\n    exp = 'Iloveyouthreethousand1143553000'\n    assert out == exp, f\"input={x!r} output={out!r}\"\n\n\ndef test_empty_string():\n    \"\"\"The empty string has no numbers, so it must be returned as empty.\"\"\"\n    x = \"\"\n    out = move_num(x)\n    assert out == \"\", f\"input={x!r} output={out!r}\"\n\n\ndef test_no_digits_unchanged():\n    \"\"\"A string with no numbers must remain unchanged.\"\"\"\n    x = \"hello world\"\n    out = move_num(x)\n    assert out == x, f\"input={x!r} output={out!r}\"\n\n\ndef test_only_digits_unchanged():\n    \"\"\"A string consisting only of numbers must remain unchanged.\"\"\"\n    x = \"12345\"\n    out = move_num(x)\n    assert out == x, f\"input={x!r} output={out!r}\"\n\n\ndef test_single_number_in_middle():\n    \"\"\"A number in the middle of the string must be moved to the end.\"\"\"\n    x = \"ab12cd\"\n    out = move_num(x)\n    assert out == \"abcd12\", f\"input={x!r} output={out!r}\"\n\n\ndef test_number_at_start():\n    \"\"\"A number at the start must be moved to the end.\"\"\"\n    x = \"12ab\"\n    out = move_num(x)\n    assert out == \"ab12\", f\"input={x!r} output={out!r}\"\n\n\ndef test_numbers_keep_order_and_digits_intact():\n    \"\"\"Multiple numbers must be appended in original order with digits unreordered.\"\"\"\n    x = \"a9b81c7\"\n    out = move_num(x)\n    assert out == \"abc9817\", f\"input={x!r} output={out!r}\"\n\n\ndef test_spaces_preserved():\n    \"\"\"Non-number characters including spaces must keep their order.\"\"\"\n    x = \"a 1 b 2\"\n    out = move_num(x)\n    assert out == \"a  b 12\", f\"input={x!r} output={out!r}\"\n\n\n@given(texts)\ndef test_matches_stable_partition(x):\n    \"\"\"The result must be the non-digits in order followed by the digits in order.\"\"\"\n    out = move_num(x)\n    exp = expected(x)\n    assert out == exp, f\"input={x!r} output={out!r}\"\n\n\n@given(texts)\ndef test_length_and_multiset_preserved(x):\n    \"\"\"No characters may be added or removed.\"\"\"\n    out = move_num(x)\n    assert isinstance(out, str), f\"input={x!r} output={out!r}\"\n    assert len(out) == len(x), f\"input={x!r} output={out!r}\"\n    assert sorted(out) == sorted(x), f\"input={x!r} output={out!r}\"\n\n\n@given(texts)\ndef test_digits_all_at_end(x):\n    \"\"\"All numbers must be at the end: no non-digit may follow a digit.\"\"\"\n    out = move_num(x)\n    seen_digit = False\n    for c in out:\n        if c in DIGITS:\n            seen_digit = True\n        else:\n            assert not seen_digit, f\"input={x!r} output={out!r}\"\n\n\n@given(texts)\ndef test_idempotent(x):\n    \"\"\"Moving numbers to the end of an already-processed string must change nothing.\"\"\"\n    once = move_num(x)\n    twice = move_num(once)\n    assert twice == once, f\"input={x!r} output={once!r} second={twice!r}\"\n\n\n@given(nondigit_texts)\ndef test_no_digits_property(x):\n    \"\"\"A string without numbers must be returned unchanged.\"\"\"\n    out = move_num(x)\n    assert out == x, f\"input={x!r} output={out!r}\"\n\n\n@given(digit_texts)\ndef test_all_digits_property(x):\n    \"\"\"A string made only of numbers must be returned unchanged.\"\"\"\n    out = move_num(x)\n    assert out == x, f\"input={x!r} output={out!r}\"\n\n\n@given(nondigit_texts, digit_texts)\ndef test_already_partitioned_unchanged(a, b):\n    \"\"\"A string with all numbers already at the end must be unchanged.\"\"\"\n    x = a + b\n    out = move_num(x)\n    assert out == x, f\"input={x!r} output={out!r}\"\n"
+    }
+   },
+   "rounds": [
+    {
+     "round": 1,
+     "failing": 0
+    }
+   ],
+   "mutation": null,
+   "open_questions": [
+    "Whether signs (`-`, `+`) or decimal points (`.`) belong to a number, for example `\"a-5\"` or `\"1.5x\"`. The tests avoid these characters.",
+    "How non-ASCII Unicode digits are treated. The tests use only ASCII digits.",
+    "Whether the input may be a non-string. The tests use only strings."
+   ],
+   "usage": {
+    "builder": {
+     "input_tokens": 0,
+     "output_tokens": 0,
+     "calls": 0
+    },
+    "verifier": {
+     "input_tokens": 720,
+     "output_tokens": 2532,
+     "calls": 1
+    }
+   },
+   "verifier_backend": "anthropic:claude-sonnet-5-5"
+  },
+  "B": {
+   "programs": [
+    "def move_num(s):\n    letters = []\n    digits = []\n    for c in s:\n        if '0' <= c <= '9':\n            digits.append(c)\n        else:\n            letters.append(c)\n    return ''.join(letters) + ''.join(digits)\n"
+   ],
+   "final": "def move_num(s):\n    letters = []\n    digits = []\n    for c in s:\n        if '0' <= c <= '9':\n            digits.append(c)\n        else:\n            letters.append(c)\n    return ''.join(letters) + ''.join(digits)\n",
+   "evidence": {
+    "B": {
+     "test_phase_b": "from hypothesis import given, strategies as st\n\nfrom solution import move_num\n\nDIGITS = \"0123456789\"\n\nascii_text = st.text(\n    alphabet=st.characters(min_codepoint=32, max_codepoint=126),\n    max_size=60,\n)\n\n\ndef expected(s):\n    return \"\".join(c for c in s if c not in DIGITS) + \"\".join(c for c in s if c in DIGITS)\n\n\ndef test_spec_example():\n    \"\"\"Numbers in the string are moved to the end, as in the specification example.\"\"\"\n    x = 'I1love143you55three3000thousand'\n    out = move_num(x)\n    exp = 'Iloveyouthreethousand1143553000'\n    assert out == exp, f\"input={x!r} output={out!r}\"\n\n\ndef test_empty_string():\n    \"\"\"An empty string has no numbers to move and stays empty.\"\"\"\n    x = \"\"\n    out = move_num(x)\n    assert out == \"\", f\"input={x!r} output={out!r}\"\n\n\ndef test_no_digits_unchanged():\n    \"\"\"A string with no digits is returned unchanged.\"\"\"\n    x = \"hello world\"\n    out = move_num(x)\n    assert out == x, f\"input={x!r} output={out!r}\"\n\n\ndef test_only_digits_unchanged():\n    \"\"\"A string made only of digits is unchanged since all are already at the end.\"\"\"\n    x = \"9876501234\"\n    out = move_num(x)\n    assert out == x, f\"input={x!r} output={out!r}\"\n\n\ndef test_digits_already_at_end():\n    \"\"\"A string whose digits are already at the end is unchanged.\"\"\"\n    x = \"abc123\"\n    out = move_num(x)\n    assert out == x, f\"input={x!r} output={out!r}\"\n\n\ndef test_digits_at_start():\n    \"\"\"Leading digits are moved after the non-digit characters, keeping digit order.\"\"\"\n    x = \"123abc\"\n    out = move_num(x)\n    assert out == \"abc123\", f\"input={x!r} output={out!r}\"\n\n\ndef test_interleaved_single():\n    \"\"\"Digits interleaved with letters keep their relative order at the end.\"\"\"\n    x = \"a1b2c3\"\n    out = move_num(x)\n    assert out == \"abc123\", f\"input={x!r} output={out!r}\"\n\n\ndef test_digit_order_not_sorted():\n    \"\"\"Digits keep their original order rather than being sorted.\"\"\"\n    x = \"a9b1c5\"\n    out = move_num(x)\n    assert out == \"abc915\", f\"input={x!r} output={out!r}\"\n\n\ndef test_boundary_ascii_neighbors_not_digits():\n    \"\"\"Characters adjacent to '0' and '9' in ASCII ('/' and ':') are not numbers and stay in front.\"\"\"\n    x = \"/0:9/\"\n    out = move_num(x)\n    assert out == \"/:/09\", f\"input={x!r} output={out!r}\"\n\n\ndef test_all_digit_characters():\n    \"\"\"Every digit 0-9 is moved to the end.\"\"\"\n    x = \"0a1b2c3d4e5f6g7h8i9\"\n    out = move_num(x)\n    assert out == \"abcdefghi0123456789\", f\"input={x!r} output={out!r}\"\n\n\ndef test_spaces_and_punctuation_preserved():\n    \"\"\"Non-digit characters including spaces and punctuation keep their order.\"\"\"\n    x = \"a 1, b-2!\"\n    out = move_num(x)\n    assert out == \"a , b-!12\", f\"input={x!r} output={out!r}\"\n\n\n@given(ascii_text)\ndef test_prop_matches_partition(s):\n    \"\"\"The result is the non-digit characters in order followed by the digits in order.\"\"\"\n    out = move_num(s)\n    exp = expected(s)\n    assert out == exp, f\"input={s!r} output={out!r}\"\n\n\n@given(ascii_text)\ndef test_prop_same_length_and_multiset(s):\n    \"\"\"The result contains exactly the same characters as the input.\"\"\"\n    out = move_num(s)\n    assert len(out) == len(s), f\"input={s!r} output={out!r}\"\n    assert sorted(out) == sorted(s), f\"input={s!r} output={out!r}\"\n\n\n@given(ascii_text)\ndef test_prop_digits_all_at_end(s):\n    \"\"\"No non-digit character appears after any digit in the result.\"\"\"\n    out = move_num(s)\n    seen_digit = False\n    for c in out:\n        if c in DIGITS:\n            seen_digit = True\n        else:\n            assert not seen_digit, f\"input={s!r} output={out!r}\"\n\n\n@given(ascii_text)\ndef test_prop_idempotent(s):\n    \"\"\"Applying the function twice gives the same result as applying it once.\"\"\"\n    once = move_num(s)\n    twice = move_num(once)\n    assert twice == once, f\"input={s!r} output={once!r} twice={twice!r}\"\n\n\n@given(st.text(alphabet=\"abc xyz\", max_size=30))\ndef test_prop_no_digits_identity(s):\n    \"\"\"A string without digits is returned unchanged.\"\"\"\n    out = move_num(s)\n    assert out == s, f\"input={s!r} output={out!r}\"\n\n\n@given(st.text(alphabet=DIGITS, max_size=30))\ndef test_prop_all_digits_identity(s):\n    \"\"\"A string of only digits is returned unchanged.\"\"\"\n    out = move_num(s)\n    assert out == s, f\"input={s!r} output={out!r}\"\n"
+    }
+   },
+   "rounds": [
+    {
+     "round": 1,
+     "failing": 0
+    }
+   ],
+   "mutation": {
+    "mutants": 8,
+    "survivors": 0
+   },
+   "open_questions": [],
+   "usage": {
+    "builder": {
+     "input_tokens": 0,
+     "output_tokens": 0,
+     "calls": 0
+    },
+    "verifier": {
+     "input_tokens": 788,
+     "output_tokens": 2205,
+     "calls": 1
+    }
+   },
+   "verifier_backend": "anthropic:claude-sonnet-5-5"
+  },
+  "AB": {
+   "programs": [
+    "def move_num(s):\n    letters = []\n    digits = []\n    for c in s:\n        if '0' <= c <= '9':\n            digits.append(c)\n        else:\n            letters.append(c)\n    return ''.join(letters) + ''.join(digits)\n"
+   ],
+   "final": "def move_num(s):\n    letters = []\n    digits = []\n    for c in s:\n        if '0' <= c <= '9':\n            digits.append(c)\n        else:\n            letters.append(c)\n    return ''.join(letters) + ''.join(digits)\n",
+   "evidence": {
+    "A": {
+     "test_phase_a": "import string\nfrom collections import Counter\n\nfrom hypothesis import given, strategies as st\n\nfrom solution import move_num\n\nALPHABET = string.ascii_letters + string.digits + \" \"\ntexts = st.text(alphabet=ALPHABET, max_size=60)\n\n\ndef _split(s):\n    nondig = \"\".join(c for c in s if c not in string.digits)\n    dig = \"\".join(c for c in s if c in string.digits)\n    return nondig, dig\n\n\ndef test_spec_example():\n    \"\"\"The example from the specification must produce the stated output.\"\"\"\n    x = 'I1love143you55three3000thousand'\n    out = move_num(x)\n    exp = 'Iloveyouthreethousand1143553000'\n    assert out == exp, f\"input={x!r} output={out!r}\"\n\n\ndef test_digits_moved_to_end_simple():\n    \"\"\"All numbers in the string must be moved to the end, keeping order.\"\"\"\n    x = 'a1b2c3'\n    out = move_num(x)\n    assert out == 'abc123', f\"input={x!r} output={out!r}\"\n\n\ndef test_number_runs_keep_order():\n    \"\"\"Numbers must appear at the end in their original left-to-right order.\"\"\"\n    x = '12ab34cd5'\n    out = move_num(x)\n    assert out == 'abcd12345', f\"input={x!r} output={out!r}\"\n\n\ndef test_leading_digits():\n    \"\"\"Numbers at the start of the string must be moved to the end.\"\"\"\n    x = '99abc'\n    out = move_num(x)\n    assert out == 'abc99', f\"input={x!r} output={out!r}\"\n\n\ndef test_no_digits_unchanged():\n    \"\"\"A string without numbers must be returned unchanged.\"\"\"\n    x = 'hello world'\n    out = move_num(x)\n    assert out == x, f\"input={x!r} output={out!r}\"\n\n\ndef test_only_digits_unchanged():\n    \"\"\"A string consisting only of numbers must be returned unchanged.\"\"\"\n    x = '9081726354'\n    out = move_num(x)\n    assert out == x, f\"input={x!r} output={out!r}\"\n\n\ndef test_empty_string():\n    \"\"\"The empty string has nothing to move and must give the empty string.\"\"\"\n    out = move_num('')\n    assert out == '', f\"input='' output={out!r}\"\n\n\ndef test_spaces_are_non_numbers():\n    \"\"\"Non-number characters such as spaces must stay in place relative to each other.\"\"\"\n    x = 'a 1 b 2'\n    out = move_num(x)\n    assert out == 'a  b 12', f\"input={x!r} output={out!r}\"\n\n\n@given(texts)\ndef test_prop_nondigits_then_digits(s):\n    \"\"\"The result must be the non-digit characters in order followed by the digits in order.\"\"\"\n    nondig, dig = _split(s)\n    out = move_num(s)\n    assert out == nondig + dig, f\"input={s!r} output={out!r}\"\n\n\n@given(texts)\ndef test_prop_same_characters(s):\n    \"\"\"Moving numbers must neither add nor remove characters.\"\"\"\n    out = move_num(s)\n    assert isinstance(out, str), f\"input={s!r} output={out!r}\"\n    assert len(out) == len(s), f\"input={s!r} output={out!r}\"\n    assert Counter(out) == Counter(s), f\"input={s!r} output={out!r}\"\n\n\n@given(texts)\ndef test_prop_no_digit_before_nondigit(s):\n    \"\"\"No number may remain before a non-number character in the result.\"\"\"\n    out = move_num(s)\n    seen_digit = False\n    for c in out:\n        if c in string.digits:\n            seen_digit = True\n        else:\n            assert not seen_digit, f\"input={s!r} output={out!r}\"\n\n\n@given(texts)\ndef test_prop_idempotent(s):\n    \"\"\"Applying the move twice must give the same result as applying it once.\"\"\"\n    once = move_num(s)\n    twice = move_num(once)\n    assert once == twice, f\"input={s!r} output={once!r} second={twice!r}\"\n\n\n@given(st.text(alphabet=string.ascii_letters + \" \", max_size=40))\ndef test_prop_no_digits_identity(s):\n    \"\"\"A string with no numbers must be returned unchanged.\"\"\"\n    out = move_num(s)\n    assert out == s, f\"input={s!r} output={out!r}\"\n\n\n@given(st.text(alphabet=string.digits, max_size=40))\ndef test_prop_all_digits_identity(s):\n    \"\"\"A string of only numbers must be returned unchanged.\"\"\"\n    out = move_num(s)\n    assert out == s, f\"input={s!r} output={out!r}\"\n"
+    },
+    "B": {
+     "test_phase_b": "import string\n\nfrom hypothesis import given, settings, strategies as st\n\nfrom solution import move_num\n\nDIGITS = \"0123456789\"\nBOUNDARY = \"/:@`\"  # ASCII neighbours of '0' and '9' and other near-range chars\n\nboundary_texts = st.text(\n    alphabet=string.ascii_letters + DIGITS + BOUNDARY + \" \\n\\t\", max_size=60\n)\n\nunicode_letter_texts = st.text(\n    alphabet=st.one_of(\n        st.characters(whitelist_categories=(\"L\",)),\n        st.sampled_from(list(DIGITS)),\n    ),\n    max_size=40,\n)\n\n\ndef _ref(s):\n    return \"\".join(c for c in s if c not in DIGITS) + \"\".join(c for c in s if c in DIGITS)\n\n\ndef test_char_before_zero_is_not_a_number():\n    \"\"\"The character '/' is not a number and must stay with the non-numbers.\"\"\"\n    x = '/0'\n    out = move_num(x)\n    assert out == '/0', f\"input={x!r} output={out!r}\"\n    x = '0/'\n    out = move_num(x)\n    assert out == '/0', f\"input={x!r} output={out!r}\"\n\n\ndef test_char_after_nine_is_not_a_number():\n    \"\"\"The character ':' is not a number and must stay with the non-numbers.\"\"\"\n    x = '9:'\n    out = move_num(x)\n    assert out == ':9', f\"input={x!r} output={out!r}\"\n    x = ':9'\n    out = move_num(x)\n    assert out == ':9', f\"input={x!r} output={out!r}\"\n\n\ndef test_boundary_chars_mixed():\n    \"\"\"Non-number neighbours of '0' and '9' stay in front, with numbers in order at the end.\"\"\"\n    x = '/0:9'\n    out = move_num(x)\n    assert out == '/:09', f\"input={x!r} output={out!r}\"\n    x = ':9/0'\n    out = move_num(x)\n    assert out == ':/90', f\"input={x!r} output={out!r}\"\n    x = '9@0`'\n    out = move_num(x)\n    assert out == '@`90', f\"input={x!r} output={out!r}\"\n\n\ndef test_every_digit_is_moved():\n    \"\"\"Each of the digits 0 to 9 is a number and must be moved to the end.\"\"\"\n    for d in DIGITS:\n        x = 'a' + d + 'b'\n        out = move_num(x)\n        assert out == 'ab' + d, f\"input={x!r} output={out!r}\"\n\n\ndef test_digits_not_sorted():\n    \"\"\"Numbers must keep their original order, not be sorted.\"\"\"\n    x = 'z9y8x7a0b1'\n    out = move_num(x)\n    assert out == 'zyxab98701', f\"input={x!r} output={out!r}\"\n\n\ndef test_repeated_digits_and_zeros():\n    \"\"\"Repeated numbers and zeros must all be preserved in original order.\"\"\"\n    x = '0a00b000'\n    out = move_num(x)\n    assert out == 'ab000000', f\"input={x!r} output={out!r}\"\n\n\ndef test_digits_already_at_end_unchanged():\n    \"\"\"A string whose numbers are already at the end must be unchanged.\"\"\"\n    x = 'abc123'\n    out = move_num(x)\n    assert out == x, f\"input={x!r} output={out!r}\"\n\n\ndef test_whitespace_preserved():\n    \"\"\"Whitespace characters are not numbers and must keep their relative order.\"\"\"\n    x = 'a\\n1\\tb 2'\n    out = move_num(x)\n    assert out == 'a\\n\\tb 12', f\"input={x!r} output={out!r}\"\n\n\ndef test_case_preserved():\n    \"\"\"Letters are not numbers and must keep their case and order.\"\"\"\n    x = 'A1b2C3'\n    out = move_num(x)\n    assert out == 'AbC123', f\"input={x!r} output={out!r}\"\n\n\ndef test_non_ascii_letters_stay_in_place():\n    \"\"\"Non-ASCII letters are not numbers and must stay in front in order.\"\"\"\n    x = '\u00e91\u00df2\u00fc'\n    out = move_num(x)\n    assert out == '\u00e9\u00df\u00fc12', f\"input={x!r} output={out!r}\"\n\n\ndef test_single_characters():\n    \"\"\"A single non-number stays as is and a single number stays as is.\"\"\"\n    for x in ['a', ' ', '/', ':', '0', '5', '9']:\n        out = move_num(x)\n        assert out == x, f\"input={x!r} output={out!r}\"\n\n\ndef test_long_input():\n    \"\"\"Long strings must have all numbers moved to the end in order.\"\"\"\n    x = ('ab1' * 5000)\n    out = move_num(x)\n    exp = 'ab' * 5000 + '1' * 5000\n    assert out == exp, f\"input_len={len(x)} output_len={len(out)}\"\n\n\n@given(boundary_texts)\ndef test_prop_boundary_alphabet_matches_definition(s):\n    \"\"\"Non-numbers in order followed by numbers in order, including ASCII neighbours of '0' and '9'.\"\"\"\n    out = move_num(s)\n    assert out == _ref(s), f\"input={s!r} output={out!r}\"\n\n\n@given(unicode_letter_texts)\ndef test_prop_unicode_letters_and_digits(s):\n    \"\"\"Letters of any script are not numbers and must precede the numbers in order.\"\"\"\n    out = move_num(s)\n    assert out == _ref(s), f\"input={s!r} output={out!r}\"\n\n\n@given(boundary_texts)\n@settings(max_examples=200)\ndef test_prop_digit_suffix_length(s):\n    \"\"\"The result must end with exactly as many numbers as the input contains.\"\"\"\n    out = move_num(s)\n    n = sum(1 for c in s if c in DIGITS)\n    tail = out[len(out) - n:] if n else \"\"\n    head = out[: len(out) - n]\n    assert all(c in DIGITS for c in tail) and len(tail) == n, f\"input={s!r} output={out!r}\"\n    assert not any(c in DIGITS for c in head), f\"input={s!r} output={out!r}\"\n\n\n@given(boundary_texts, boundary_texts)\ndef test_prop_concatenation(a, b):\n    \"\"\"Digits of a concatenation come in left-to-right order, non-numbers likewise.\"\"\"\n    out = move_num(a + b)\n    na = \"\".join(c for c in a if c not in DIGITS)\n    nb = \"\".join(c for c in b if c not in DIGITS)\n    da = \"\".join(c for c in a if c in DIGITS)\n    db = \"\".join(c for c in b if c in DIGITS)\n    exp = na + nb + da + db\n    assert out == exp, f\"input={(a + b)!r} output={out!r}\"\n"
+    }
+   },
+   "rounds": [
+    {
+     "round": 1,
+     "failing": 0
+    }
+   ],
+   "mutation": {
+    "mutants": 8,
+    "survivors": 0
+   },
+   "open_questions": [
+    "Non-ASCII digit characters (e.g. `'\u00b2'`, Arabic-Indic digits) are not specified as \"numbers\", so I do not test them.",
+    "Signs and decimal points (`'-5'`, `'3.14'`) are not specified. It is unclear whether they belong to the number and move with it, so I do not test them.",
+    "Behavior for non-string inputs is unspecified, so I do not test it."
+   ],
+   "usage": {
+    "builder": {
+     "input_tokens": 0,
+     "output_tokens": 0,
+     "calls": 0
+    },
+    "verifier": {
+     "input_tokens": 5412,
+     "output_tokens": 5414,
+     "calls": 2
+    }
+   },
+   "verifier_backend": "anthropic:claude-sonnet-5-5"
+  },
+  "ABp": {
+   "programs": [
+    "def move_num(s):\n    letters = []\n    digits = []\n    for c in s:\n        if '0' <= c <= '9':\n            digits.append(c)\n        else:\n            letters.append(c)\n    return ''.join(letters) + ''.join(digits)\n"
+   ],
+   "final": "def move_num(s):\n    letters = []\n    digits = []\n    for c in s:\n        if '0' <= c <= '9':\n            digits.append(c)\n        else:\n            letters.append(c)\n    return ''.join(letters) + ''.join(digits)\n",
+   "evidence": {
+    "A": {
+     "test_phase_a": "from hypothesis import given, strategies as st\n\nfrom solution import move_num\n\n\ndef expected_move_ascii_digits(s: str) -> str:\n    return \"\".join(ch for ch in s if not ch.isdigit()) + \"\".join(ch for ch in s if ch.isdigit())\n\n\ndef test_given_example_moves_numbers_to_end():\n    \"\"\"The function must reproduce the specified example by moving the numbers to the end.\"\"\"\n    x = \"I1love143you55three3000thousand\"\n    out = move_num(x)\n    exp = \"Iloveyouthreethousand1143553000\"\n    assert out == exp, f\"input={x!r} output={out!r}\"\n\n\ndef test_empty_string_returns_empty_string():\n    \"\"\"The function must return an empty string when given an empty string.\"\"\"\n    x = \"\"\n    out = move_num(x)\n    exp = \"\"\n    assert out == exp, f\"input={x!r} output={out!r}\"\n\n\ndef test_string_with_no_numbers_is_unchanged():\n    \"\"\"The function must leave a string with no numbers unchanged.\"\"\"\n    x = \"Iloveyouthreethousand\"\n    out = move_num(x)\n    exp = \"Iloveyouthreethousand\"\n    assert out == exp, f\"input={x!r} output={out!r}\"\n\n\ndef test_string_with_only_numbers_is_unchanged():\n    \"\"\"The function must leave a string containing only numbers unchanged.\"\"\"\n    x = \"1143553000\"\n    out = move_num(x)\n    exp = \"1143553000\"\n    assert out == exp, f\"input={x!r} output={out!r}\"\n\n\ndef test_interleaved_letters_and_digits_preserve_both_orders():\n    \"\"\"The function must preserve the relative order of letters and the relative order of numbers.\"\"\"\n    x = \"a9b8c7d6\"\n    out = move_num(x)\n    exp = \"abcd9876\"\n    assert out == exp, f\"input={x!r} output={out!r}\"\n\n\n@given(st.text(alphabet=st.characters(min_codepoint=48, max_codepoint=122).filter(lambda c: c.isascii() and c.isalnum()), max_size=200))\ndef test_ascii_alphanumeric_strings_equal_letters_then_digits(x):\n    \"\"\"The function must return all non-number ASCII alphanumeric characters followed by all number characters in original order.\"\"\"\n    out = move_num(x)\n    exp = expected_move_ascii_digits(x)\n    assert out == exp, f\"input={x!r} output={out!r}\"\n\n\n@given(st.lists(st.text(alphabet=st.characters(min_codepoint=65, max_codepoint=90), min_size=1, max_size=5), max_size=20))\ndef test_strings_with_no_digits_are_identity_for_many_inputs(parts):\n    \"\"\"The function must act as the identity for strings that contain no numbers.\"\"\"\n    x = \"\".join(parts)\n    out = move_num(x)\n    exp = x\n    assert out == exp, f\"input={x!r} output={out!r}\"\n\n\n@given(st.text(alphabet=\"0123456789\", max_size=200))\ndef test_strings_with_only_digits_are_identity_for_many_inputs(x):\n    \"\"\"The function must act as the identity for strings that contain only numbers.\"\"\"\n    out = move_num(x)\n    exp = x\n    assert out == exp, f\"input={x!r} output={out!r}\"\n"
+    },
+    "B": {
+     "test_phase_b": "import string\n\nfrom hypothesis import given, strategies as st\n\nfrom solution import move_num\n\n\nASCII_LETTERS = string.ascii_letters\nASCII_DIGITS = string.digits\n\n\ndef expected_move_ascii_numbers(s: str) -> str:\n    return \"\".join(ch for ch in s if ch not in ASCII_DIGITS) + \"\".join(\n        ch for ch in s if ch in ASCII_DIGITS\n    )\n\n\ndef test_zero_and_nine_at_string_edges_move_after_letters():\n    \"\"\"The function must move boundary number characters 0 and 9 to the end while preserving order.\"\"\"\n    x = \"0Alpha9Beta0\"\n    out = move_num(x)\n    exp = \"AlphaBeta090\"\n    assert out == exp, f\"input={x!r} output={out!r}\"\n\n\ndef test_leading_zeroes_in_digit_runs_are_preserved_as_numbers():\n    \"\"\"The function must preserve leading zero characters when moving numbers to the end.\"\"\"\n    x = \"x0y00z1\"\n    out = move_num(x)\n    exp = \"xyz0001\"\n    assert out == exp, f\"input={x!r} output={out!r}\"\n\n\ndef test_multiple_digit_runs_after_letters_are_concatenated_in_original_order():\n    \"\"\"The function must concatenate all moved number runs at the end in their original order.\"\"\"\n    x = \"A12B34C56D\"\n    out = move_num(x)\n    exp = \"ABCD123456\"\n    assert out == exp, f\"input={x!r} output={out!r}\"\n\n\ndef test_digits_between_lowercase_and_uppercase_letters_move_to_final_suffix():\n    \"\"\"The function must treat both lowercase and uppercase letters as non-numbers before the moved numbers.\"\"\"\n    x = \"a1B2c3D4\"\n    out = move_num(x)\n    exp = \"aBcD1234\"\n    assert out == exp, f\"input={x!r} output={out!r}\"\n\n\n@given(\n    st.text(alphabet=ASCII_LETTERS + \"09\", min_size=2, max_size=100).filter(\n        lambda s: any(ch in ASCII_LETTERS for ch in s)\n        and any(ch in \"09\" for ch in s)\n    )\n)\ndef test_mixed_letters_with_boundary_digits_equal_letters_then_numbers(x):\n    \"\"\"The function must move mixed 0 and 9 number characters after all letters while preserving both orders.\"\"\"\n    out = move_num(x)\n    exp = expected_move_ascii_numbers(x)\n    assert out == exp, f\"input={x!r} output={out!r}\"\n\n\n@given(\n    st.text(alphabet=ASCII_LETTERS + ASCII_DIGITS, max_size=100)\n)\ndef test_result_is_idempotent_for_ascii_letter_and_number_strings(x):\n    \"\"\"The function must produce a result that is unchanged by moving numbers to the end again.\"\"\"\n    out = move_num(x)\n    out_again = move_num(out)\n    assert out_again == out, f\"input={x!r} output={out_again!r} first_output={out!r}\"\n\n\n@given(\n    st.text(alphabet=ASCII_LETTERS + ASCII_DIGITS, max_size=100)\n)\ndef test_output_has_no_letter_after_the_first_moved_number(x):\n    \"\"\"The function must place all number characters after all non-number letters.\"\"\"\n    out = move_num(x)\n    seen_number = False\n    for ch in out:\n        if ch in ASCII_DIGITS:\n            seen_number = True\n        else:\n            assert not seen_number, f\"input={x!r} output={out!r}\"\n",
+     "test_phase_b_mutants": "from hypothesis import given, strategies as st\n\nfrom solution import move_num\n\n\ndef expected_move_numbers_to_end(s: str) -> str:\n    return \"\".join(ch for ch in s if not ch.isdigit()) + \"\".join(ch for ch in s if ch.isdigit())\n\n\ndef test_non_number_punctuation_before_letters_must_not_move_with_numbers():\n    \"\"\"The function must move only number characters to the end and leave non-number punctuation with other non-numbers.\"\"\"\n    x = \"!abc123\"\n    out = move_num(x)\n    exp = \"!abc123\"\n    assert out == exp, f\"input={x!r} output={out!r}\"\n\n\n@given(\n    st.text(alphabet=\"abcXYZ0123456789!#/\", min_size=1, max_size=100).filter(\n        lambda s: any(ch in \"!#/\" for ch in s)\n    )\n)\ndef test_non_number_punctuation_is_preserved_with_non_numbers_for_many_strings(x):\n    \"\"\"The function must preserve non-number punctuation in the non-number prefix rather than treating it as a number.\"\"\"\n    out = move_num(x)\n    exp = expected_move_numbers_to_end(x)\n    assert out == exp, f\"input={x!r} output={out!r}\"\n"
+    }
+   },
+   "rounds": [
+    {
+     "round": 1,
+     "failing": 0
+    }
+   ],
+   "mutation": {
+    "mutants": 8,
+    "survivors": 1,
+    "shown": 1
+   },
+   "open_questions": [
+    "Whether \u201cnumbers\u201d means only ASCII digit characters (`0`-`9`) or includes Unicode digits.",
+    "Whether signs, decimal points, or grouped numeric substrings have special meaning beyond their digit characters.",
+    "Whether arbitrary non-alphanumeric characters must be handled; the example only determines behavior for letters and digits."
+   ],
+   "usage": {
+    "builder": {
+     "input_tokens": 0,
+     "output_tokens": 0,
+     "calls": 0
+    },
+    "verifier": {
+     "input_tokens": 6638,
+     "output_tokens": 5413,
+     "calls": 3
+    }
+   },
+   "verifier_backend": "openai:gpt-5.5-2026-04-23"
+  }
+ },
+ "seconds": 190.4
+}

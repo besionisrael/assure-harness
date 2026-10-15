@@ -1,0 +1,32 @@
+casestudy/docpay run0
+Traceback (most recent call last):
+  File "/app/assure/pipeline.py", line 118, in run_campaign
+    status = f.result()
+  File "/usr/local/lib/python3.13/concurrent/futures/_base.py", line 453, in result
+    return self.__get_result()
+           ~~~~~~~~~~~~~~~~~^^
+  File "/usr/local/lib/python3.13/concurrent/futures/_base.py", line 402, in __get_result
+    raise self._exception
+  File "/usr/local/lib/python3.13/concurrent/futures/thread.py", line 59, in run
+    result = self.fn(*self.args, **self.kwargs)
+  File "/app/assure/pipeline.py", line 82, in run_unit
+    unit["conditions"][cond] = run_condition(cond, task, run, builder0, backends, cfg, log)
+                               ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/assure/pipeline.py", line 45, in run_condition
+    evidence["A"] = verifier.phase_a()
+                    ~~~~~~~~~~~~~~~~^^
+  File "/app/assure/agents.py", line 153, in phase_a
+    text = self._ask(self.system, prompts.VERIFIER_PHASE_A.format(
+        spec=self.task.spec, entry_point=self.task.entry_point, rules=self.rules,
+        **self.fields),
+        phase="A")
+  File "/app/assure/agents.py", line 20, in _ask
+    text, usage = self.backend.complete(system, self.messages, meta)
+                  ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/assure/llm.py", line 70, in complete
+    _check_complete(self.name, text, resp.stop_reason, usage)
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/assure/llm.py", line 43, in _check_complete
+    raise IncompleteResponse(f"{name}: stop={stop} text_chars={len(text)} usage={usage}")
+assure.llm.IncompleteResponse: anthropic:claude-sonnet-5-5: stop=max_tokens text_chars=37873 usage={'input_tokens': 2470, 'output_tokens': 32000, 'stop_reason': 'max_tokens', 'blocks': ['thinking', 'text']}
+

@@ -1,0 +1,231 @@
+{
+ "task_id": "HumanEval/30",
+ "benchmark": "humaneval",
+ "run": 0,
+ "prompt_version": "2026-10-08.2",
+ "backends": {
+  "builder": "mock-builder",
+  "verifier": "mock-verifier",
+  "verifier_alt": "mock-verifier-alt"
+ },
+ "p0": "def get_positive(l: list):\n    \"\"\"Return only positive numbers in the list.\n    >>> get_positive([-1, 2, -4, 5, 6])\n    [2, 5, 6]\n    >>> get_positive([5, 3, -5, 2, -3, 3, 9, 0, 123, 1, -10])\n    [5, 3, 2, 3, 9, 123, 1]\n    \"\"\"\n\n    return list(filter(lambda x: x > 0, l))\n",
+ "p0_info": {
+  "self_rounds": 0,
+  "self_converged": true
+ },
+ "usage_shared": {
+  "input_tokens": 212,
+  "output_tokens": 400,
+  "calls": 1
+ },
+ "conditions": {
+  "SV": {
+   "programs": [
+    "def get_positive(l: list):\n    \"\"\"Return only positive numbers in the list.\n    >>> get_positive([-1, 2, -4, 5, 6])\n    [2, 5, 6]\n    >>> get_positive([5, 3, -5, 2, -3, 3, 9, 0, 123, 1, -10])\n    [5, 3, 2, 3, 9, 123, 1]\n    \"\"\"\n\n    return list(filter(lambda x: x > 0, l))\n"
+   ],
+   "final": "def get_positive(l: list):\n    \"\"\"Return only positive numbers in the list.\n    >>> get_positive([-1, 2, -4, 5, 6])\n    [2, 5, 6]\n    >>> get_positive([5, 3, -5, 2, -3, 3, 9, 0, 123, 1, -10])\n    [5, 3, 2, 3, 9, 123, 1]\n    \"\"\"\n\n    return list(filter(lambda x: x > 0, l))\n",
+   "evidence": {
+    "builder": {
+     "test_solution": "from solution import *\n\ndef test_example_0():\n    assert get_positive(*[[-1, -2, 4, 5, 6]]) == [4, 5, 6]\n\ndef test_example_1():\n    assert get_positive(*[[5, 3, -5, 2, 3, 3, 9, 0, 123, 1, -10]]) == [5, 3, 2, 3, 3, 9, 123, 1]\n\ndef test_example_2():\n    assert get_positive(*[[-1, -2]]) == []\n\ndef test_example_3():\n    assert get_positive(*[[]]) == []\n"
+    }
+   },
+   "rounds": [],
+   "usage": {
+    "input_tokens": 0,
+    "output_tokens": 0,
+    "calls": 0
+   },
+   "open_questions": []
+  },
+  "A": {
+   "programs": [
+    "def get_positive(l: list):\n    \"\"\"Return only positive numbers in the list.\n    >>> get_positive([-1, 2, -4, 5, 6])\n    [2, 5, 6]\n    >>> get_positive([5, 3, -5, 2, -3, 3, 9, 0, 123, 1, -10])\n    [5, 3, 2, 3, 9, 123, 1]\n    \"\"\"\n\n    return list(filter(lambda x: x > 0, l))\n"
+   ],
+   "final": "def get_positive(l: list):\n    \"\"\"Return only positive numbers in the list.\n    >>> get_positive([-1, 2, -4, 5, 6])\n    [2, 5, 6]\n    >>> get_positive([5, 3, -5, 2, -3, 3, 9, 0, 123, 1, -10])\n    [5, 3, 2, 3, 9, 123, 1]\n    \"\"\"\n\n    return list(filter(lambda x: x > 0, l))\n",
+   "evidence": {
+    "A": {
+     "test_phase_a": "from solution import *\n\ndef test_A_0():\n    \"\"\"Guarantee 0: output matches the specification.\"\"\"\n    inp = [[-1, -2, -3, -4, -5]]\n    out = get_positive(*inp)\n    assert out == [], f'input={inp!r} output={out!r}'\n\ndef test_A_1():\n    \"\"\"Guarantee 1: output matches the specification.\"\"\"\n    inp = [[0, -1, -2, -9, -3, -6, -4, 9]]\n    out = get_positive(*inp)\n    assert out == [9], f'input={inp!r} output={out!r}'\n\ndef test_A_2():\n    \"\"\"Guarantee 2: output matches the specification.\"\"\"\n    inp = [[-5, -9, -2, -5, -5]]\n    out = get_positive(*inp)\n    assert out == [], f'input={inp!r} output={out!r}'\n\ndef test_A_3():\n    \"\"\"Guarantee 3: output matches the specification.\"\"\"\n    inp = [[-5, -2, -10, 4, -4]]\n    out = get_positive(*inp)\n    assert out == [4], f'input={inp!r} output={out!r}'\n"
+    }
+   },
+   "rounds": [
+    {
+     "round": 1,
+     "failing": 0
+    }
+   ],
+   "mutation": null,
+   "open_questions": [],
+   "usage": {
+    "builder": {
+     "input_tokens": 0,
+     "output_tokens": 0,
+     "calls": 0
+    },
+    "verifier": {
+     "input_tokens": 383,
+     "output_tokens": 400,
+     "calls": 1
+    }
+   },
+   "verifier_backend": "mock-verifier"
+  },
+  "B": {
+   "programs": [
+    "def get_positive(l: list):\n    \"\"\"Return only positive numbers in the list.\n    >>> get_positive([-1, 2, -4, 5, 6])\n    [2, 5, 6]\n    >>> get_positive([5, 3, -5, 2, -3, 3, 9, 0, 123, 1, -10])\n    [5, 3, 2, 3, 9, 123, 1]\n    \"\"\"\n\n    return list(filter(lambda x: x > 0, l))\n",
+    "def get_positive(l: list):\n    \"\"\"Return only positive numbers in the list.\n    >>> get_positive([-1, 2, -4, 5, 6])\n    [2, 5, 6]\n    >>> get_positive([5, 3, -5, 2, -3, 3, 9, 0, 123, 1, -10])\n    [5, 3, 2, 3, 9, 123, 1]\n    \"\"\"\n    return list(filter(lambda x: x >= 0, l))\n",
+    "def get_positive(l: list):\n    \"\"\"Return only positive numbers in the list.\n    >>> get_positive([-1, 2, -4, 5, 6])\n    [2, 5, 6]\n    >>> get_positive([5, 3, -5, 2, -3, 3, 9, 0, 123, 1, -10])\n    [5, 3, 2, 3, 9, 123, 1]\n    \"\"\"\n\n    return list(filter(lambda x: x > 0, l))\n",
+    "def get_positive(l: list):\n    \"\"\"Return only positive numbers in the list.\n    >>> get_positive([-1, 2, -4, 5, 6])\n    [2, 5, 6]\n    >>> get_positive([5, 3, -5, 2, -3, 3, 9, 0, 123, 1, -10])\n    [5, 3, 2, 3, 9, 123, 1]\n    \"\"\"\n\n    return list(filter(lambda x: x > 0, l))\n"
+   ],
+   "final": "def get_positive(l: list):\n    \"\"\"Return only positive numbers in the list.\n    >>> get_positive([-1, 2, -4, 5, 6])\n    [2, 5, 6]\n    >>> get_positive([5, 3, -5, 2, -3, 3, 9, 0, 123, 1, -10])\n    [5, 3, 2, 3, 9, 123, 1]\n    \"\"\"\n\n    return list(filter(lambda x: x > 0, l))\n",
+   "evidence": {
+    "B": {
+     "test_phase_b": "from solution import *\n\ndef test_B_0():\n    \"\"\"Guarantee 0: output matches the specification.\"\"\"\n    inp = [[1, 1, 6, 1, 1, 2, 1, 2, 2, 2]]\n    out = get_positive(*inp)\n    assert out == '__wrong__', f'input={inp!r} output={out!r}'\n\ndef test_B_1():\n    \"\"\"Guarantee 1: output matches the specification.\"\"\"\n    inp = [[8, -1]]\n    out = get_positive(*inp)\n    assert out == [8], f'input={inp!r} output={out!r}'\n\ndef test_B_2():\n    \"\"\"Guarantee 2: output matches the specification.\"\"\"\n    inp = [[0, -1, 7, -2, -3, -4, -2, 9]]\n    out = get_positive(*inp)\n    assert out == [7, 9], f'input={inp!r} output={out!r}'\n",
+     "test_phase_b_mutants": "from solution import *\n\ndef test_B_mut_0():\n    \"\"\"Guarantee 0: output matches the specification.\"\"\"\n    inp = [[-1, -2, -4, 5, 0, 6, 7, -9, 9]]\n    out = get_positive(*inp)\n    assert out == [5, 6, 7, 9], f'input={inp!r} output={out!r}'\n\ndef test_B_mut_1():\n    \"\"\"Guarantee 1: output matches the specification.\"\"\"\n    inp = [[1, 1, 1, 1, 99, 2, 2, 2, -3, 1, 2]]\n    out = get_positive(*inp)\n    assert out == [1, 1, 1, 1, 99, 2, 2, 2, 1, 2], f'input={inp!r} output={out!r}'\n\ndef test_B_mut_2():\n    \"\"\"Guarantee 2: output matches the specification.\"\"\"\n    inp = [[0.5, -4, 2.5, 5, -2.2, -8, -7, -10.5, 9.9, -10.5]]\n    out = get_positive(*inp)\n    assert out == [0.5, 2.5, 5, 9.9], f'input={inp!r} output={out!r}'\n"
+    }
+   },
+   "rounds": [
+    {
+     "round": 1,
+     "failing": 1,
+     "counterexamples": "1. Guarantee: Guarantee 0: output matches the specification.\n  Observed: AssertionError: 'input=[[1, 1, 6, 1, 1, 2, 1, 2, 2, 2]] output=[1, 1, 6, 1, 1, 2, 1, 2, 2, 2]'"
+    },
+    {
+     "round": 2,
+     "failing": 3,
+     "counterexamples": "1. Guarantee: Guarantee 0: output matches the specification.\n  Observed: AssertionError: 'input=[[1, 1, 6, 1, 1, 2, 1, 2, 2, 2]] output=[1, 1, 6, 1, 1, 2, 1, 2, 2, 2]'\n2. Guarantee: Guarantee 2: output matches the specification.\n  Observed: AssertionError: 'input=[[0, -1, 7, -2, -3, -4, -2, 9]] output=[0, 7, 9]'\n3. Guarantee: Guarantee 0: output matches the specification.\n  Observed: AssertionError: 'input=[[-1, -2, -4, 5, 0, 6, 7, -9, 9]] output=[5, 0, 6, 7, 9]'"
+    },
+    {
+     "round": 3,
+     "failing": 1,
+     "counterexamples": "1. Guarantee: Guarantee 0: output matches the specification.\n  Observed: AssertionError: 'input=[[1, 1, 6, 1, 1, 2, 1, 2, 2, 2]] output=[1, 1, 6, 1, 1, 2, 1, 2, 2, 2]'"
+    }
+   ],
+   "mutation": {
+    "mutants": 3,
+    "survivors": 1,
+    "shown": 1
+   },
+   "open_questions": [],
+   "usage": {
+    "builder": {
+     "input_tokens": 5686,
+     "output_tokens": 2000,
+     "calls": 5
+    },
+    "verifier": {
+     "input_tokens": 1417,
+     "output_tokens": 800,
+     "calls": 2
+    }
+   },
+   "verifier_backend": "mock-verifier"
+  },
+  "AB": {
+   "programs": [
+    "def get_positive(l: list):\n    \"\"\"Return only positive numbers in the list.\n    >>> get_positive([-1, 2, -4, 5, 6])\n    [2, 5, 6]\n    >>> get_positive([5, 3, -5, 2, -3, 3, 9, 0, 123, 1, -10])\n    [5, 3, 2, 3, 9, 123, 1]\n    \"\"\"\n\n    return list(filter(lambda x: x > 0, l))\n",
+    "def get_positive(l: list):\n    \"\"\"Return only positive numbers in the list.\n    >>> get_positive([-1, 2, -4, 5, 6])\n    [2, 5, 6]\n    >>> get_positive([5, 3, -5, 2, -3, 3, 9, 0, 123, 1, -10])\n    [5, 3, 2, 3, 9, 123, 1]\n    \"\"\"\n\n    return list(filter(lambda x: x > 0, l))\n",
+    "def get_positive(l: list):\n    \"\"\"Return only positive numbers in the list.\n    >>> get_positive([-1, 2, -4, 5, 6])\n    [2, 5, 6]\n    >>> get_positive([5, 3, -5, 2, -3, 3, 9, 0, 123, 1, -10])\n    [5, 3, 2, 3, 9, 123, 1]\n    \"\"\"\n\n    return list(filter(lambda x: x > 0, l))\n",
+    "def get_positive(l: list):\n    \"\"\"Return only positive numbers in the list.\n    >>> get_positive([-1, 2, -4, 5, 6])\n    [2, 5, 6]\n    >>> get_positive([5, 3, -5, 2, -3, 3, 9, 0, 123, 1, -10])\n    [5, 3, 2, 3, 9, 123, 1]\n    \"\"\"\n\n    return list(filter(lambda x: x > 0, l))\n"
+   ],
+   "final": "def get_positive(l: list):\n    \"\"\"Return only positive numbers in the list.\n    >>> get_positive([-1, 2, -4, 5, 6])\n    [2, 5, 6]\n    >>> get_positive([5, 3, -5, 2, -3, 3, 9, 0, 123, 1, -10])\n    [5, 3, 2, 3, 9, 123, 1]\n    \"\"\"\n\n    return list(filter(lambda x: x > 0, l))\n",
+   "evidence": {
+    "A": {
+     "test_phase_a": "from solution import *\n\ndef test_A_0():\n    \"\"\"Guarantee 0: output matches the specification.\"\"\"\n    inp = [[-1, -2, -3, -4, -5]]\n    out = get_positive(*inp)\n    assert out == '__wrong__', f'input={inp!r} output={out!r}'\n\ndef test_A_1():\n    \"\"\"Guarantee 1: output matches the specification.\"\"\"\n    inp = [[0, -1, -2, -9, -3, -6, -4, 9]]\n    out = get_positive(*inp)\n    assert out == [9], f'input={inp!r} output={out!r}'\n\ndef test_A_2():\n    \"\"\"Guarantee 2: output matches the specification.\"\"\"\n    inp = [[-5, -9, -2, -5, -5]]\n    out = get_positive(*inp)\n    assert out == '__wrong__', f'input={inp!r} output={out!r}'\n\ndef test_A_3():\n    \"\"\"Guarantee 3: output matches the specification.\"\"\"\n    inp = [[-5, -2, -10, 4, -4]]\n    out = get_positive(*inp)\n    assert out == '__wrong__', f'input={inp!r} output={out!r}'\n"
+    },
+    "B": {
+     "test_phase_b": "from solution import *\n\ndef test_B_0():\n    \"\"\"Guarantee 0: output matches the specification.\"\"\"\n    inp = [[1, 1, 6, 1, 1, 2, 1, 2, 2, 2]]\n    out = get_positive(*inp)\n    assert out == '__wrong__', f'input={inp!r} output={out!r}'\n\ndef test_B_1():\n    \"\"\"Guarantee 1: output matches the specification.\"\"\"\n    inp = [[8, -1]]\n    out = get_positive(*inp)\n    assert out == '__wrong__', f'input={inp!r} output={out!r}'\n\ndef test_B_2():\n    \"\"\"Guarantee 2: output matches the specification.\"\"\"\n    inp = [[0, -1, 7, -2, -3, -4, -2, 9]]\n    out = get_positive(*inp)\n    assert out == [7, 9], f'input={inp!r} output={out!r}'\n",
+     "test_phase_b_mutants": "from solution import *\n\ndef test_B_mut_0():\n    \"\"\"Guarantee 0: output matches the specification.\"\"\"\n    inp = [[-1, -2, -4, 5, 0, 6, 7, -9, 9]]\n    out = get_positive(*inp)\n    assert out == [5, 6, 7, 9], f'input={inp!r} output={out!r}'\n\ndef test_B_mut_1():\n    \"\"\"Guarantee 1: output matches the specification.\"\"\"\n    inp = [[1, 1, 1, 1, 99, 2, 2, 2, -3, 1, 2]]\n    out = get_positive(*inp)\n    assert out == [1, 1, 1, 1, 99, 2, 2, 2, 1, 2], f'input={inp!r} output={out!r}'\n\ndef test_B_mut_2():\n    \"\"\"Guarantee 2: output matches the specification.\"\"\"\n    inp = [[0.5, -4, 2.5, 5, -2.2, -8, -7, -10.5, 9.9, -10.5]]\n    out = get_positive(*inp)\n    assert out == [0.5, 2.5, 5, 9.9], f'input={inp!r} output={out!r}'\n"
+    }
+   },
+   "rounds": [
+    {
+     "round": 1,
+     "failing": 5,
+     "counterexamples": "1. Guarantee: Guarantee 0: output matches the specification.\n  Observed: AssertionError: 'input=[[-1, -2, -3, -4, -5]] output=[]'\n2. Guarantee: Guarantee 2: output matches the specification.\n  Observed: AssertionError: 'input=[[-5, -9, -2, -5, -5]] output=[]'\n3. Guarantee: Guarantee 3: output matches the specification.\n  Observed: AssertionError: 'input=[[-5, -2, -10, 4, -4]] output=[4]'\n4. Guarantee: Guarantee 0: output matches the specification.\n  Observed: AssertionError: 'input=[[1, 1, 6, 1, 1, 2, 1, 2, 2, 2]] output=[1, 1, 6, 1, 1, 2, 1, 2, 2, 2]'\n5. Guarantee: Guarantee 1: output matches the specification.\n  Observed: AssertionError: 'input=[[8, -1]] output=[8]'"
+    },
+    {
+     "round": 2,
+     "failing": 5,
+     "counterexamples": "1. Guarantee: Guarantee 0: output matches the specification.\n  Observed: AssertionError: 'input=[[-1, -2, -3, -4, -5]] output=[]'\n2. Guarantee: Guarantee 2: output matches the specification.\n  Observed: AssertionError: 'input=[[-5, -9, -2, -5, -5]] output=[]'\n3. Guarantee: Guarantee 3: output matches the specification.\n  Observed: AssertionError: 'input=[[-5, -2, -10, 4, -4]] output=[4]'\n4. Guarantee: Guarantee 0: output matches the specification.\n  Observed: AssertionError: 'input=[[1, 1, 6, 1, 1, 2, 1, 2, 2, 2]] output=[1, 1, 6, 1, 1, 2, 1, 2, 2, 2]'\n5. Guarantee: Guarantee 1: output matches the specification.\n  Observed: AssertionError: 'input=[[8, -1]] output=[8]'"
+    },
+    {
+     "round": 3,
+     "failing": 5,
+     "counterexamples": "1. Guarantee: Guarantee 0: output matches the specification.\n  Observed: AssertionError: 'input=[[-1, -2, -3, -4, -5]] output=[]'\n2. Guarantee: Guarantee 2: output matches the specification.\n  Observed: AssertionError: 'input=[[-5, -9, -2, -5, -5]] output=[]'\n3. Guarantee: Guarantee 3: output matches the specification.\n  Observed: AssertionError: 'input=[[-5, -2, -10, 4, -4]] output=[4]'\n4. Guarantee: Guarantee 0: output matches the specification.\n  Observed: AssertionError: 'input=[[1, 1, 6, 1, 1, 2, 1, 2, 2, 2]] output=[1, 1, 6, 1, 1, 2, 1, 2, 2, 2]'\n5. Guarantee: Guarantee 1: output matches the specification.\n  Observed: AssertionError: 'input=[[8, -1]] output=[8]'"
+    }
+   ],
+   "mutation": {
+    "mutants": 3,
+    "survivors": 1,
+    "shown": 1
+   },
+   "open_questions": [],
+   "usage": {
+    "builder": {
+     "input_tokens": 3460,
+     "output_tokens": 1200,
+     "calls": 3
+    },
+    "verifier": {
+     "input_tokens": 3460,
+     "output_tokens": 1200,
+     "calls": 3
+    }
+   },
+   "verifier_backend": "mock-verifier"
+  },
+  "ABp": {
+   "programs": [
+    "def get_positive(l: list):\n    \"\"\"Return only positive numbers in the list.\n    >>> get_positive([-1, 2, -4, 5, 6])\n    [2, 5, 6]\n    >>> get_positive([5, 3, -5, 2, -3, 3, 9, 0, 123, 1, -10])\n    [5, 3, 2, 3, 9, 123, 1]\n    \"\"\"\n\n    return list(filter(lambda x: x > 0, l))\n",
+    "def get_positive(l: list):\n    \"\"\"Return only positive numbers in the list.\n    >>> get_positive([-1, 2, -4, 5, 6])\n    [2, 5, 6]\n    >>> get_positive([5, 3, -5, 2, -3, 3, 9, 0, 123, 1, -10])\n    [5, 3, 2, 3, 9, 123, 1]\n    \"\"\"\n\n    return list(filter(lambda x: x > 0, l))\n",
+    "def get_positive(l: list):\n    \"\"\"Return only positive numbers in the list.\n    >>> get_positive([-1, 2, -4, 5, 6])\n    [2, 5, 6]\n    >>> get_positive([5, 3, -5, 2, -3, 3, 9, 0, 123, 1, -10])\n    [5, 3, 2, 3, 9, 123, 1]\n    \"\"\"\n\n    return list(filter(lambda x: x > 0, l))\n",
+    "def get_positive(l: list):\n    \"\"\"Return only positive numbers in the list.\n    >>> get_positive([-1, 2, -4, 5, 6])\n    [2, 5, 6]\n    >>> get_positive([5, 3, -5, 2, -3, 3, 9, 0, 123, 1, -10])\n    [5, 3, 2, 3, 9, 123, 1]\n    \"\"\"\n\n    return list(filter(lambda x: x > 0, l))\n"
+   ],
+   "final": "def get_positive(l: list):\n    \"\"\"Return only positive numbers in the list.\n    >>> get_positive([-1, 2, -4, 5, 6])\n    [2, 5, 6]\n    >>> get_positive([5, 3, -5, 2, -3, 3, 9, 0, 123, 1, -10])\n    [5, 3, 2, 3, 9, 123, 1]\n    \"\"\"\n\n    return list(filter(lambda x: x > 0, l))\n",
+   "evidence": {
+    "A": {
+     "test_phase_a": "from solution import *\n\ndef test_A_0():\n    \"\"\"Guarantee 0: output matches the specification.\"\"\"\n    inp = [[-1, -2, -3, -4, -5]]\n    out = get_positive(*inp)\n    assert out == [], f'input={inp!r} output={out!r}'\n\ndef test_A_1():\n    \"\"\"Guarantee 1: output matches the specification.\"\"\"\n    inp = [[0, -1, -2, -9, -3, -6, -4, 9]]\n    out = get_positive(*inp)\n    assert out == [9], f'input={inp!r} output={out!r}'\n\ndef test_A_2():\n    \"\"\"Guarantee 2: output matches the specification.\"\"\"\n    inp = [[-5, -9, -2, -5, -5]]\n    out = get_positive(*inp)\n    assert out == [], f'input={inp!r} output={out!r}'\n\ndef test_A_3():\n    \"\"\"Guarantee 3: output matches the specification.\"\"\"\n    inp = [[-5, -2, -10, 4, -4]]\n    out = get_positive(*inp)\n    assert out == [4], f'input={inp!r} output={out!r}'\n"
+    },
+    "B": {
+     "test_phase_b": "from solution import *\n\ndef test_B_0():\n    \"\"\"Guarantee 0: output matches the specification.\"\"\"\n    inp = [[1, 1, 6, 1, 1, 2, 1, 2, 2, 2]]\n    out = get_positive(*inp)\n    assert out == [1, 1, 6, 1, 1, 2, 1, 2, 2, 2], f'input={inp!r} output={out!r}'\n\ndef test_B_1():\n    \"\"\"Guarantee 1: output matches the specification.\"\"\"\n    inp = [[8, -1]]\n    out = get_positive(*inp)\n    assert out == [8], f'input={inp!r} output={out!r}'\n\ndef test_B_2():\n    \"\"\"Guarantee 2: output matches the specification.\"\"\"\n    inp = [[0, -1, 7, -2, -3, -4, -2, 9]]\n    out = get_positive(*inp)\n    assert out == '__wrong__', f'input={inp!r} output={out!r}'\n"
+    }
+   },
+   "rounds": [
+    {
+     "round": 1,
+     "failing": 1,
+     "counterexamples": "1. Guarantee: Guarantee 2: output matches the specification.\n  Observed: AssertionError: 'input=[[0, -1, 7, -2, -3, -4, -2, 9]] output=[7, 9]'"
+    },
+    {
+     "round": 2,
+     "failing": 1,
+     "counterexamples": "1. Guarantee: Guarantee 2: output matches the specification.\n  Observed: AssertionError: 'input=[[0, -1, 7, -2, -3, -4, -2, 9]] output=[7, 9]'"
+    },
+    {
+     "round": 3,
+     "failing": 1,
+     "counterexamples": "1. Guarantee: Guarantee 2: output matches the specification.\n  Observed: AssertionError: 'input=[[0, -1, 7, -2, -3, -4, -2, 9]] output=[7, 9]'"
+    }
+   ],
+   "mutation": {
+    "mutants": 3,
+    "survivors": 0
+   },
+   "open_questions": [],
+   "usage": {
+    "builder": {
+     "input_tokens": 3950,
+     "output_tokens": 1600,
+     "calls": 4
+    },
+    "verifier": {
+     "input_tokens": 1659,
+     "output_tokens": 800,
+     "calls": 2
+    }
+   },
+   "verifier_backend": "mock-verifier-alt"
+  }
+ },
+ "seconds": 26.2
+}

@@ -1,0 +1,1028 @@
+I'll design a stateful software service for benchmarking. Let me think through the domain carefully first.
+
+**Domain choice: Equipment loan service.** A library/lab lends physical equipment items to users. There are shared resources (items), access rules (users, roles), repeated operations (checkout/return/renew), and state that evolves over time via an injected clock. This is realistic, has interesting edge cases (overdue, renewals, capacity limits per user), and avoids document storage and payments.
+
+Let me plan the requirements (~10 numbered):
+
+- REQ-1 Registration of users with roles (member/staff), validation.
+- REQ-2 Adding inventory items (catalog) with unique IDs, validation.
+- REQ-3 Checkout: item must exist, be available, user under max-loans; creates a loan with due date = now + period.
+- REQ-4 Return: closes loan, frees item.
+- REQ-5 Renew: only if not overdue, at most N renewals, extends due date.
+- REQ-6 Overdue detection / status reporting.
+- REQ-7 Per-user loan limit enforcement.
+- REQ-8 Staff can force-return any loan; members only their own.
+- REQ-9 Listing loans / item availability queries.
+- REQ-10 Cancellation of checkout before due (or some rule).
+
+Let me make it precise and self-consistent. I'll write everything out and reason about each fault passing T_v and failing T_h.
+
+Let me draft the spec interface precisely.
+
+```
+class Service:
+    def __init__(self, clock, max_loans=3, max_renewals=2, loan_period=7.0): ...
+    def register_user(self, user_id, role): ...        # 201 {"user_id","role"} | 400 | 409
+    def add_item(self, item_id, name): ...             # 201 {"item_id","name"} | 400 | 409
+    def checkout(self, user_id, item_id): ...          # 200 {"loan_id","due_at"} | 404 | 409(item unavailable) | 422(too many loans)
+    def return_loan(self, user_id, loan_id): ...       # 200 {"item_id"} | 404 | 403(not owner unless staff)
+    def renew(self, user_id, loan_id): ...             # 200 {"due_at"} | 404 | 403 | 409(overdue) | 422(max renewals)
+    def list_loans(self, user_id): ...                 # 200 list of loan dicts
+    def item_status(self, item_id): ...                # 200 {"available": bool,"loan_id":...} | 404
+```
+
+Hmm, I need to be careful about what statuses mean and ensure T_h tests only what's fixed. Let me simplify and tighten. Let me reduce method count a bit but keep ~10 requirements.
+
+Actually let me restructure to have clean, testable semantics. I'll define roles: "member" and "staff". Validation: role must be one of these -> 400 otherwise. Duplicate user_id -> 409.
+
+Items: item_id non-empty string, unique -> 409 duplicate, empty/invalid -> 400.
+
+Checkout: user must exist else 404; item must exist else 404; if item already on loan -> 409; if user already has >= max_loans active loans -> 422. On success create loan_id (auto-increment integer), due_at = clock.now() + loan_period. Body returns loan_id and due_at.
+
+Return: loan must exist else 404; if requester is not the owner and not staff -> 403; mark returned (item freed). Body returns item_id.
+
+Renew: loan exists else 404; not owner & not staff -> 403; if loan already returned -> 409? Hmm need to decide. Let's say renew only valid on active loans; if returned -> 404 (treat as not found) or 409. To keep simple: renew requires active loan; if not active -> 409. If overdue (now > due_at) -> 409 cannot renew overdue. If renewals_used >= max_renewals -> 422. Else extend due_at by loan_period, increment renewals_used, return new due_at.
+
+list_loans(user_id): user must exist else 404; returns list of active loans belonging to user (each dict with loan_id, item_id, due_at, renewals_used, status). Status "active" or "returned"? Let's include both maybe. Keep: returns all loans ever created for that user with a "status" field "active"/"returned". Order by loan_id ascending.
+
+item_status(item_id): 404 if unknown; else {"available": bool, "loan_id": int or None}. available true if no active loan on it.
+
+That's good. Now concurrency/statefulness: we don't need threads since in-process deterministic; but "repeated operations" covered.
+
+Now I must ensure visible tests pass all faults. Visible tests should be nominal happy-path only, simple.
+
+Now faults: at least 12, each single local edit, passes T_v fails T_h caught by deterministic test.
+
+Let me enumerate plausible defects mapping to requirements:
+
+F01 REQ-1: role validation accepts any truthy / wrong set e.g. allow "guest". Original checks `role in ("member","staff")`. Replace with `role in ("member","staff","guest")` -> would fail hidden test expecting 400 for guest. But does it pass visible? Visible registers member/staff only -> passes. Good. Caught deterministically.
+
+F02 REQ-1: duplicate check inverted or missing -> creating same user twice returns 201 instead of 409. Need original text unique. Could change `if user_id in self._users:` to `if False and user_id in self._users:`? That's weird. Better: remove the 409 branch by changing condition. But must be single local edit pair. We can replace the whole guard block. Let's craft.
+
+Actually simpler: change the equality check from `in self._users` to something always false like `in self._loans`. That yields no 409. Passes visible (visible doesn't dup). Fails hidden dup test. Good but is it "realistic"? Eh. Let's do more natural: swap order so it stores then checks? Hmm.
+
+Let me think of natural off-by-one / boundary bugs:
+
+F03 REQ-3 max_loans boundary: use `>` instead of `>=` so user allowed one extra loan. Natural. Passes visible (visible likely stays under limit). Fails hidden boundary test. Good.
+
+F04 REQ-3 due_at computed with minus instead of plus: `clock.now() - loan_period`. Natural typo. Hidden checks due_at == now+period. Visible? If visible reads due_at value it'd catch. So keep visible not asserting exact due_at numeric, or assert loosely. To be safe, visible shouldn't pin due_at number. Then F04 passes visible. Good.
+
+F05 REQ-3 item availability: forgot to mark item as on loan -> second checkout succeeds (should 409). Natural: missing assignment. Implement via removing line setting `_item_to_loan`. As a replacement we can replace two lines with one. Must occur once.
+
+F06 REQ-4 return frees item bug: after return, not clearing loan pointer so item_status still shows unavailable. Natural.
+
+F07 REQ-4 ownership check: staff bypass missing -> staff can't return others' loan (returns 403). Or opposite: member can return anyone's (missing check). Choose missing ownership check => member returns other's loan returns 200 instead of 403. Passes visible (visible returns own). Fails hidden cross-user test. Good.
+
+F08 REQ-5 renew overdue boundary: `now >= due_at` vs `now > due_at` causing off-by-one when exactly at due date. Hidden tests exact boundary. Visible not.
+
+F09 REQ-5 renewals_used limit boundary `>` vs `>=`.
+
+F10 REQ-5 renew extends by wrong amount (e.g., adds loan_period*2) or resets renewals_used to 0. Resetting to 0 lets infinite renewals -> hidden catches after exceeding.
+
+F11 REQ-9 list_loans includes returned loans when spec says only active, or vice versa. Decide spec: list returns all with status. Fault: filter excludes returned -> hidden expects returned present. Or include others' loans (bug ignoring user). Pick ignoring user filter => returns all loans. Passes visible (single user). Fails hidden multi-user.
+
+F12 REQ-2 add_item duplicate check uses name instead of id -> adding same id different name allowed wrongly / or different id same name blocked. Natural confusion. Hidden tests unique id.
+
+F13 REQ-10? I removed cancel. Maybe add a requirement about auto-increment loan_id starting at 1. Fault: start at 0. Hidden checks first loan_id==1.
+
+F14 REQ-6 item_status available logic inverted.
+
+Let me settle final requirement list numbering to match faults references. I'll write spec with REQ-1..REQ-10.
+
+Map:
+REQ-1 register_user validation+duplicate.
+REQ-2 add_item validation+duplicate by id.
+REQ-3 checkout preconditions (user exists 404, item exists 404, item on loan 409, too many loans 422) and creates loan with due_at=now+period, loan_id sequential from 1.
+REQ-4 return_loan (404 unknown, 403 not owner non-staff, frees item, marks returned).
+REQ-5 renew_loan (404 unknown, 403, 409 if not active or overdue, 422 if renewals used up, else extend due_at+=period, renewals_used+=1).
+REQ-6 list_loans(user) 404 unknown user else list all loans of that user ordered by loan_id with fields incl status.
+REQ-7 item_status 404 unknown else available flag correct.
+REQ-8 staff privilege: staff may return/renew any loan; members only own. (covered partly in 4,5)
+REQ-9 max_loans and max_renewals configurable via constructor defaults.
+REQ-10 clock injection: due_at and overdue depend solely on clock.now(); no system time.
+
+Good enough.
+
+Now I must be meticulous that reference implements exactly this and T_h asserts derived from sentences.
+
+Let me also ensure visible tests don't assert things that faults could break accidentally. Keep visible minimal nominal.
+
+Potential issue: F04 changes due_at sign; visible must not compare due_at numeric. Fine.
+
+F13 loan_id start: visible might capture loan_id from checkout body and reuse in return/renew; if starts at 0 vs 1 both work as long as consistent. So visible fine.
+
+Now let's write code carefully.
+
+I'll represent internal state:
+self._users = {}  # id -> role
+self._items = {}  # id -> name
+self._loans = {}  # loan_id -> dict {user,item,due_at,renewals,status('active'/'returned')}
+self._item_active_loan = {} # item_id -> loan_id if currently active else absent
+self._next_loan_id = 1
+
+register_user: validate isinstance str and nonempty? Spec: user_id must be a non-empty string; role in set. 400 else. dup 409.
+
+add_item similar.
+
+checkout: user exists? 404. item exists? 404. item in _item_active_loan? 409. count active loans for user >= max_loans? 422. else create.
+
+Need helper to count active loans per user: iterate _loans values where user matches and status active.
+
+return_loan: loan exists? 404. if loan.status != 'active': 409? Spec didn't define returning already returned. Let's define: returning an already-returned loan -> 409 conflict. Add to spec. Also ownership: if requester!=loan.user and role!='staff' -> 403. On success set status returned, del _item_active_loan[item].
+
+renew_loan: loan exists 404. ownership 403 (same rule). if status != active -> 409. if clock.now() > due_at -> 409 (overdue). if renewals_used >= max_renewals -> 422. else due_at += loan_period; renewals_used+=1; return due_at.
+
+Wait ordering of checks matters for hidden tests. Define precedence clearly in spec: existence, then ownership, then active, then overdue, then renewal cap. Put sentences.
+
+list_loans: user exists else 404; produce list of dicts for loans with that user sorted by loan_id; each {loan_id,item_id,due_at,renewals_used,status}.
+
+item_status: item exists else 404; loan_id = _item_active_loan.get(item); available = loan_id is None; body {available, loan_id}.
+
+Constructor params with defaults.
+
+Validation details: define non-empty string for ids/names. Use helper _is_nonempty_str.
+
+Role set constant.
+
+Now statuses summary in spec.
+
+Now T_v visible: a few nominal flows: register member, add item, checkout, item_status shows unavailable, return, item_status available, list shows returned status, renew nominal (within limits, before due). Ensure passes all faults: e.g., renew nominal uses default max_renewals 2 so fine.
+
+But careful: F07 removes ownership check -> visible still passes (own loan). F11 ignores user filter -> visible single user passes. F05 missing mark unavailable -> visible checks item_status after checkout expecting unavailable! That would FAIL visible. So I must NOT have visible assert item_status right after checkout, OR choose F05 differently. To keep visible robust, avoid asserting availability transitions that depend on the buggy line. Hmm but nominal flow naturally includes that. The rule: every seeded fault must pass T_v. So either drop that assertion from visible or pick faults that don't affect it. Since F05 is a real desired fault, I'll just not put item_status-after-checkout in visible. Instead visible can do checkout then return then list. And separately maybe item_status before checkout (available True) which F05 wouldn't change? F05 makes after-checkout also available True incorrectly; before-checkout still True correct. So visible asserting available True before checkout passes. After checkout skip. Good.
+
+Also F06 (return not freeing) affects after-return available; skip that in visible too. So visible won't assert availability at all except maybe initial. Fine—keep visible focused on happy path without availability assertions to be safe. Actually we want visible to look normal though; it's okay.
+
+Let me design visible tests:
+
+test_register_and_add: 201s.
+test_checkout_return_flow: register, add, checkout returns loan_id int & due_at float>now, return returns item_id, list contains that loan with status returned.
+test_renew_nominal: checkout, renew -> due_at increased, renewals_used 1 in list.
+test_two_users_same_name_items: two members each own loans; list per user shows only own? That's F11 territory—if visible asserts isolation it'd fail F11. So avoid asserting cross-user isolation in visible. Keep visible single-user mostly.
+
+Thus visible must be weak enough. Good.
+
+Now hidden thorough.
+
+Now ensure each fault caught by deterministic test (not only stateful). Provide explicit unit tests.
+
+Let me now also double check F02-style faults uniqueness of original text.
+
+I'll write reference compactly ~250 lines.
+
+Let me now produce files. I'll be careful with indentation matching exactly between reference and fault originals.
+
+Given complexity, I'll mentally verify each fault's old string appears once.
+
+Let me write reference.py now in head with stable formatting.
+
+I'll include module docstring and helpers.
+
+For _count_active helper inline.
+
+Now produce final answer. This is long; I'll be precise.
+
+Let me define constants ROLE_SET = ("member", "staff").
+
+Edge: bool is subclass of int but ids are strings; names strings; numbers via config ints—validate max_loans etc? Spec: constructor params integers >=0; but we inject via constructor; hidden may test invalid? Not necessary. Keep simple; don't test constructor validation to avoid extra reqs. But mention left open.
+
+Overdue strictness: define overdue when now > due_at (strict). At exactly due not overdue. Good for F08.
+
+Renew extends due_at by loan_period (the configured period), regardless of current time. Spec sentence.
+
+max_renewals counts successful renewals.
+
+Now write.
+
+After writing, sanity check T_v vs each fault quickly in notes.
+
+Time to output. I'll keep reasoning done.
+
+One more: status codes list per method in spec table indented.
+
+Let me ensure no fenced code blocks inside spec.md (use indentation). Good.
+
+Write AUTHOR_NOTES with open behaviors: ordering ties none; constructor param validation; behavior of returning nonexistent vs already returned defined; etc.
+
+Proceed.
+
+
+### FILE: spec.md
+```markdown
+# Equipment Loan Service
+
+A small in‑process service that models a lab/library lending physical equipment
+items to registered users. State evolves through an injected clock.
+
+## Interface
+
+The service is a Python module `solution.py` defining one class `Service`.
+Every public method returns a pair `(status, body)` where `status` is an
+HTTP‑style integer and `body` is a `dict`, a `list`, or `None`.
+
+    class Service:
+        def __init__(self, clock, max_loans=3, max_renewals=2, loan_period=7.0): ...
+        def register_user(self, user_id, role): ...     # 201 | 400 | 409
+        def add_item(self, item_id, name): ...           # 201 | 400 | 409
+        def checkout(self, user_id, item_id): ...        # 200 | 404 | 409 | 422
+        def return_loan(self, user_id, loan_id): ...     # 200 | 404 | 403 | 409
+        def renew_loan(self, user_id, loan_id): ...      # 200 | 404 | 403 | 409 | 422
+        def list_loans(self, user_id): ...               # 200 | 404
+        def item_status(self, item_id): ...              # 200 | 404
+
+`clock` is any object exposing `now()` returning a float (seconds). All time
+decisions use only `clock.now()`; the wall clock is never read.
+
+Constructor parameters: `max_loans` and `max_renewals` are non‑negative
+integers, `loan_period` a positive number. Their exact validation beyond the
+stated types/ranges is left open.
+
+Roles are exactly `"member"` and `"staff"`. An identifier (`user_id`,
+`item_id`) or `name` is valid iff it is a non‑empty `str`.
+
+## Response bodies
+
+- `register_user` 201: `{"user_id": str, "role": str}`
+- `add_item` 201: `{"item_id": str, "name": str}`
+- `checkout` 200: `{"loan_id": int, "due_at": float}`
+- `return_loan` 200: `{"item_id": str}`
+- `renew_loan` 200: `{"due_at": float}`
+- `list_loans` 200: a `list` of loan objects, each
+  `{"loan_id": int, "item_id": str, "due_at": float,
+  "renewals_used": int, "status": str}` where `status` is `"active"` or
+  `"returned"`.
+- `item_status` 200: `{"available": bool, "loan_id": int | None}`
+
+## Requirements
+
+**REQ‑1 Register user.** `register_user` creates a user. If `user_id` or
+`role` is invalid (see above) return 400. If `user_id` already exists return
+409. Otherwise store the role and return 201 with the body above.
+
+**REQ‑2 Add item.** `add_item` adds catalog inventory keyed by `item_id`.
+If `item_id` or `name` is invalid return 400. If `item_id` already exists
+return 409. Two distinct items may share the same `name`. Otherwise return
+201 with the body above.
+
+**REQ‑3 Checkout.** Checks run in this order, first match wins:
+1. If `user_id` is not registered return 404.
+2. If `item_id` is not in the catalog return 404.
+3. If the item currently has an active loan return 409.
+4. If the user already has `max_loans` or more active loans return 422.
+Otherwise create a new loan: assign the next sequential `loan_id` starting at
+1, record `user_id`, `item_id`, `due_at = clock.now() + loan_period`,
+`renewals_used = 0`, `status = "active"`, mark the item as on loan, and
+return 200 with `{"loan_id", "due_at"}`.
+
+**REQ‑4 Return loan.** Checks run in this order:
+1. If `loan_id` is unknown return 404.
+2. If the loan is not owned by `user_id` and the caller's role is not
+   `"staff"` return 403.
+3. If the loan's status is already `"returned"` return 409.
+Otherwise set its status to `"returned"`, free the item (it becomes available
+again), and return 200 with `{"item_id"}`.
+
+**REQ‑5 Renew loan.** Checks run in this order:
+1. If `loan_id` is unknown return 404.
+2. If the loan is not owned by `user_id` and the caller's role is not
+   `"staff"` return 403.
+3. If the loan's status is `"returned"` return 409.
+4. If `clock.now() > due_at` (strictly overdue) return 409.
+5. If `renewals_used >= max_renewals` return 422.
+Otherwise set `due_at = due_at + loan_period`, increment `renewals_used`, and
+return 200 with `{"due_at"}`.
+
+**REQ‑6 List loans.** If `user_id` is not registered return 404. Otherwise
+return every loan ever created for that user (active and returned), as a list
+sorted by `loan_id` ascending, using the loan object shape above.
+
+**REQ‑7 Item status.** If `item_id` is not in the catalog return 404.
+Otherwise `available` is `True` iff the item has no active loan; `loan_id` is
+that active loan's id, or `None` if available.
+
+**REQ‑8 Staff privilege.** A `"staff"` user may call `return_loan` and
+`renew_loan` on any loan regardless of ownership. A `"member"` may act only
+on loans they own (otherwise 403). This applies to the ownership check in
+REQ‑4 step 2 and REQ‑5 step 2.
+
+**REQ‑9 Limits are configurable.** `max_loans` caps simultaneous active loans
+per user (REQ‑3 step 4) and `max_renewals` caps renewals per loan (REQ‑5
+step 5). With the defaults (3 and 2) a user may hold at most 3 active loans
+and renew a loan at most 2 times.
+
+**REQ‑10 Time comes from the clock.** Every `due_at` value and every
+overdue decision is derived solely from `clock.now()` at the moment of the
+relevant call; no other time source is consulted.
+```
+
+### FILE: reference.py
+```python
+"""Reference implementation of the Equipment Loan Service."""
+
+
+def _is_nonempty_str(x):
+    return isinstance(x, str) and len(x) > 0
+
+
+_ROLES = ("member", "staff")
+
+
+class Service:
+    def __init__(self, clock, max_loans=3, max_renewals=2, loan_period=7.0):
+        self.clock = clock
+        self.max_loans = max_loans
+        self.max_renewals = max_renewals
+        self.loan_period = loan_period
+        self._users = {}            # user_id -> role
+        self._items = {}            # item_id -> name
+        self._loans = {}            # loan_id -> loan dict
+        self._item_loan = {}        # item_id -> active loan_id
+        self._next_loan_id = 1
+
+    # ---- helpers -------------------------------------------------------
+    def _active_count(self, user_id):
+        n = 0
+        for loan in self._loans.values():
+            if loan["user"] == user_id and loan["status"] == "active":
+                n += 1
+        return n
+
+    def _owned_or_staff(self, user_id, loan):
+        if loan["user"] == user_id:
+            return True
+        return self._users.get(user_id) == "staff"
+
+    # ---- REQ-1 ---------------------------------------------------------
+    def register_user(self, user_id, role):
+        if not (_is_nonempty_str(user_id) and role in _ROLES):
+            return 400, None
+        if user_id in self._users:
+            return 409, None
+        self._users[user_id] = role
+        return 201, {"user_id": user_id, "role": role}
+
+    # ---- REQ-2 ---------------------------------------------------------
+    def add_item(self, item_id, name):
+        if not (_is_nonempty_str(item_id) and _is_nonempty_str(name)):
+            return 400, None
+        if item_id in self._items:
+            return 409, None
+        self._items[item_id] = name
+        return 201, {"item_id": item_id, "name": name}
+
+    # ---- REQ-3 ---------------------------------------------------------
+    def checkout(self, user_id, item_id):
+        if user_id not in self._users:
+            return 404, None
+        if item_id not in self._items:
+            return 404, None
+        if item_id in self._item_loan:
+            return 409, None
+        if self._active_count(user_id) >= self.max_loans:
+            return 422, None
+        loan_id = self._next_loan_id
+        self._next_loan_id += 1
+        due_at = self.clock.now() + self.loan_period
+        self._loans[loan_id] = {
+            "id": loan_id,
+            "user": user_id,
+            "item": item_id,
+            "due_at": due_at,
+            "renewals_used": 0,
+            "status": "active",
+        }
+        self._item_loan[item_id] = loan_id
+        return 200, {"loan_id": loan_id, "due_at": due_at}
+
+    # ---- REQ-4 ---------------------------------------------------------
+    def return_loan(self, user_id, loan_id):
+        loan = self._loans.get(loan_id)
+        if loan is None:
+            return 404, None
+        if not self._owned_or_staff(user_id, loan):
+            return 403, None
+        if loan["status"] == "returned":
+            return 409, None
+        loan["status"] = "returned"
+        self._item_loan.pop(loan["item"], None)
+        return 200, {"item_id": loan["item"]}
+
+    # ---- REQ-5 ---------------------------------------------------------
+    def renew_loan(self, user_id, loan_id):
+        loan = self._loans.get(loan_id)
+        if loan is None:
+            return 404, None
+        if not self._owned_or_staff(user_id, loan):
+            return 403, None
+        if loan["status"] == "returned":
+            return 409, None
+        if self.clock.now() > loan["due_at"]:
+            return 409, None
+        if loan["renewals_used"] >= self.max_renewals:
+            return 422, None
+        loan["due_at"] = loan["due_at"] + self.loan_period
+        loan["renewals_used"] += 1
+        return 200, {"due_at": loan["due_at"]}
+
+    # ---- REQ-6 ---------------------------------------------------------
+    def list_loans(self, user_id):
+        if user_id not in self._users:
+            return 404, None
+        rows = []
+        for loan in self._loans.values():
+            if loan["user"] == user_id:
+                rows.append({
+                    "loan_id": loan["id"],
+                    "item_id": loan["item"],
+                    "due_at": loan["due_at"],
+                    "renewals_used": loan["renewals_used"],
+                    "status": loan["status"],
+                })
+        rows.sort(key=lambda r: r["loan_id"])
+        return 200, rows
+
+    # ---- REQ-7 ---------------------------------------------------------
+    def item_status(self, item_id):
+        if item_id not in self._items:
+            return 404, None
+        loan_id = self._item_loan.get(item_id)
+        return 200, {"available": loan_id is None, "loan_id": loan_id}
+```
+
+### FILE: visible_tests.py
+```python
+"""Visible tests T_v: nominal happy paths only (shown to agents)."""
+from solution import Service
+
+
+class Clock:
+    def __init__(self, t=1000.0):
+        self.t = t
+
+    def now(self):
+        return self.t
+
+
+def test_register_and_add_item():
+    svc = Service(Clock())
+    assert svc.register_user("ann", "member") == (201, {"user_id": "ann", "role": "member"})
+    assert svc.add_item("scope-1", "Oscilloscope") == (201, {"item_id": "scope-1", "name": "Oscilloscope"})
+
+
+def test_checkout_then_return_lists_loan():
+    svc = Service(Clock())
+    svc.register_user("ann", "member")
+    svc.add_item("scope-1", "Oscilloscope")
+    st, body = svc.checkout("ann", "scope-1")
+    assert st == 200
+    loan_id = body["loan_id"]
+    assert isinstance(loan_id, int)
+    st2, body2 = svc.return_loan("ann", loan_id)
+    assert st2 == 200 and body2 == {"item_id": "scope-1"}
+    st3, loans = svc.list_loans("ann")
+    assert st3 == 200
+    assert len(loans) == 1
+    assert loans[0]["loan_id"] == loan_id
+    assert loans[0]["status"] == "returned"
+
+
+def test_renew_nominal():
+    svc = Service(Clock())
+    svc.register_user("bob", "member")
+    svc.add_item("drill", "Cordless drill")
+    _, c = svc.checkout("bob", "drill")
+    due0 = c["due_at"]
+    st, r = svc.renew_loan("bob", c["loan_id"])
+    assert st == 200
+    assert r["due_at"] > due0
+    _, loans = svc.list_loans("bob")
+    assert loans[0]["renewals_used"] == 1
+
+
+def test_item_available_before_checkout():
+    svc = Service(Clock())
+    svc.add_item("multimeter", "Multimeter")
+    st, s = svc.item_status("multimeter")
+    assert st == 200 and s == {"available": True, "loan_id": None}
+
+
+def test_unknown_item_status_404():
+    svc = Service(Clock())
+    assert svc.item_status("nope")[0] == 404
+```
+
+### FILE: hidden_tests.py
+```python
+"""Hidden suite T_h. Every assertion follows from a sentence of spec.md."""
+from hypothesis import settings, strategies as st
+from hypothesis.stateful import RuleBasedStateMachine, rule, initialize, run_state_machine_as_test
+
+from solution import Service
+
+
+class Clock:
+    def __init__(self, t=1000.0):
+        self.t = t
+
+    def now(self):
+        return self.t
+
+
+# ---------------- REQ-1 ----------------
+def test_req1_invalid_inputs():
+    svc = Service(Clock())
+    for bad_id in ["", None, 5, True]:
+        assert svc.register_user(bad_id, "member")[0] == 400, bad_id
+    for bad_role in ["", "guest", "MEMBER", None, 1]:
+        assert svc.register_user("u", bad_role)[0] == 400, bad_role
+
+
+def test_req1_duplicate_user():
+    svc = Service(Clock())
+    assert svc.register_user("ann", "member") == (201, {"user_id": "ann", "role": "member"})
+    assert svc.register_user("ann", "staff")[0] == 409
+
+
+# ---------------- REQ-2 ----------------
+def test_req2_invalid_inputs():
+    svc = Service(Clock())
+    for bad in ["", None, 3]:
+        assert svc.add_item(bad, "n")[0] == 400, bad
+        assert svc.add_item("i", bad)[0] == 400, bad
+
+
+def test_req2_duplicate_id_but_shared_name():
+    svc = Service(Clock())
+    assert svc.add_item("a", "Hammer")[0] == 201
+    assert svc.add_item("b", "Hammer")[0] == 201          # same name ok
+    assert svc.add_item("a", "Saw")[0] == 409             # same id clash
+
+
+# ---------------- REQ-3 ----------------
+def test_req3_check_order_and_codes():
+    svc = Service(Clock())
+    assert svc.checkout("ghost", "x")[0] == 404           # user missing first
+    svc.register_user("ann", "member")
+    assert svc.checkout("ann", "ghost")[0] == 404         # item missing
+    svc.add_item("tool", "Tool")
+    assert svc.checkout("ann", "tool")[0] == 200
+
+
+def test_req3_due_at_uses_clock_plus_period():
+    clk = Clock(50.0)
+    svc = Service(clk, loan_period=4.0)
+    svc.register_user("ann", "member")
+    svc.add_item("t", "T")
+    st, b = svc.checkout("ann", "t")
+    assert st == 200 and b["due_at"] == 54.0
+
+
+def test_req3_loan_ids_sequential_from_one():
+    svc = Service(Clock())
+    svc.register_user("ann", "member")
+    for i in range(3):
+        svc.add_item(f"t{i}", "T")
+    ids = [svc.checkout("ann", f"t{i}")[1]["loan_id"] for i in range(3)]
+    assert ids == [1, 2, 3]
+
+
+def test_req3_item_on_loan_conflict():
+    svc = Service(Clock())
+    svc.register_user("ann", "member")
+    svc.register_user("bob", "member")
+    svc.add_item("t", "T")
+    assert svc.checkout("ann", "t")[0] == 200
+    assert svc.checkout("bob", "t")[0] == 409
+
+
+def test_req3_max_loans_boundary():
+    svc = Service(Clock(), max_loans=2)
+    svc.register_user("ann", "member")
+    for i in range(3):
+        svc.add_item(f"t{i}", "T")
+    assert svc.checkout("ann", "t0")[0] == 200
+    assert svc.checkout("ann", "t1")[0] == 200
+    assert svc.checkout("ann", "t2")[0] == 422            # already at limit
+
+
+# ---------------- REQ-4 ----------------
+def test_req4_unknown_loan_404():
+    svc = Service(Clock())
+    svc.register_user("ann", "member")
+    assert svc.return_loan("ann", 999)[0] == 404
+
+
+def test_req4_not_owner_member_forbidden():
+    svc = Service(Clock())
+    svc.register_user("ann", "member")
+    svc.register_user("bob", "member")
+    svc.add_item("t", "T")
+    lid = svc.checkout("ann", "t")[1]["loan_id"]
+    assert svc.return_loan("bob", lid)[0] == 403
+    # still active for ann
+    assert svc.item_status("t")[1]["available"] is False
+
+
+def test_req4_already_returned_conflict():
+    svc = Service(Clock())
+    svc.register_user("ann", "member")
+    svc.add_item("t", "T")
+    lid = svc.checkout("ann", "t")[1]["loan_id"]
+    assert svc.return_loan("ann", lid)[0] == 200
+    assert svc.return_loan("ann", lid)[0] == 409
+
+
+def test_req4_return_frees_item():
+    svc = Service(Clock())
+    svc.register_user("ann", "member")
+    svc.add_item("t", "T")
+    lid = svc.checkout("ann", "t")[1]["loan_id"]
+    assert svc.item_status("t") == (200, {"available": False, "loan_id": lid})
+    assert svc.return_loan("ann", lid)[0] == 200
+    assert svc.item_status("t") == (200, {"available": True, "loan_id": None})
+
+
+# ---------------- REQ-5 ----------------
+def test_req5_unknown_and_forbidden():
+    svc = Service(Clock())
+    svc.register_user("ann", "member")
+    svc.register_user("bob", "member")
+    svc.add_item("t", "T")
+    lid = svc.checkout("ann", "t")[1]["loan_id"]
+    assert svc.renew_loan("ann", 999)[0] == 404
+    assert svc.renew_loan("bob", lid)[0] == 403
+
+
+def test_req5_returned_cannot_renew():
+    svc = Service(Clock())
+    svc.register_user("ann", "member")
+    svc.add_item("t", "T")
+    lid = svc.checkout("ann", "t")[1]["loan_id"]
+    svc.return_loan("ann", lid)
+    assert svc.renew_loan("ann", lid)[0] == 409
+
+
+def test_req5_overdue_boundary_strict():
+    clk = Clock(100.0)
+    svc = Service(clk, loan_period=10.0, max_renewals=5)
+    svc.register_user("ann", "member")
+    svc.add_item("t", "T")
+    lid = svc.checkout("ann", "t")[1]["loan_id"]      # due 110
+    clk.t = 110.0                                     # exactly due -> not overdue
+    assert svc.renew_loan("ann", lid)[0] == 200       # renew ok, due->120
+    clk.t = 120.0001                                  # strictly overdue
+    assert svc.renew_loan("ann", lid)[0] == 409
+
+
+def test_req5_renewal_cap_boundary():
+    svc = Service(Clock(), loan_period=10.0, max_renewals=2)
+    svc.register_user("ann", "member")
+    svc.add_item("t", "T")
+    lid = svc.checkout("ann", "t")[1]["loan_id"]
+    assert svc.renew_loan("ann", lid)[0] == 200       # used 1
+    assert svc.renew_loan("ann", lid)[0] == 200       # used 2
+    assert svc.renew_loan("ann", lid)[0] == 422       # at cap
+
+
+def test_req5_renew_extends_by_period():
+    clk = Clock(0.0)
+    svc = Service(clk, loan_period=8.0, max_renewals=3)
+    svc.register_user("ann", "member")
+    svc.add_item("t", "T")
+    lid = svc.checkout("ann", "t")[1]["loan_id"]      # due 8
+    st, b = svc.renew_loan("ann", lid)
+    assert st == 200 and b["due_at"] == 16.0
+
+
+# ---------------- REQ-6 ----------------
+def test_req6_unknown_user_404():
+    svc = Service(Clock())
+    assert svc.list_loans("ghost")[0] == 404
+
+
+def test_req6_only_own_loans_sorted_with_statuses():
+    svc = Service(Clock())
+    svc.register_user("ann", "member")
+    svc.register_user("bob", "member")
+    for i in range(3):
+        svc.add_item(f"t{i}", "T")
+    l0 = svc.checkout("ann", "t0")[1]["loan_id"]
+    l1 = svc.checkout("bob", "t1")[1]["loan_id"]
+    l2 = svc.checkout("ann", "t2")[1]["loan_id"]
+    svc.return_loan("ann", l0)
+    _, ann = svc.list_loans("ann")
+    assert [r["loan_id"] for r in ann] == [l0, l2]
+    assert ann[0]["status"] == "returned"
+    assert ann[1]["status"] == "active"
+    _, bob = svc.list_loans("bob")
+    assert [r["loan_id"] for r in bob] == [l1]
+
+
+# ---------------- REQ-7 ----------------
+def test_req7_unknown_item_404():
+    svc = Service(Clock())
+    assert svc.item_status("ghost")[0] == 404
+
+
+def test_req7_availability_tracks_active_loan():
+    svc = Service(Clock())
+    svc.register_user("ann", "member")
+    svc.add_item("t", "T")
+    assert svc.item_status("t") == (200, {"available": True, "loan_id": None})
+    lid = svc.checkout("ann", "t")[1]["loan_id"]
+    assert svc.item_status("t") == (200, {"available": False, "loan_id": lid})
+
+
+# ---------------- REQ-8 ----------------
+def test_req8_staff_can_act_on_others():
+    svc = Service(Clock())
+    svc.register_user("ann", "member")
+    svc.register_user("admin", "staff")
+    svc.add_item("t", "T")
+    lid = svc.checkout("ann", "t")[1]["loan_id"]
+    assert svc.renew_loan("admin", lid)[0] == 200
+    assert svc.return_loan("admin", lid)[0] == 200
+
+
+def test_req8_member_still_forbidden_after_staff_rule():
+    svc = Service(Clock())
+    svc.register_user("ann", "member")
+    svc.register_user("bob", "member")
+    svc.add_item("t", "T")
+    lid = svc.checkout("ann", "t")[1]["loan_id"]
+    assert svc.renew_loan("bob", lid)[0] == 403
+
+
+# ---------------- REQ-9 ----------------
+def test_req9_custom_limits():
+    svc = Service(Clock(), max_loans=1, max_renewals=0)
+    svc.register_user("ann", "member")
+    svc.add_item("a", "A")
+    svc.add_item("b", "B")
+    assert svc.checkout("ann", "a")[0] == 200
+    assert svc.checkout("ann", "b")[0] == 422
+    lid = svc.checkout("ann", "a")  # already held; conflict
+    assert lid[0] == 409
+    _, c = svc.checkout("ann", "a")
+    # renew with cap 0
+    # need a fresh loan not conflicting: return then checkout again
+    svc.return_loan("ann", 1)
+    _, c = svc.checkout("ann", "a")
+    assert svc.renew_loan("ann", c["loan_id"])[0] == 422
+
+
+# ---------------- REQ-10 ----------------
+def test_req10_no_wall_clock_dependency():
+    # two clocks give independent timelines
+    svc = Service(Clock(10.0), loan_period=5.0)
+    svc.register_user("ann", "member")
+    svc.add_item("t", "T")
+    assert svc.checkout("ann", "t")[1]["due_at"] == 15.0
+
+
+# ---------------- stateful model ----------------
+class Loans(RuleBasedStateMachine):
+    def __init__(self):
+        super().__init__()
+        self.clk = Clock(100.0)
+        self.svc = Service(self.clk, max_loans=2, max_renewals=1, loan_period=10.0)
+        self.users = {}      # uid -> role
+        self.items = set()
+        self.loans = {}      # lid -> dict
+        self.next_lid = 1
+
+    @initialize()
+    def seed(self):
+        for u in ("ann", "bob"):
+            self.svc.register_user(u, "member")
+            self.users[u] = "member"
+        self.svc.register_user("admin", "staff")
+        self.users["admin"] = "staff"
+        for i in ("x", "y", "z"):
+            self.svc.add_item(i, "N")
+            self.items.add(i)
+
+    @rule(tick=st.integers(0, 30))
+    def advance_time(self, tick):
+        self.clk.t += float(tick)
+
+    @rule(uid=st.sampled_from(["ann", "bob"]), iid=st.sampled_from(["x", "y", "z"]))
+    def checkout(self, uid, iid):
+        active_for_user = sum(1 for L in self.loans.values()
+                              if L["user"] == uid and L["status"] == "active")
+        on_loan = any(L["item"] == iid and L["status"] == "active" for L in self.loans.values())
+        stt, body = self.svc.checkout(uid, iid)
+        if on_loan:
+            assert stt == 409
+        elif active_for_user >= 2:
+            assert stt == 422
+        else:
+            assert stt == 200
+            assert body["loan_id"] == self.next_lid
+            self.loans[self.next_lid] = {
+                "user": uid, "item": iid,
+                "due_at": self.clk.t + 10.0, "renewals_used": 0, "status": "active",
+            }
+            self.next_lid += 1
+
+    @rule(lid=st.integers(1, 3))
+    def return_loan(self, lid):
+        L = self.loans.get(lid)
+        stt, body = self.svc.return_loan("admin", lid)
+        if L is None:
+            assert stt == 404
+        elif L["status"] == "returned":
+            assert stt == 409
+        else:
+            assert stt == 200 and body["item_id"] == L["item"]
+            L["status"] = "returned"
+
+    @rule(lid=st.integers(1, 3))
+    def renew_loan(self, lid):
+        L = self.loans.get(lid)
+        stt, body = self.svc.renew_loan("admin", lid)
+        if L is None:
+            assert stt == 404
+        elif L["status"] == "returned":
+            assert stt == 409
+        elif self.clk.t > L["due_at"]:
+            assert stt == 409
+        elif L["renewals_used"] >= 1:
+            assert stt == 422
+        else:
+            assert stt == 200
+            L["due_at"] += 10.0
+            L["renewals_used"] += 1
+            assert body["due_at"] == L["due_at"]
+
+
+def test_stateful_model():
+    run_state_machine_as_test(Loans, settings=settings(
+        max_examples=40, stateful_step_count=15, deadline=None,
+        database=None, derandomize=True))
+```
+
+### FILE: faults.py
+```python
+"""Seeded faults. Format required by validate.py:
+
+  FAULTS = {fault_id: (requirement, short description, original text, replacement text)}
+
+Each original text occurs exactly once in reference.py. Keep the helpers below.
+"""
+from pathlib import Path
+
+HERE = Path(__file__).resolve().parent
+
+FAULTS = {
+    # REQ-1: role whitelist widened -> "guest" wrongly accepted (400 expected).
+    "F01": ("REQ-1", "accepts an extra bogus role",
+            '''        if not (_is_nonempty_str(user_id) and role in _ROLES):''',
+            '''        if not (_is_nonempty_str(user_id) and role in ("member", "staff", "guest")):'''),
+
+    # REQ-1: duplicate check dropped -> second registration returns 201 not 409.
+    "F02": ("REQ-1", "duplicate user silently overwritten",
+            '''        if user_id in self._users:
+            return 409, None
+        self._users[user_id] = role''',
+            '''        self._users[user_id] = role'''),
+
+    # REQ-2: uniqueness keyed on name instead of id -> same-id clash missed.
+    "F03": ("REQ-2", "item uniqueness checked against name",
+            '''        if item_id in self._items:
+            return 409, None''',
+            '''        if name in self._items.values():
+            return 409, None'''),
+
+    # REQ-3: due_at subtracts the period instead of adding it.
+    "F04": ("REQ-3", "due date computed backwards",
+            '''        due_at = self.clock.now() + self.loan_period''',
+            '''        due_at = self.clock.now() - self.loan_period'''),
+
+    # REQ-3: loan ids start at 0 instead of 1.
+    "F05": ("REQ-3", "first loan id is 0",
+            '''        self._next_loan_id = 1''',
+            '''        self._next_loan_id = 0'''),
+
+    # REQ-3: forgetting to reserve the item -> double checkout allowed.
+    "F06": ("REQ-3", "item not marked on loan",
+            '''        self._item_loan[item_id] = loan_id
+        return 200, {"loan_id": loan_id, "due_at": due_at}''',
+            '''        return 200, {"loan_id": loan_id, "due_at": due_at}'''),
+
+    # REQ-3: off-by-one on the concurrent-loan cap.
+    "F07": ("REQ-3", "allows one loan past max_loans",
+            '''        if self._active_count(user_id) >= self.max_loans:''',
+            '''        if self._active_count(user_id) > self.max_loans:'''),
+
+    # REQ-4: ownership check ignored -> members return others' loans.
+    "F08": ("REQ-4", "ownership check skipped",
+            '''        if not self._owned_or_staff(user_id, loan):
+            return 403, None
+        if loan["status"] == "returned":
+            return 409, None
+        loan["status"] = "returned"''',
+            '''        if loan["status"] == "returned":
+            return 409, None
+        loan["status"] = "returned"'''),
+
+    # REQ-4: returning does not free the item.
+    "F09": ("REQ-4", "item stays reserved after return",
+            '''        loan["status"] = "returned"
+        self._item_loan.pop(loan["item"], None)''',
+            '''        loan["status"] = "returned"'''),
+
+    # REQ-5: overdue test uses >= so being exactly due wrongly blocks renew.
+    "F10": ("REQ-5", "overdue boundary off by one",
+            '''        if self.clock.now() > loan["due_at"]:
+            return 409, None''',
+            '''        if self.clock.now() >= loan["due_at"]:
+            return 409, None'''),
+
+    # REQ-5: renewal counter reset each time -> cap never reached.
+    "F11": ("REQ-5", "renewal count reset on renew",
+            '''        loan["due_at"] = loan["due_at"] + self.loan_period
+        loan["renewals_used"] += 1''',
+            '''        loan["due_at"] = loan["due_at"] + self.loan_period
+        loan["renewals_used"] = 1'''),
+
+    # REQ-5: renewal cap compared with > allowing one extra renewal.
+    "F12": ("REQ-5", "off-by-one on max_renewals",
+            '''        if loan["renewals_used"] >= self.max_renewals:''',
+            '''        if loan["renewals_used"] > self.max_renewals:'''),
+
+    # REQ-6: listing ignores the user filter -> leaks everyone's loans.
+    "F13": ("REQ-6", "lists all loans regardless of user",
+            '''        for loan in self._loans.values():
+            if loan["user"] == user_id:''',
+            '''        for loan in self._loans.values():
+            if True:'''),
+
+    # REQ-7: availability flag inverted.
+    "F14": ("REQ-7", "available flag inverted",
+            '''        return 200, {"available": loan_id is None, "loan_id": loan_id}''',
+            '''        return 200, {"available": loan_id is not None, "loan_id": loan_id}'''),
+
+    # REQ-8: staff treated as ordinary member (privilege lost).
+    "F15": ("REQ-8", "staff privilege broken",
+            '''        return self._users.get(user_id) == "staff"''',
+            '''        return False'''),
+}
+
+
+def reference():
+    return (HERE / "reference.py").read_text(encoding="utf-8")
+
+
+def variant(fault_id):
+    _, _, old, new = FAULTS[fault_id]
+    src = reference()
+    if src.count(old) != 1:
+        raise ValueError(f"{fault_id}: original text occurs {src.count(old)} times")
+    return src.replace(old, new)
+```
+
+### FILE: AUTHOR_NOTES.md
+```markdown
+# Author notes
+
+## Design choices
+
+- Domain: physical equipment loans (catalog + users + loans). Chosen because it
+  exercises shared mutable resources, per-user quotas, time-based rules, and a
+  role-based override, while staying in-process and deterministic.
+- Status codes follow the usual REST-ish convention: 200/201 success, 400 bad
+  input, 403 forbidden, 404 not found, 409 conflict, 422 unprocessable.
+- Check-order precedence (REQ-3/4/5) is spelled out in the spec so hidden tests
+  can rely on a single observable code for overlapping conditions.
+
+## Behaviors deliberately left open (NOT tested)
+
+- Exact validation of the constructor arguments (`max_loans`, `max_renewals`,
+  `loan_period`) beyond the documented types/ranges.
+- Whether `return_loan`/`renew_loan` of a *nonexistent* id is reported before
+  or after an ownership failure — the spec fixes existence first, so only that
+  order is tested; nothing else about error precedence outside the listed steps.
+- Internal representation of `loan_id` (only the sequence-from-1 property is
+  specified).
+- Tie-breaking is impossible (ids unique), so ordering stability is unspecified.
+- Behavior of registering with a name identical to another user's id is not a
+  concept here; ids are global keys.
+
+## Why each fault is plausible (one line each)
+
+- **F01**: copy-pasting a longer role list from another product's docs.
+- **F02**: "just overwrite" convenience that quietly kills the conflict code.
+- **F03**: confusing business-level uniqueness (by name) with key uniqueness.
+- **F04**: classic sign slip when wiring `now() ± period`.
+- **F05**: zero-based indexing habit leaking into a public id sequence.
+- **F06**: forgetting the side-effect line that reserves the resource.
+- **F07**: `>=` vs `>` boundary mistake on a quota check.
+- **F08**: removing a guard during a refactor that assumed callers were trusted.
+- **F09**: updating status but forgetting the companion release of the lock.
+- **F10**: inclusive-vs-exclusive comparison on a deadline.
+- **F11**: resetting a counter instead of incrementing it.
+- **F12**: mirror-image boundary slip on the renewal cap.
+- **F13**: dropping a filter predicate while optimizing iteration.
+- **F14**: boolean inversion when reading "loan_id is None means available".
+- **F15**: stubbing out a permission branch and leaving the stub in place.
+```

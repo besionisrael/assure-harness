@@ -1,0 +1,23 @@
+# Pilot: small sample, one run. Use it to check prompts, parsing, and cost per
+# unit before launching the full campaign.
+# The EvalPlus pilot of 2026-10-08 ran with the former default max_tokens=8192.
+campaign: pilot
+output_dir: results
+seed: 2026
+runs: 1
+benchmarks:
+  humaneval: {n: 10}
+  mbpp: {n: 10}
+max_hidden: null          # use the full EvalPlus hidden suites
+workers: 4
+models:
+  builder:
+    provider: anthropic
+    model: claude-sonnet-5-5
+  verifier:                # same model as the builder (conditions A, B, AB)
+    provider: anthropic
+    model: claude-sonnet-5-5
+  verifier_alt:            # different provider (condition ABp), REQUIRED
+    provider: openai
+    model: gpt-5.5-2026-04-23          # e.g. the OpenAI model you choose; any OpenAI-compatible endpoint works with base_url
+    # base_url: https://...

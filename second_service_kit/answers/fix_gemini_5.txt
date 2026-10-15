@@ -1,0 +1,18 @@
+Thank you. The internal-state accesses are gone, and the empty item_id and the
+overdue rounding are now stated in the specification. Three problems remain:
+
+1. Review point still open: test_req5_return_and_fines asserts
+   `svc.return_item(loan_id, "good") == (200, {"fine": 0.0, "status": "good"})`,
+   but the specification still only says `{"fine": float, "status": str}` and never
+   says what `status` contains. Either state it in spec.md or stop asserting its value.
+
+2. Fault F03 (REQ-3, unpaid fine check uses > instead of >=) now passes every test
+   of T_h (not detected). It was caught only by the test that set fines through
+   internal state. Add a hidden test that reaches the boundary through the public
+   interface only, or replace the fault.
+
+3. Fault F06 (REQ-9, damaged condition adds an incorrect fine) now fails the visible
+   test test_pay_fine. Every fault must pass T_v and fail T_h. Change or replace it.
+
+Tests must keep using only the public interface. At least 12 valid faults.
+Output all files again in full, in the same format.

@@ -1,0 +1,16 @@
+The validator reported these problems:
+
+1. The reference fails one hidden test: test_req5_return_and_fines.
+   hidden_tests.py, line 79:  assert svc.return_item(loan_id, "invalid")[0] == 400
+   The reference returns 404, not 400.
+   Decide which behavior the specification requires. Then fix the reference or the
+   test, and the specification if it is unclear, so that S, the reference and T_h agree.
+   Note: because this test fails on the reference, it currently "detects" most
+   faults for the wrong reason. Check that each fault is still caught by a test
+   that targets it.
+
+2. Fault F11 (REQ-7, pay_fine sets the fine to the payment amount) fails the
+   visible test test_pay_fine. Every fault must pass T_v. Change the fault, or
+   replace it with another realistic fault, so that it passes T_v and fails T_h.
+
+Output all files again in full, in the same format.

@@ -1,0 +1,28 @@
+## Review table
+
+| # | test | Spec lines justifying each assertion | Verdict | Reason if PROBLEM |
+|---|---|---|---|
+| 1 | test_req1_member_validation | L24 (empty username → 400, invalid tier → 400, 201 on success, existing username → 409) | OK | — |
+| 2 | test_req2_item_validation | L26 for qty≤0 → 400, duration≤0 → 400, success → 201, existing item_id → 409 | PROBLEM | `add_item("", ...)` expects 400, but L26 only makes total_qty/duration ≤ 0 a 400; an empty `item_id` is never declared invalid. |
+| 3 | test_req3_borrow_restrictions | L28 (missing member/item → 404; success → 201; available == 0 → 409; alice has only 2 active loans, under the standard limit of 3 from L24, so no limit conflict) | OK | — |
+| 4 | test_req3_borrow_limits_tier | L24 (standard limit 3), L28(c) (limit reached → 409) | OK | — |
+| 5 | test_req3_unpaid_fines_block_borrow | L28(b) (unpaid fines ≥ 10.0 → 403) justifies the 403 | PROBLEM | `svc.members["debtor"]["fines"] = 10.0` mutates an internal attribute; the spec fixes no internal state layout (L5–L20 describe only method signatures). |
+| 6 | test_req5_return_and_fines | L32 (on-time good return incurs no late fine; already returned → 404; nonexistent loan → 404; condition check (400) precedes loan check (404) in the text), L13 (200 body {"fine", "status"}) | PROBLEM | The exact equality `(200, {"fine": 0.0, "status": "good"})` requires the `status` field to hold the condition string; no spec line defines the content of `status`. |
+| 7 | test_req5_overdue_fines | L30 (due = now + 1·86400), L32 (clock.now() exceeds due → 2.0 per overdue day, ceiling of days: 2 days × 2.0 = 4.0) | OK | — |
+| 8 | test_req5_fractional_overdue_ceiling | L32 (ceiling) would fix 2.0 | PROBLEM | The author's notes explicitly list partial-seconds overdue as "deliberately left open", so it must not be tested. |
+| 9 | test_req6_reservations | L34 (available > 0 → 400; out of stock → 201; duplicate active reservation → 409) | OK | — |
+| 10 | test_req7_pay_fine_validation | L36 (amount > 0, otherwise 400) | OK | — |
+| 11 | test_req8_renew_loan | L38 (renewal once per loan; already renewed → 409; no reservations exist) | OK | — |
+| 12 | test_req8_renew_blocked_by_reservation | L34 (out-of-stock reservation → 201), L38 (active reservations → renewal rejected 409) | OK | — |
+| 13 | test_req9_damaged_and_lost | L32 (available +1 unless lost), L40 (damaged 15.0, lost 50.0, total_qty −1) for the fine values and quantity effects | PROBLEM | The test reads `svc.items["i1"]["available"]` / `svc.items["i2"]["total_qty"]` directly; the spec defines no internal data structure (L5–L20). |
+| 14 | test_stateful_library | L24 (existing username → 409, else 201), L26 (valid qty/duration, existing item_id → 409, else 201); assertions are tracked against the test's own bookkeeping of spec-visible outcomes | OK | — |
+
+Note on test 6's last assertion: `return_item(loan_id, "invalid")` expects 400 although the loan is also already returned (404). I treated the prose order of L32 (condition first, then loan) as fixing precedence, so it is not itself flagged — but it is borderline.
+
+## PROBLEMS:
+
+- **test_req2_item_validation**: `assert svc.add_item("", "Hammer", "Tools", 5, 7)[0] == 400` — the specification only returns 400 for `total_qty` ≤ 0 or `duration_days` ≤ 0 (L26); it never says an empty `item_id` is invalid.
+- **test_req3_unpaid_fines_block_borrow**: `svc.members["debtor"]["fines"] = 10.0` — the specification defines no internal state layout, so a spec-conforming implementation need not expose `svc.members[username]["fines"]`.
+- **test_req5_return_and_fines**: `assert svc.return_item(loan_id, "good") == (200, {"fine": 0.0, "status": "good"})` — the specification (L13) declares a `status` field but never fixes its content, so requiring the exact value `"good"` is the author's decision.
+- **test_req5_fractional_overdue_ceiling**: `assert res[1]["fine"] == 2.0` on a 1-second overdue return — the author's notes explicitly declare partial-seconds overdue handling "deliberately left open", so this must not be tested.
+- **test_req9_damaged_and_lost**: `assert svc.items["i1"]["available"] == 1` and `assert svc.items["i2"]["total_qty"] == 0` — these inspect an internal `svc.items` dictionary whose structure the specification never describes; the effects themselves (L32, L40) are only required to be observable through the API.

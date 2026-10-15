@@ -1,0 +1,10 @@
+The validator reported one remaining problem: fault F11 still fails the visible test
+test_pay_fine. This is the third version of F11 that does: test_pay_fine checks the
+result of pay_fine, so any fault that changes that result in the nominal case is
+visible in T_v.
+
+Replace F11 with a different realistic fault, anywhere in the reference, that
+passes T_v and fails T_h (add a hidden test if needed, testing only behavior the
+specification fixes). Everything else now passes the validator; keep it unchanged.
+
+Output all files again in full, in the same format.

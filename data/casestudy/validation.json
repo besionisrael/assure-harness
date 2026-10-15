@@ -1,0 +1,73 @@
+{
+ "reference": {
+  "visible_failed": [],
+  "hidden_failed": []
+ },
+ "F01": {
+  "visible_failed": [],
+  "hidden_failed": [
+   "test_req17_search_never_returns_other_users_documents",
+   "test_stateful_two_users"
+  ]
+ },
+ "F02": {
+  "visible_failed": [],
+  "hidden_failed": [
+   "test_req17_cursor_of_another_user_is_rejected"
+  ]
+ },
+ "F03": {
+  "visible_failed": [],
+  "hidden_failed": [
+   "test_req17_get_other_users_document_is_404"
+  ]
+ },
+ "F04": {
+  "visible_failed": [],
+  "hidden_failed": [
+   "test_req14_expired_token_rejected_everywhere",
+   "test_req14_token_expiry_boundary"
+  ]
+ },
+ "F05": {
+  "visible_failed": [],
+  "hidden_failed": [
+   "test_req15_revoked_token_rejected_everywhere"
+  ]
+ },
+ "F06": {
+  "visible_failed": [],
+  "hidden_failed": [
+   "test_req18_deleted_document_never_returned",
+   "test_stateful_two_users"
+  ]
+ },
+ "F07": {
+  "visible_failed": [],
+  "hidden_failed": [
+   "test_req17_update_and_delete_other_users_document_is_404",
+   "test_stateful_two_users"
+  ]
+ },
+ "F08": {
+  "visible_failed": [],
+  "hidden_failed": [
+   "test_req19_pagination_returns_each_document_once_in_order",
+   "test_stateful_two_users"
+  ]
+ },
+ "F09": {
+  "visible_failed": [],
+  "hidden_failed": [
+   "test_req23_different_amount_after_timeout_is_409",
+   "test_req23_retry_after_timeout_charges_at_most_once"
+  ]
+ },
+ "F10": {
+  "visible_failed": [],
+  "hidden_failed": [
+   "test_req23_different_amount_after_timeout_is_409",
+   "test_req23_same_key_different_amount_is_409"
+  ]
+ }
+}

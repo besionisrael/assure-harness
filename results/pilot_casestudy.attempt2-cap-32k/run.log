@@ -1,0 +1,4 @@
+1 tasks x 1 runs = 1 units; conditions ['SV', 'A', 'B', 'AB', 'ABp']
+[1/1] casestudy/docpay run0: error
+finished with 1 errors
+EXIT 0

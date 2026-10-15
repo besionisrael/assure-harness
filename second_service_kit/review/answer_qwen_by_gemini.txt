@@ -1,0 +1,31 @@
+| # | test | spec lines that justify each assertion | verdict (OK / PROBLEM) | reason if PROBLEM |
+| --- | --- | --- | --- | --- |
+| 1 | `test_req1_invalid_inputs` | 29–30, 47–48 | OK |  |
+| 2 | `test_req1_duplicate_user` | 34, 48–49 | OK |  |
+| 3 | `test_req2_invalid_inputs` | 30, 52 | OK |  |
+| 4 | `test_req2_duplicate_id_but_shared_name` | 52–53 | OK |  |
+| 5 | `test_req3_check_order_and_codes` | 56–60 | OK |  |
+| 6 | `test_req3_due_at_uses_clock_plus_period` | 22–23, 62 | OK |  |
+| 7 | `test_req3_loan_ids_sequential_from_one` | 61 | OK |  |
+| 8 | `test_req3_item_on_loan_conflict` | 59 | OK |  |
+| 9 | `test_req3_max_loans_boundary` | 60, 97 | OK |  |
+| 10 | `test_req4_unknown_loan_404` | 67 | OK |  |
+| 11 | `test_req4_not_owner_member_forbidden` | 68–69, 89 | OK |  |
+| 12 | `test_req4_already_returned_conflict` | 70 | OK |  |
+| 13 | `test_req4_return_frees_item` | 43, 71–72 | OK |  |
+| 14 | `test_req5_unknown_and_forbidden` | 75–77 | OK |  |
+| 15 | `test_req5_returned_cannot_renew` | 78 | OK |  |
+| 16 | `test_req5_overdue_boundary_strict` | 79 | OK |  |
+| 17 | `test_req5_renewal_cap_boundary` | 80, 98 | OK |  |
+| 18 | `test_req5_renew_extends_by_period` | 81–82 | OK |  |
+| 19 | `test_req6_unknown_user_404` | 84 | OK |  |
+| 20 | `test_req6_only_own_loans_sorted_with_statuses` | 41–42, 85–86 | OK |  |
+| 21 | `test_req7_unknown_item_404` | 88 | OK |  |
+| 22 | `test_req7_availability_tracks_active_loan` | 43, 89–90 | OK |  |
+| 23 | `test_req8_staff_can_act_on_others` | 92–95 | OK |  |
+| 24 | `test_req8_member_still_forbidden_after_staff_rule` | 93–95 | OK |  |
+| 25 | `test_req9_custom_limits` | 97–100 | OK |  |
+| 26 | `test_req10_no_wall_clock_dependency` | 22–23, 102–104 | OK |  |
+| 27 | `test_stateful_model` | 22–23, 34, 39–43, 56–64, 67–72, 75–82, 85–86, 92–95, 97–100 | OK |  |
+
+PROBLEMS: none

@@ -1,0 +1,233 @@
+{
+ "task_id": "Mbpp/724",
+ "benchmark": "mbpp",
+ "run": 0,
+ "prompt_version": "2026-10-08.1",
+ "backends": {
+  "builder": "anthropic:claude-sonnet-5-5",
+  "verifier": "anthropic:claude-sonnet-5-5",
+  "verifier_alt": "openai:gpt-5.5-2026-04-23"
+ },
+ "p0": "def power_base_sum(base, power):\n    if power < 0:\n        raise ValueError(\"power must be non-negative\")\n    value = abs(int(base) ** int(power))\n    return sum(int(c) for c in str(value))\n",
+ "p0_info": {
+  "self_rounds": 0,
+  "self_converged": true
+ },
+ "usage_shared": {
+  "input_tokens": 462,
+  "output_tokens": 538,
+  "calls": 1
+ },
+ "conditions": {
+  "SV": {
+   "programs": [
+    "def power_base_sum(base, power):\n    if power < 0:\n        raise ValueError(\"power must be non-negative\")\n    value = abs(int(base) ** int(power))\n    return sum(int(c) for c in str(value))\n"
+   ],
+   "final": "def power_base_sum(base, power):\n    if power < 0:\n        raise ValueError(\"power must be non-negative\")\n    value = abs(int(base) ** int(power))\n    return sum(int(c) for c in str(value))\n",
+   "evidence": {
+    "builder": {
+     "test_solution": "from solution import power_base_sum\n\n\ndef test_visible():\n    assert power_base_sum(2, 100) == 115\n    assert power_base_sum(8, 10) == 37\n    assert power_base_sum(8, 15) == 62\n    assert power_base_sum(3, 3) == 9\n\n\ndef test_zero_power():\n    assert power_base_sum(5, 0) == 1\n\n\ndef test_one_power():\n    assert power_base_sum(123, 1) == 6\n\n\ndef test_zero_base():\n    assert power_base_sum(0, 5) == 0\n\n\ndef test_negative_base():\n    assert power_base_sum(-3, 3) == 9\n    assert power_base_sum(-2, 2) == 4\n\n\ndef test_negative_power():\n    try:\n        power_base_sum(2, -1)\n    except ValueError:\n        pass\n    else:\n        assert False\n"
+    }
+   },
+   "rounds": [],
+   "usage": {
+    "input_tokens": 0,
+    "output_tokens": 0,
+    "calls": 0
+   },
+   "open_questions": []
+  },
+  "A": {
+   "programs": [
+    "def power_base_sum(base, power):\n    if power < 0:\n        raise ValueError(\"power must be non-negative\")\n    value = abs(int(base) ** int(power))\n    return sum(int(c) for c in str(value))\n",
+    "def power_base_sum(base, power):\n    if power < 0:\n        raise ValueError(\"power must be non-negative\")\n    value = abs(int(base) ** int(power))\n    return sum(int(c) for c in str(value))\n",
+    "def power_base_sum(base, power):\n    if power < 0:\n        raise ValueError(\"power must be non-negative\")\n    value = abs(int(base) ** int(power))\n    return sum(int(c) for c in str(value))\n",
+    "def power_base_sum(base, power):\n    if power < 0:\n        raise ValueError(\"power must be non-negative\")\n    value = abs(int(base) ** int(power))\n    return sum(int(c) for c in str(value))\n"
+   ],
+   "final": "def power_base_sum(base, power):\n    if power < 0:\n        raise ValueError(\"power must be non-negative\")\n    value = abs(int(base) ** int(power))\n    return sum(int(c) for c in str(value))\n",
+   "evidence": {
+    "A": {
+     "test_phase_a": "import pytest\nfrom hypothesis import given, strategies as st, settings\nfrom solution import power_base_sum\n\n\ndef ref(base, power):\n    return sum(int(c) for c in str(base ** power))\n\n\ndef test_spec_example():\n    \"\"\"The sum of digits of 2**100 must be 115.\"\"\"\n    out = power_base_sum(2, 100)\n    assert out == 115, f\"input={(2, 100)!r} output={out!r}\"\n\n\n@pytest.mark.parametrize(\"base,power,expected\", [\n    (2, 15, 26),     # 32768\n    (2, 10, 7),      # 1024\n    (3, 5, 9),       # 243\n    (5, 3, 8),       # 125\n    (7, 2, 13),      # 49\n    (9, 2, 9),       # 81\n    (2, 1, 2),\n    (12, 2, 9),      # 144\n    (1, 50, 1),\n    (10, 7, 1),\n    (2, 1000, 1366),\n])\ndef test_known_values(base, power, expected):\n    \"\"\"The result must equal the digit sum of base raised to power.\"\"\"\n    out = power_base_sum(base, power)\n    assert out == expected, f\"input={(base, power)!r} output={out!r}\"\n\n\ndef test_power_one_is_digit_sum_of_base():\n    \"\"\"With power 1 the result must be the digit sum of the base itself.\"\"\"\n    for b in [1, 9, 10, 99, 123, 98765]:\n        out = power_base_sum(b, 1)\n        assert out == sum(int(c) for c in str(b)), f\"input={(b, 1)!r} output={out!r}\"\n\n\n@given(st.integers(min_value=1, max_value=1000), st.integers(min_value=1, max_value=200))\ndef test_matches_digit_sum_definition(base, power):\n    \"\"\"The result must equal the sum of decimal digits of base**power.\"\"\"\n    out = power_base_sum(base, power)\n    assert out == ref(base, power), f\"input={(base, power)!r} output={out!r}\"\n\n\n@given(st.integers(min_value=1, max_value=500), st.integers(min_value=1, max_value=100))\ndef test_congruent_mod_9(base, power):\n    \"\"\"The digit sum must be congruent to base**power modulo 9.\"\"\"\n    out = power_base_sum(base, power)\n    assert out % 9 == pow(base, power, 9), f\"input={(base, power)!r} output={out!r}\"\n\n\n@given(st.integers(min_value=1, max_value=500), st.integers(min_value=1, max_value=100))\ndef test_bounds(base, power):\n    \"\"\"The digit sum of a positive integer must be between 1 and 9 times its digit count.\"\"\"\n    out = power_base_sum(base, power)\n    n = len(str(base ** power))\n    assert isinstance(out, int), f\"input={(base, power)!r} output={out!r}\"\n    assert 1 <= out <= 9 * n, f\"input={(base, power)!r} output={out!r}\"\n\n\n@given(st.integers(min_value=1, max_value=300))\ndef test_power_of_ten_gives_one(p):\n    \"\"\"The digit sum of 10**p must be 1.\"\"\"\n    out = power_base_sum(10, p)\n    assert out == 1, f\"input={(10, p)!r} output={out!r}\"\n\n\n@given(st.integers(min_value=1, max_value=100), st.integers(min_value=1, max_value=50))\ndef test_trailing_zero_invariance(base, power):\n    \"\"\"Multiplying the base by 10 must not change the digit sum of the result.\"\"\"\n    a = power_base_sum(base, power)\n    b = power_base_sum(base * 10, power)\n    assert a == b, f\"input={(base, power)!r} output={a!r} vs {b!r}\"\n"
+    }
+   },
+   "rounds": [
+    {
+     "round": 1,
+     "failing": 1,
+     "counterexamples": "1. Guarantee: The result must equal the digit sum of base raised to power.\n  Observed: TypeError: \"test_known_values() missing 3 required positional arguments: 'base', 'power', and 'expected'\""
+    },
+    {
+     "round": 2,
+     "failing": 1,
+     "counterexamples": "1. Guarantee: The result must equal the digit sum of base raised to power.\n  Observed: TypeError: \"test_known_values() missing 3 required positional arguments: 'base', 'power', and 'expected'\""
+    },
+    {
+     "round": 3,
+     "failing": 1,
+     "counterexamples": "1. Guarantee: The result must equal the digit sum of base raised to power.\n  Observed: TypeError: \"test_known_values() missing 3 required positional arguments: 'base', 'power', and 'expected'\""
+    }
+   ],
+   "mutation": null,
+   "open_questions": [
+    "Behavior for negative base, zero base, negative power, and non-integer inputs is unspecified.",
+    "Behavior for power = 0 is not stated, so I don't test it.",
+    "Whether base = 0 is valid is unspecified, so I don't test it."
+   ],
+   "usage": {
+    "builder": {
+     "input_tokens": 5786,
+     "output_tokens": 1757,
+     "calls": 3
+    },
+    "verifier": {
+     "input_tokens": 721,
+     "output_tokens": 1618,
+     "calls": 1
+    }
+   },
+   "verifier_backend": "anthropic:claude-sonnet-5-5"
+  },
+  "B": {
+   "programs": [
+    "def power_base_sum(base, power):\n    if power < 0:\n        raise ValueError(\"power must be non-negative\")\n    value = abs(int(base) ** int(power))\n    return sum(int(c) for c in str(value))\n"
+   ],
+   "final": "def power_base_sum(base, power):\n    if power < 0:\n        raise ValueError(\"power must be non-negative\")\n    value = abs(int(base) ** int(power))\n    return sum(int(c) for c in str(value))\n",
+   "evidence": {
+    "B": {
+     "test_phase_b": "from hypothesis import given, settings, strategies as st\n\nfrom solution import power_base_sum\n\n\ndef ref_digit_sum(n):\n    total = 0\n    while n:\n        n, r = divmod(n, 10)\n        total += r\n    return total\n\n\ndef test_spec_example():\n    \"\"\"The sum of digits of 2**100 must be 115.\"\"\"\n    out = power_base_sum(2, 100)\n    assert out == 115, f\"input=(2, 100) output={out!r}\"\n\n\ndef test_known_values():\n    \"\"\"The result must be the digit sum of base**power for known cases.\"\"\"\n    cases = [(2, 15, 26), (2, 1000, 1366), (3, 5, 9), (7, 2, 13), (9, 3, 18), (5, 3, 8)]\n    for b, p, exp in cases:\n        out = power_base_sum(b, p)\n        assert out == exp, f\"input={(b, p)!r} output={out!r} expected={exp!r}\"\n\n\ndef test_power_zero_gives_one():\n    \"\"\"Any positive base to power 0 equals 1, whose digit sum is 1.\"\"\"\n    for b in [1, 2, 9, 10, 123, 99999]:\n        out = power_base_sum(b, 0)\n        assert out == 1, f\"input={(b, 0)!r} output={out!r}\"\n\n\ndef test_power_one_is_digit_sum_of_base():\n    \"\"\"Base to power 1 must be the digit sum of the base itself.\"\"\"\n    for b in [0, 5, 10, 99, 12345, 987654321]:\n        out = power_base_sum(b, 1)\n        exp = ref_digit_sum(b)\n        assert out == exp, f\"input={(b, 1)!r} output={out!r} expected={exp!r}\"\n\n\ndef test_zero_base_positive_power():\n    \"\"\"Zero to any positive power is 0, whose digit sum is 0.\"\"\"\n    for p in [1, 2, 10, 100]:\n        out = power_base_sum(0, p)\n        assert out == 0, f\"input={(0, p)!r} output={out!r}\"\n\n\ndef test_base_one():\n    \"\"\"One to any power is 1, so the digit sum is 1.\"\"\"\n    for p in [0, 1, 50, 1000]:\n        out = power_base_sum(1, p)\n        assert out == 1, f\"input={(1, p)!r} output={out!r}\"\n\n\ndef test_powers_of_ten():\n    \"\"\"Powers of ten have the form 1 followed by zeros, so the digit sum is 1.\"\"\"\n    for b in [10, 100, 1000]:\n        for p in [1, 5, 20]:\n            out = power_base_sum(b, p)\n            assert out == 1, f\"input={(b, p)!r} output={out!r}\"\n\n\ndef test_large_result():\n    \"\"\"The digit sum must be exact for results with thousands of digits.\"\"\"\n    out = power_base_sum(2, 10000)\n    exp = ref_digit_sum(2 ** 10000)\n    assert out == exp, f\"input=(2, 10000) output={out!r} expected={exp!r}\"\n\n\n@settings(max_examples=200, deadline=None)\n@given(st.integers(min_value=0, max_value=10**6), st.integers(min_value=1, max_value=200))\ndef test_matches_digit_sum_definition(b, p):\n    \"\"\"The result must equal the sum of the decimal digits of base**power.\"\"\"\n    out = power_base_sum(b, p)\n    exp = ref_digit_sum(b ** p)\n    assert out == exp, f\"input={(b, p)!r} output={out!r} expected={exp!r}\"\n\n\n@settings(max_examples=200, deadline=None)\n@given(st.integers(min_value=0, max_value=10**4), st.integers(min_value=1, max_value=100))\ndef test_congruent_mod_9(b, p):\n    \"\"\"The digit sum of base**power must be congruent to base**power modulo 9.\"\"\"\n    out = power_base_sum(b, p)\n    assert out % 9 == pow(b, p, 9), f\"input={(b, p)!r} output={out!r}\"\n\n\n@settings(max_examples=100, deadline=None)\n@given(st.integers(min_value=1, max_value=10**4), st.integers(min_value=0, max_value=100))\ndef test_positive_and_bounded(b, p):\n    \"\"\"The digit sum of a positive number must be at least 1 and at most 9 times its digit count.\"\"\"\n    out = power_base_sum(b, p)\n    n_digits = len(str(b ** p))\n    assert 1 <= out <= 9 * n_digits, f\"input={(b, p)!r} output={out!r}\"\n\n\n@settings(max_examples=100, deadline=None)\n@given(st.integers(min_value=1, max_value=50), st.integers(min_value=1, max_value=60))\ndef test_trailing_zero_scaling_invariant(b, p):\n    \"\"\"Multiplying the base by 10 must not change the digit sum of the result.\"\"\"\n    out1 = power_base_sum(b, p)\n    out2 = power_base_sum(b * 10, p)\n    assert out1 == out2, f\"input={(b, p)!r} output={out1!r} scaled_output={out2!r}\"\n",
+     "test_phase_b_mutants": "# No new tests: mutant M005 changes only the error message for a negative\n# power, which the specification does not determine.\n"
+    }
+   },
+   "rounds": [
+    {
+     "round": 1,
+     "failing": 0
+    }
+   ],
+   "mutation": {
+    "mutants": 6,
+    "survivors": 1,
+    "shown": 1
+   },
+   "open_questions": [],
+   "usage": {
+    "builder": {
+     "input_tokens": 0,
+     "output_tokens": 0,
+     "calls": 0
+    },
+    "verifier": {
+     "input_tokens": 3796,
+     "output_tokens": 2651,
+     "calls": 2
+    }
+   },
+   "verifier_backend": "anthropic:claude-sonnet-5-5"
+  },
+  "AB": {
+   "programs": [
+    "def power_base_sum(base, power):\n    if power < 0:\n        raise ValueError(\"power must be non-negative\")\n    value = abs(int(base) ** int(power))\n    return sum(int(c) for c in str(value))\n",
+    "_CHUNK_DIGITS = 1000\n_CHUNK = 10 ** _CHUNK_DIGITS\n\n\ndef power_base_sum(base, power):\n    if power < 0:\n        raise ValueError(\"power must be non-negative\")\n    value = abs(int(base) ** int(power))\n    total = 0\n    while value:\n        value, rem = divmod(value, _CHUNK)\n        # Leading zeros of a chunk contribute nothing to the digit sum.\n        total += sum(int(c) for c in str(rem))\n    return total\n"
+   ],
+   "final": "_CHUNK_DIGITS = 1000\n_CHUNK = 10 ** _CHUNK_DIGITS\n\n\ndef power_base_sum(base, power):\n    if power < 0:\n        raise ValueError(\"power must be non-negative\")\n    value = abs(int(base) ** int(power))\n    total = 0\n    while value:\n        value, rem = divmod(value, _CHUNK)\n        # Leading zeros of a chunk contribute nothing to the digit sum.\n        total += sum(int(c) for c in str(rem))\n    return total\n",
+   "evidence": {
+    "A": {
+     "test_phase_a": "from hypothesis import given, strategies as st, settings\nfrom solution import power_base_sum\n\n\ndef ref(base, power):\n    return sum(int(c) for c in str(base ** power))\n\n\ndef test_spec_example():\n    \"\"\"The sum of digits of 2**100 must be 115.\"\"\"\n    out = power_base_sum(2, 100)\n    assert out == 115, f\"input={(2, 100)!r} output={out!r}\"\n\n\ndef test_known_examples():\n    \"\"\"The result must equal the digit sum of base**power for known small cases.\"\"\"\n    cases = [(2, 15, 26), (2, 10, 7), (3, 4, 9), (10, 5, 1), (7, 2, 13), (9, 3, 18), (2, 1000, 1366)]\n    for b, p, e in cases:\n        out = power_base_sum(b, p)\n        assert out == e, f\"input={(b, p)!r} output={out!r} expected={e!r}\"\n\n\ndef test_power_one_is_digit_sum_of_base():\n    \"\"\"With power 1 the result must be the digit sum of the base itself.\"\"\"\n    for b in [1, 9, 10, 99, 12345, 987654321]:\n        out = power_base_sum(b, 1)\n        exp = sum(int(c) for c in str(b))\n        assert out == exp, f\"input={(b, 1)!r} output={out!r} expected={exp!r}\"\n\n\ndef test_power_zero_positive_base():\n    \"\"\"Any positive base to power 0 equals 1, whose digit sum must be 1.\"\"\"\n    for b in [1, 2, 10, 12345]:\n        out = power_base_sum(b, 0)\n        assert out == 1, f\"input={(b, 0)!r} output={out!r}\"\n\n\ndef test_zero_base_positive_power():\n    \"\"\"Zero to a positive power equals 0, whose digit sum must be 0.\"\"\"\n    for p in [1, 2, 50]:\n        out = power_base_sum(0, p)\n        assert out == 0, f\"input={(0, p)!r} output={out!r}\"\n\n\n@given(st.integers(min_value=1, max_value=10**6), st.integers(min_value=0, max_value=300))\n@settings(max_examples=200, deadline=None)\ndef test_matches_reference(b, p):\n    \"\"\"The result must equal the sum of decimal digits of base**power.\"\"\"\n    out = power_base_sum(b, p)\n    exp = ref(b, p)\n    assert out == exp, f\"input={(b, p)!r} output={out!r} expected={exp!r}\"\n\n\n@given(st.integers(min_value=1, max_value=10**4), st.integers(min_value=0, max_value=200))\n@settings(max_examples=100, deadline=None)\ndef test_positive_int_and_mod9(b, p):\n    \"\"\"The result must be a positive integer congruent to base**power modulo 9.\"\"\"\n    out = power_base_sum(b, p)\n    assert isinstance(out, int), f\"input={(b, p)!r} output={out!r}\"\n    assert out >= 1, f\"input={(b, p)!r} output={out!r}\"\n    assert out % 9 == pow(b, p, 9), f\"input={(b, p)!r} output={out!r}\"\n\n\n@given(st.integers(min_value=0, max_value=500))\n@settings(max_examples=50, deadline=None)\ndef test_power_of_ten_is_one(p):\n    \"\"\"Ten to any non-negative power has digit sum 1.\"\"\"\n    out = power_base_sum(10, p)\n    assert out == 1, f\"input={(10, p)!r} output={out!r}\"\n\n\n@given(st.integers(min_value=0, max_value=500))\n@settings(max_examples=50, deadline=None)\ndef test_base_one_is_one(p):\n    \"\"\"One to any non-negative power has digit sum 1.\"\"\"\n    out = power_base_sum(1, p)\n    assert out == 1, f\"input={(1, p)!r} output={out!r}\"\n\n\n@given(st.integers(min_value=1, max_value=1000), st.integers(min_value=0, max_value=100), st.integers(min_value=1, max_value=5))\n@settings(max_examples=100, deadline=None)\ndef test_base_times_power_of_ten_same_sum(b, p, k):\n    \"\"\"Multiplying the base by 10**k appends zeros to the result and leaves the digit sum unchanged.\"\"\"\n    out = power_base_sum(b * 10 ** k, p)\n    exp = power_base_sum(b, p)\n    assert out == exp, f\"input={(b * 10 ** k, p)!r} output={out!r} expected={exp!r}\"\n"
+    },
+    "B": {
+     "test_phase_b": "from hypothesis import given, strategies as st, settings\nfrom solution import power_base_sum\n\n_CHUNK = 10 ** 1000\n\n\ndef big_digit_sum(n):\n    \"\"\"Reference decimal digit sum that avoids huge int->str conversions.\"\"\"\n    total = 0\n    while n:\n        n, r = divmod(n, _CHUNK)\n        total += sum(int(c) for c in str(r))\n    return total\n\n\ndef test_result_with_more_than_4300_digits():\n    \"\"\"The digit sum of 2**20000 (a 6021-digit number) must be returned correctly.\"\"\"\n    out = power_base_sum(2, 20000)\n    exp = big_digit_sum(2 ** 20000)\n    assert out == exp, f\"input={(2, 20000)!r} output={out!r} expected={exp!r}\"\n\n\ndef test_power_of_ten_with_huge_result():\n    \"\"\"Ten to the 5000th power has digit sum 1 regardless of its size.\"\"\"\n    out = power_base_sum(10, 5000)\n    assert out == 1, f\"input={(10, 5000)!r} output={out!r}\"\n\n\ndef test_large_base_large_result():\n    \"\"\"The digit sum of 7**6000 must be computed correctly even though it exceeds 5000 digits.\"\"\"\n    out = power_base_sum(7, 6000)\n    exp = big_digit_sum(7 ** 6000)\n    assert out == exp, f\"input={(7, 6000)!r} output={out!r} expected={exp!r}\"\n\n\n@given(st.integers(min_value=2, max_value=50), st.integers(min_value=13000, max_value=16000))\n@settings(max_examples=15, deadline=None)\ndef test_huge_results_match_reference(b, p):\n    \"\"\"The result must equal the digit sum of base**power for results with thousands of digits.\"\"\"\n    out = power_base_sum(b, p)\n    exp = big_digit_sum(b ** p)\n    assert out == exp, f\"input={(b, p)!r} output={out!r} expected={exp!r}\"\n\n\n@given(st.integers(min_value=2, max_value=30), st.integers(min_value=13000, max_value=16000))\n@settings(max_examples=10, deadline=None)\ndef test_huge_results_mod9(b, p):\n    \"\"\"The digit sum of a huge power must be congruent to base**power modulo 9.\"\"\"\n    out = power_base_sum(b, p)\n    assert out % 9 == pow(b, p, 9), f\"input={(b, p)!r} output={out!r}\"\n\n\n@given(st.integers(min_value=1, max_value=200))\n@settings(max_examples=50, deadline=None)\ndef test_all_nines_squared(k):\n    \"\"\"(10**k - 1) squared is 99..9800..01 and must have digit sum 9*k.\"\"\"\n    b = 10 ** k - 1\n    out = power_base_sum(b, 2)\n    assert out == 9 * k, f\"input={(b, 2)!r} output={out!r} expected={9 * k!r}\"\n\n\n@given(st.integers(min_value=1, max_value=200))\n@settings(max_examples=50, deadline=None)\ndef test_all_nines_power_one(k):\n    \"\"\"With power 1 the base 10**k - 1 must give digit sum 9*k.\"\"\"\n    b = 10 ** k - 1\n    out = power_base_sum(b, 1)\n    assert out == 9 * k, f\"input={(b, 1)!r} output={out!r} expected={9 * k!r}\"\n\n\n@given(st.integers(min_value=1, max_value=200))\n@settings(max_examples=50, deadline=None)\ndef test_ten_to_k_plus_one_squared(k):\n    \"\"\"(10**k + 1) squared is 10..020..01 and must have digit sum 4.\"\"\"\n    b = 10 ** k + 1\n    out = power_base_sum(b, 2)\n    assert out == 4, f\"input={(b, 2)!r} output={out!r}\"\n\n\n@given(st.integers(min_value=1, max_value=60), st.integers(min_value=0, max_value=40))\n@settings(max_examples=50, deadline=None)\ndef test_huge_base_trailing_zeros(k, p):\n    \"\"\"A base of 10**k raised to any power has digit sum 1.\"\"\"\n    b = 10 ** k\n    out = power_base_sum(b, p)\n    assert out == 1, f\"input={(b, p)!r} output={out!r}\"\n\n\n@given(st.integers(min_value=10 ** 20, max_value=10 ** 40), st.integers(min_value=0, max_value=20))\n@settings(max_examples=50, deadline=None)\ndef test_very_large_base_matches_reference(b, p):\n    \"\"\"The result must equal the digit sum of base**power for very large bases.\"\"\"\n    out = power_base_sum(b, p)\n    exp = sum(int(c) for c in str(b ** p))\n    assert out == exp, f\"input={(b, p)!r} output={out!r} expected={exp!r}\"\n\n\ndef test_returns_int_for_power_zero():\n    \"\"\"The returned digit sum for base**0 must be an int equal to 1.\"\"\"\n    out = power_base_sum(7, 0)\n    assert isinstance(out, int) and out == 1, f\"input={(7, 0)!r} output={out!r}\"\n\n\ndef test_digit_sum_of_each_single_digit_base_squared():\n    \"\"\"The digit sum of d**2 for d in 1..9 must match 1,4,9,7,7,9,13,10,9.\"\"\"\n    expected = [1, 4, 9, 7, 7, 9, 13, 10, 9]\n    for d, e in zip(range(1, 10), expected):\n        out = power_base_sum(d, 2)\n        assert out == e, f\"input={(d, 2)!r} output={out!r} expected={e!r}\"\n",
+     "test_phase_b_mutants": "from hypothesis import given, strategies as st, settings\nfrom solution import power_base_sum\n\n\n@given(st.integers(min_value=1, max_value=999), st.integers(min_value=0, max_value=50))\n@settings(max_examples=50, deadline=None)\ndef test_nonnegative_power_returns_digit_sum(b, p):\n    \"\"\"For a positive base and non-negative power the result must be the digit sum of base**power.\"\"\"\n    out = power_base_sum(b, p)\n    exp = sum(int(c) for c in str(b ** p))\n    assert out == exp, f\"input={(b, p)!r} output={out!r} expected={exp!r}\"\n"
+    }
+   },
+   "rounds": [
+    {
+     "round": 1,
+     "failing": 5,
+     "counterexamples": "1. Guarantee: The digit sum of 2**20000 (a 6021-digit number) must be returned correctly.\n  Observed: ValueError: 'Exceeds the limit (4300 digits) for integer string conversion; use sys.set_int_max_str_digits() to increase the limit'\n2. Guarantee: Ten to the 5000th power has digit sum 1 regardless of its size.\n  Observed: ValueError: 'Exceeds the limit (4300 digits) for integer string conversion; use sys.set_int_max_str_digits() to increase the limit'\n3. Guarantee: The digit sum of 7**6000 must be computed correctly even though it exceeds 5000 digits.\n  Observed: ValueError: 'Exceeds the limit (4300 digits) for integer string conversion; use sys.set_int_max_str_digits() to increase the limit'\n4. Guarantee: The result must equal the digit sum of base**power for results with thousands of digits.\n  Observed: ValueError: 'Exceeds the limit (4300 digits) for integer string conversion; use sys.set_int_max_str_digits() to increase the limit'\n  Failing test case: falsifying_input(\n    b=2,  # or any other generated value\n    p=14285,\n)\n5. Guarantee: The digit sum of a huge power must be congruent to base**power modulo 9.\n  Observed: ValueError: 'Exceeds the limit (4300 digits) for integer string conversion; use sys.set_int_max_str_digits() to increase the limit'\n  Failing test case: falsifying_input(\n    b=2,  # or any other generated value\n    p=14285,\n)"
+    },
+    {
+     "round": 2,
+     "failing": 0
+    }
+   ],
+   "mutation": {
+    "mutants": 6,
+    "survivors": 1,
+    "shown": 1
+   },
+   "open_questions": [
+    "Negative base: it is unclear whether the sign is ignored or the minus sign is handled in some other way. Not tested.",
+    "Negative power: the result would be a fraction, so the digit sum is undefined. Not tested.",
+    "Base 0 with power 0 is ambiguous; base 0 with positive power gives 0, which I treat as determined, but I leave out 0**0.",
+    "Non-integer inputs: not specified, so not tested."
+   ],
+   "usage": {
+    "builder": {
+     "input_tokens": 1688,
+     "output_tokens": 1523,
+     "calls": 1
+    },
+    "verifier": {
+     "input_tokens": 12764,
+     "output_tokens": 5765,
+     "calls": 3
+    }
+   },
+   "verifier_backend": "anthropic:claude-sonnet-5-5"
+  },
+  "ABp": {
+   "programs": [
+    "def power_base_sum(base, power):\n    if power < 0:\n        raise ValueError(\"power must be non-negative\")\n    value = abs(int(base) ** int(power))\n    return sum(int(c) for c in str(value))\n",
+    "def power_base_sum(base, power):\n    if power < 0:\n        raise ValueError(\"power must be non-negative\")\n    value = abs(int(base) ** int(power))\n    chunk = 10 ** 9\n    total = 0\n    while value:\n        value, rem = divmod(value, chunk)\n        if rem:\n            total += sum(map(int, str(rem)))\n    return total\n"
+   ],
+   "final": "def power_base_sum(base, power):\n    if power < 0:\n        raise ValueError(\"power must be non-negative\")\n    value = abs(int(base) ** int(power))\n    chunk = 10 ** 9\n    total = 0\n    while value:\n        value, rem = divmod(value, chunk)\n        if rem:\n            total += sum(map(int, str(rem)))\n    return total\n",
+   "evidence": {
+    "A": {
+     "test_phase_a": "from hypothesis import given, settings, strategies as st\n\nfrom solution import power_base_sum\n\n\ndef _digit_sum_of_power(base, power):\n    return sum(int(ch) for ch in str(base ** power))\n\n\ndef test_given_example_2_to_100():\n    \"\"\"The function must return the sum of the decimal digits of 2 raised to the 100th power.\"\"\"\n    base, power = 2, 100\n    out = power_base_sum(base, power)\n    exp = 115\n    assert out == exp, f\"input={(base, power)!r} output={out!r} expected={exp!r}\"\n\n\ndef test_zero_power_for_positive_base():\n    \"\"\"For a positive base raised to the zeroth power, the function must return the digit sum of 1.\"\"\"\n    base, power = 7, 0\n    out = power_base_sum(base, power)\n    exp = 1\n    assert out == exp, f\"input={(base, power)!r} output={out!r} expected={exp!r}\"\n\n\ndef test_zero_base_positive_power():\n    \"\"\"For zero raised to a positive power, the function must return the digit sum of 0.\"\"\"\n    base, power = 0, 5\n    out = power_base_sum(base, power)\n    exp = 0\n    assert out == exp, f\"input={(base, power)!r} output={out!r} expected={exp!r}\"\n\n\ndef test_power_one_sums_digits_of_base():\n    \"\"\"For power one, the function must return the decimal digit sum of the base.\"\"\"\n    base, power = 12345, 1\n    out = power_base_sum(base, power)\n    exp = 15\n    assert out == exp, f\"input={(base, power)!r} output={out!r} expected={exp!r}\"\n\n\ndef test_multi_digit_power_result():\n    \"\"\"The function must sum all decimal digits of the computed power result, not just digits of the base.\"\"\"\n    base, power = 99, 2\n    out = power_base_sum(base, power)\n    exp = 18  # 99 ** 2 == 9801\n    assert out == exp, f\"input={(base, power)!r} output={out!r} expected={exp!r}\"\n\n\nvalid_small_inputs = st.one_of(\n    st.tuples(st.integers(min_value=1, max_value=1000), st.integers(min_value=0, max_value=80)),\n    st.tuples(st.just(0), st.integers(min_value=1, max_value=80)),\n)\n\n\n@given(valid_small_inputs)\n@settings(max_examples=200)\ndef test_matches_direct_decimal_digit_sum_for_nonnegative_integer_inputs(pair):\n    \"\"\"For nonnegative integer inputs with a determined integer power result, the function must equal the direct decimal digit sum of base ** power.\"\"\"\n    base, power = pair\n    out = power_base_sum(base, power)\n    exp = _digit_sum_of_power(base, power)\n    assert out == exp, f\"input={(base, power)!r} output={out!r} expected={exp!r}\"\n\n\nvalid_modulo_inputs = st.one_of(\n    st.tuples(st.integers(min_value=1, max_value=10**6), st.integers(min_value=0, max_value=300)),\n    st.tuples(st.just(0), st.integers(min_value=1, max_value=300)),\n)\n\n\n@given(valid_modulo_inputs)\n@settings(max_examples=200)\ndef test_digit_sum_has_same_remainder_modulo_nine_as_power(pair):\n    \"\"\"For determined nonnegative integer inputs, the digit sum returned must have the same remainder modulo 9 as base ** power.\"\"\"\n    base, power = pair\n    out = power_base_sum(base, power)\n    assert isinstance(out, int), f\"input={(base, power)!r} output={out!r} expected_integer_digit_sum=True\"\n    exp_remainder = pow(base, power, 9)\n    observed_remainder = out % 9\n    assert observed_remainder == exp_remainder, (\n        f\"input={(base, power)!r} output={out!r} \"\n        f\"expected_remainder={exp_remainder!r} observed_remainder={observed_remainder!r}\"\n    )\n"
+    },
+    "B": {
+     "test_phase_b": "from hypothesis import given, settings, strategies as st\n\nfrom solution import power_base_sum\n\n\ndef _digit_sum_of_power(base, power):\n    return sum(int(ch) for ch in str(base ** power))\n\n\ndef test_two_to_one_thousand_large_power():\n    \"\"\"The function must return the sum of all decimal digits for large nonnegative integer powers.\"\"\"\n    base, power = 2, 1000\n    out = power_base_sum(base, power)\n    exp = 1366\n    assert out == exp, f\"input={(base, power)!r} output={out!r} expected={exp!r}\"\n\n\ndef test_large_power_of_power_of_ten_has_digit_sum_one():\n    \"\"\"The function must return one for any positive power of a positive power of ten.\"\"\"\n    base, power = 10**50, 123\n    out = power_base_sum(base, power)\n    exp = 1\n    assert out == exp, f\"input={(base, power)!r} output={out!r} expected={exp!r}\"\n\n\ndef test_zero_to_very_large_positive_power():\n    \"\"\"The function must return zero for zero raised to any positive integer power.\"\"\"\n    base, power = 0, 10_000\n    out = power_base_sum(base, power)\n    exp = 0\n    assert out == exp, f\"input={(base, power)!r} output={out!r} expected={exp!r}\"\n\n\ndef test_very_large_positive_base_to_zero_power():\n    \"\"\"The function must return one for any positive integer base raised to the zeroth power.\"\"\"\n    base, power = 987654321987654321987654321, 0\n    out = power_base_sum(base, power)\n    exp = 1\n    assert out == exp, f\"input={(base, power)!r} output={out!r} expected={exp!r}\"\n\n\ndef test_large_base_small_power_exact_digit_sum():\n    \"\"\"The function must sum the digits of the full computed power for large integer bases.\"\"\"\n    base, power = 12345678901234567890, 3\n    out = power_base_sum(base, power)\n    exp = _digit_sum_of_power(base, power)\n    assert out == exp, f\"input={(base, power)!r} output={out!r} expected={exp!r}\"\n\n\n@given(st.integers(min_value=2, max_value=25), st.integers(min_value=81, max_value=180))\n@settings(max_examples=100)\ndef test_matches_direct_digit_sum_for_higher_exponents(base, power):\n    \"\"\"For positive integer bases and higher nonnegative integer powers, the function must equal the direct decimal digit sum of base ** power.\"\"\"\n    out = power_base_sum(base, power)\n    exp = _digit_sum_of_power(base, power)\n    assert out == exp, f\"input={(base, power)!r} output={out!r} expected={exp!r}\"\n\n\n@given(st.integers(min_value=1001, max_value=10**12), st.integers(min_value=1, max_value=8))\n@settings(max_examples=100)\ndef test_matches_direct_digit_sum_for_large_bases(base, power):\n    \"\"\"For large nonnegative integer bases and positive integer powers, the function must equal the direct decimal digit sum of base ** power.\"\"\"\n    out = power_base_sum(base, power)\n    exp = _digit_sum_of_power(base, power)\n    assert out == exp, f\"input={(base, power)!r} output={out!r} expected={exp!r}\"\n\n\n@given(st.integers(min_value=0, max_value=10_000))\n@settings(max_examples=100)\ndef test_base_one_always_has_digit_sum_one(power):\n    \"\"\"The function must return one for base one raised to any nonnegative integer power.\"\"\"\n    base = 1\n    out = power_base_sum(base, power)\n    exp = 1\n    assert out == exp, f\"input={(base, power)!r} output={out!r} expected={exp!r}\"\n",
+     "test_phase_b_mutants": "# No additional tests: the listed mutant only affects behavior for negative powers,\n# which the specification leaves unspecified.\n"
+    }
+   },
+   "rounds": [
+    {
+     "round": 1,
+     "failing": 1,
+     "counterexamples": "1. Guarantee: The function must return one for any positive power of a positive power of ten.\n  Observed: ValueError: 'Exceeds the limit (4300 digits) for integer string conversion; use sys.set_int_max_str_digits() to increase the limit'"
+    },
+    {
+     "round": 2,
+     "failing": 0
+    }
+   ],
+   "mutation": {
+    "mutants": 6,
+    "survivors": 1,
+    "shown": 1
+   },
+   "open_questions": [
+    "Whether non-integer inputs are allowed, coerced, or rejected.",
+    "Whether negative bases are supported, and if so whether a minus sign is ignored or treated specially.",
+    "Whether negative powers are supported, since they can produce fractional results whose digit interpretation is unspecified.",
+    "Whether `0 ** 0` should be accepted and what result it should produce.",
+    "Whether boolean arguments, as subclasses of `int`, are intended to be valid inputs.",
+    "No performance or maximum-size requirements are specified."
+   ],
+   "usage": {
+    "builder": {
+     "input_tokens": 1226,
+     "output_tokens": 1380,
+     "calls": 1
+    },
+    "verifier": {
+     "input_tokens": 7686,
+     "output_tokens": 5602,
+     "calls": 3
+    }
+   },
+   "verifier_backend": "openai:gpt-5.5-2026-04-23"
+  }
+ },
+ "seconds": 220.1
+}
