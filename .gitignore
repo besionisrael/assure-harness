@@ -8,5 +8,5 @@ paper/
 __pycache__/
 *.pyc
 .pytest_cache/
-data/cache/
+study/data/cache/
 /second_service_kit.zip
