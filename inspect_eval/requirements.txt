@@ -1,0 +1,6 @@
+# Host side of the evaluation (the generated tests run in the Docker sandbox, see sandbox/Dockerfile).
+inspect-ai==0.3.281
+anthropic
+openai
+pytest>=8
+scipy>=1.11            # sign test in report.py

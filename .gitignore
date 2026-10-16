@@ -6,7 +6,12 @@ paper/
 
 # caches and build artifacts
 __pycache__/
+venv/
 *.pyc
 .pytest_cache/
 study/data/cache/
 /second_service_kit.zip
+/second_service_kit/
+
+# Inspect logs (runs are summarized in inspect_eval/results/)
+/logs/

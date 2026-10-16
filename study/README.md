@@ -1,6 +1,8 @@
 # assure: experimental harness for "Who Verifies the Builder?"
 
-This harness runs the controlled study of the paper *Who Verifies the Builder? Toward Independent Assurance for Agent-Produced Software*. It compares self-validation by a coding agent with independent verification, on EvalPlus tasks (HumanEval+ and MBPP+).
+This harness runs the controlled study of the paper *Who Verifies the Builder? Toward Independent Assurance for Agent-Produced Software*. It compares self-validation by a coding agent with independent verification, on three stateful services with seeded faults (main campaign, `configs/main_casestudy.yaml`) and on an exploratory pilot of EvalPlus tasks (HumanEval+ and MBPP+).
+
+Run every command below from this folder (`cd study`). The Inspect evaluation derived from this study is in [`../inspect_eval/`](../inspect_eval/).
 
 ## Design in one paragraph
 

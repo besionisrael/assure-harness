@@ -1,0 +1,11 @@
+# Inspect sandbox: one isolated container per sample. Generated code runs here,
+# without network and with bounded memory and CPU.
+services:
+  default:
+    build: .
+    image: assure-eval-sandbox
+    init: true
+    command: tail -f /dev/null      # keep the container alive; Inspect runs commands in it
+    network_mode: none
+    mem_limit: 2g                   # same bound as the study's RLIMIT_AS (study/assure/sandbox.py)
+    cpus: 1
