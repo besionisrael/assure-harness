@@ -169,7 +169,8 @@ def main(paths):
                   "Exact two-sided sign test over the seeded faults, the procedure the study used "
                   "for its registered hypotheses. This comparison was not registered: it is "
                   "exploratory, one pair of models, and it confounds provider, capability, and "
-                  "suite size (see the Tests column above).", "",
+                  "suite size (see the Tests column above). The prompt was developed in a study "
+                  "where Claude was builder and verifier, and was not adapted to GPT-5.5.", "",
                   f"{a} vs {b}: {plus} faults favor {a}, {minus} favor {b}, {ties} ties; p = {p:.4f}."]
     (OUT / "REPORT.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
     print("\n".join(lines))

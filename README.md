@@ -65,7 +65,8 @@ Full per-fault table: [`inspect_eval/results/REPORT.md`](inspect_eval/results/RE
 - **Exploratory comparison (not pre-registered).** An exact sign test over the
   faults, the study's own procedure: 11 faults favor Claude, 0 favor GPT-5.5,
   35 ties, p = 0.001. It compares one pair of models, so provider, capability
-  and suite size are confounded (Claude wrote 4.4 times as many tests).
+  and suite size are confounded (Claude wrote 4.4 times as many tests),
+  and the prompt was developed with Claude (see Limitations).
 
 ### Validation of the scorer
 
@@ -86,31 +87,46 @@ the reason the evaluation keeps errors apart and validates its scorer first.
 
 ### Run it
 
-Requirements: Python 3.13 (tested), Docker, and API keys for the models you evaluate.
+**Prerequisites.** These are the points that cost time when the evaluation was
+built; check them before running anything.
+
+- **Python 3.13** (the version tested) with the host dependencies:
+  `python -m pip install -r inspect_eval/requirements.txt`.
+- **Docker** running, with **at least 8 GB of memory** for its VM (Docker
+  Desktop: Settings > Resources). Every sample is scored in its own container,
+  limited to 2 GB.
+- **`--max-sandboxes 3`** on every `eval` command. Without a bound, Inspect
+  starts one container per sample at once; 15 containers froze an 8 GB Docker
+  VM and the Docker daemon had to be restarted (`wsl --shutdown` on Windows).
+  Keep `max-sandboxes x 2 GB` below the memory of your Docker VM.
+- **`python -m inspect_ai`** rather than the `inspect` command. If several
+  Python installs are on your PATH, `inspect` may belong to another one, with
+  another version of inspect-ai and without the provider SDKs.
+- **API keys** in the environment or in a `.env` file at the repository root
+  (`ANTHROPIC_API_KEY`, `OPENAI_API_KEY`), only for the model runs. Controls,
+  report and replay need none.
 
 ```bash
-pip install -r inspect_eval/requirements.txt
 python -m pytest -q inspect_eval/tests                       # ~1 min, needs Docker
 
 # validation controls (no model call)
-inspect eval inspect_eval/task.py@control_hidden  --max-sandboxes 3
-inspect eval inspect_eval/task.py@control_visible --max-sandboxes 3
+python -m inspect_ai eval inspect_eval/task.py@control_hidden  --max-sandboxes 3
+python -m inspect_ai eval inspect_eval/task.py@control_visible --max-sandboxes 3
 
 # the evaluation (~15 calls of up to 64k output tokens per model)
-inspect eval inspect_eval/task.py@assure_phase_a --model anthropic/claude-sonnet-5-5 --epochs 5 --max-sandboxes 3
-inspect eval inspect_eval/task.py@assure_phase_a --model openai/gpt-5.5-2026-04-23 -M responses_api=false --epochs 5 --max-sandboxes 3
+python -m inspect_ai eval inspect_eval/task.py@assure_phase_a --model anthropic/claude-sonnet-5-5 --epochs 5 --max-sandboxes 3
+python -m inspect_ai eval inspect_eval/task.py@assure_phase_a --model openai/gpt-5.5-2026-04-23 -M responses_api=false --epochs 5 --max-sandboxes 3
 
 # report from logs (no model call); the logs of the results above are included
 python inspect_eval/report.py inspect_eval/results/logs/phase_a_*.eval
 
 # reproduction of the study's scores (no model call)
-inspect eval inspect_eval/task.py@replay_study -T campaign=main_casestudy --max-sandboxes 3
+python -m inspect_ai eval inspect_eval/task.py@replay_study -T campaign=main_casestudy --max-sandboxes 3
 python inspect_eval/replay_check.py logs/<replay log>.eval
 ```
 
-`--max-sandboxes` bounds concurrent containers (2 GB each). Keep it times 2 GB
-below the memory of your Docker VM. If several Python installs are on your PATH,
-use `python -m inspect_ai eval` instead of `inspect eval`.
+If a run is interrupted, `python -m inspect_ai eval-retry <log>.eval --max-sandboxes 3`
+reruns only the samples that did not finish.
 
 How the evaluation is built, file by file: [`inspect_eval/LEARNING.md`](inspect_eval/LEARNING.md).
 
@@ -134,6 +150,15 @@ How the evaluation is built, file by file: [`inspect_eval/LEARNING.md`](inspect_
 - **Two models, five epochs.** Provider defaults for temperature and reasoning.
   Differences between models confound provider, capability and suite size. The
   sign test is exploratory.
+- **Possible bias in favor of Claude.** The Phase A prompt was written and
+  tuned in a study where Claude was both builder and verifier, and it was not
+  adapted to GPT-5.5. The evaluation itself was built with the help of a Claude
+  agent. GPT-5.5 was called through the Chat Completions API
+  (`responses_api=false`, to match the study) with default reasoning settings;
+  the Responses API or a higher reasoning effort may serve it better. Claude
+  also wrote 4.4 times as many tests. The gap between the two models should
+  therefore be read as a result for this prompt and these settings, not as a
+  ranking of the models as verifiers.
 - **Inspect's provider adapters** replace the study's SDK calls. The prompts are
   checked to be identical, but request details may differ (for example, prompt
   caching is enabled by Inspect for Anthropic).
@@ -169,3 +194,11 @@ Main campaign: 3 services, 5 runs each, 15 units, 5.8M tokens.
 How to run the study, its outputs and metric definitions:
 [`study/README.md`](study/README.md). Raw units, transcripts and scores of
 every campaign are in `study/results/`.
+
+## License
+
+The code, services, seeded faults, protocol and results of this repository are
+released under the [MIT License](LICENSE). The EvalPlus datasets in
+`study/data/` (`HumanEvalPlus.jsonl.gz`, `MbppPlus.jsonl.gz`) are redistributed
+unchanged and keep the licenses of their original projects (EvalPlus,
+HumanEval, MBPP).

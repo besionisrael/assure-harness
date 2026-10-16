@@ -73,6 +73,6 @@ Missed in at least one run by every model: casestudy_v2/F11, casestudy_v2/F12, s
 
 ## Exploratory comparison (not pre-registered)
 
-Exact two-sided sign test over the seeded faults, the procedure the study used for its registered hypotheses. This comparison was not registered: it is exploratory, one pair of models, and it confounds provider, capability, and suite size (see the Tests column above).
+Exact two-sided sign test over the seeded faults, the procedure the study used for its registered hypotheses. This comparison was not registered: it is exploratory, one pair of models, and it confounds provider, capability, and suite size (see the Tests column above). The prompt was developed in a study where Claude was builder and verifier, and was not adapted to GPT-5.5.
 
 anthropic/claude-sonnet-5-5 vs openai/gpt-5.5-2026-04-23: 11 faults favor anthropic/claude-sonnet-5-5, 0 favor openai/gpt-5.5-2026-04-23, 35 ties; p = 0.0010.
